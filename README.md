@@ -36,6 +36,18 @@ shinyapps:
     glucose_table: 'glucose_records'
 ```
 
+## Database
+
+The app requires a database. You can load data with the scripts `psi_db*`
+
+This is easier if you store all the data in the directory with the path at
+
+``` r
+config::get("tastermonial")$datadir
+```
+
 ## Deploy
 
 Run the script `psi_deploy.R`.
+
+Go to: <https://personalscience.shinyapps.io/Tastermonial/>
