@@ -36,6 +36,24 @@ shinyapps:
     glucose_table: 'glucose_records'
 ```
 
+To run locally, you will need a Postgres database. The app will use the configuration set in the `config.yml`. To use the local database, run
+
+``` r
+Sys.setenv(R_CONFIG_ACTIVE = "local")
+```
+
+## Database
+
+The app requires a database. You can load data with the scripts `psi_db*`
+
+This is easier if you store all the data in the directory with the path at
+
+``` r
+config::get("tastermonial")$datadir
+```
+
 ## Deploy
 
 Run the script `psi_deploy.R`.
+
+Go to: <https://personalscience.shinyapps.io/Tastermonial/>
