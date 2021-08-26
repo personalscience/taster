@@ -38,7 +38,7 @@ shinyapps:
 
 To run locally, you will need a Postgres database. The app will use the configuration set in the `config.yml`. To use the local database, run
 
-``` r
+```r
 Sys.setenv(R_CONFIG_ACTIVE = "local")
 ```
 
