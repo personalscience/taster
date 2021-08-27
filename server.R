@@ -30,19 +30,8 @@ server <- function(input, output) {
                                            attr(config::get(),"config"),
                                            packageVersion("psiCGM")))
 
-    # output$show_file <- renderText(datafilepath()$name)
-    #
-    active_glucose_record <- mod_filterServer("psi_filter_plot")
-    #active_glucose_record <- reactiveVal(sample_libreview_df)
-    username<-reactive(username_for_id(active_glucose_record()[["user_id"]][1]))
 
-    observe(
-        cat(stderr(), sprintf("username=%s \n",username()))
-    )
-    #
-    g <- mod_libreview_plotServer("modChart", active_glucose_record, title = username)
-    #
-    food_time_ggplot <- mod_foodServer("food_compare_plot", active_glucose_record, title = username )
+   mod_food2Server("food_compare_plot", active_glucose_record, title = "Tastermonial" )
 
 }
 

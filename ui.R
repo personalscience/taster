@@ -31,23 +31,7 @@ ui <- fluidPage(
 
     # Application title
     h2("Your CGM Data"),
-    mod_foodUI("food_compare_plot"),
-        # Show a plot of the glucose levels
-        sidebarLayout(
-          sidebarPanel(
-            mod_filterUI("psi_filter_plot")
-
-            ),
-
-
-        # textOutput("auc"),
-           mainPanel(
-
-
-               mod_libreviewUI("modChart")
-
-          # dataTableOutput("glucoseTable")
-        ))
+    mod_food2UI("food_compare_plot")
 
 )
 
