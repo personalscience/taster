@@ -1,10 +1,17 @@
 # Okay to delete anything here
 
 library(psiCGM)
+Sys.setenv(R_CONFIG_ACTIVE = "shinyapps")
+conn_args <- config::get("dataconnection")
+con <- DBI::dbConnect(
+  drv = conn_args$driver,
+  user = conn_args$user,
+  host = conn_args$host,
+  port = conn_args$port,
+  dbname = conn_args$dbname,
+  password = conn_args$password
+)
 
-taster_dir <- file.path(Sys.getenv("ONEDRIVE"),"Ensembio/Personal Science/Partners/Tastermonial/data")
+DBI::dbWriteTable(con, "notes_records", taster_notes_df, append = TRUE)
+tbl(con, "notes_records") %>% distinct(user_id)
 
-list.files(taster_dir) %>% stringr::str_subset("Car")
-
-
-carles <- glucose_df_from_libreview_csv(list.files(taster_dir, full.names = TRUE) %>% stringr::str_subset("Car"))

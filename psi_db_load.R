@@ -13,9 +13,10 @@ library(lubridate)
 
 
 # set the active configuration globally via Renviron.site or Rprofile.site
+Sys.setenv(R_CONFIG_ACTIVE = "shinyapps")
 #Sys.setenv(R_CONFIG_ACTIVE = "local")  # save to local postgres
 # Sys.setenv(R_CONFIG_ACTIVE = "cloud") # save to cloud
-# Sys.setenv(R_CONFIG_ACTIVE = "default") # save to sqlite
+# Sys.setenv(R_CONFIG_ACTIVE = "default") # save to tastercloud
 # Sys.setenv(R_CONFIG_ACTIVE = "cloud")
 
 
@@ -214,7 +215,9 @@ psi_fill_notes_records_from_scratch <- function(conn_args = config::get("datacon
 
   message("Write Martha notes")
 
-  martha_notes <- bind_rows(notes_df_from_csv(user_id=1235),
+  martha_notes <- bind_rows(notes_df_from_csv(file = file.path(config::get("tastermonial")$datadir,
+                                                               "MarthaSprague_notes.csv"),
+                                                               user_id=1235),
                             notes_df_from_glucose_table(user_id=1235))
 
   DBI::dbWriteTable(con, name = "notes_records",
@@ -223,7 +226,7 @@ psi_fill_notes_records_from_scratch <- function(conn_args = config::get("datacon
                     overwrite = TRUE)
 
   message("Write Ayumi notes")
-  ayumi_notes <-  notes_df_from_glucose_table(user_id=1002)
+  ayumi_notes <-  notes_df_from_glucose_table(user_id=lookup_id_from_name("Ayumi Blystone"))
 
   DBI::dbWriteTable(con, name = "notes_records",
                     value = ayumi_notes,
@@ -231,7 +234,7 @@ psi_fill_notes_records_from_scratch <- function(conn_args = config::get("datacon
                     append = TRUE)
 
   message("Write Bude notes")
-  bude_notes <-  notes_df_from_glucose_table(user_id=1010)
+  bude_notes <-  notes_df_from_glucose_table(user_id=lookup_id_from_name("Bude Sethaputra"))
 
   DBI::dbWriteTable(con, name = "notes_records",
                     value = bude_notes,
@@ -248,12 +251,37 @@ psi_fill_notes_records_from_scratch <- function(conn_args = config::get("datacon
 
 }
 
+psi_user_list_from_scratch <- function(conn_args = config::get("dataconnection"),
+                                                drop = TRUE) {
+
+  con <- DBI::dbConnect(
+    drv = conn_args$driver,
+    user = conn_args$user,
+    host = conn_args$host,
+    port = conn_args$port,
+    dbname = conn_args$dbname,
+    password = conn_args$password
+  )
+  if(drop) {
+
+    message("removing user records")
+    DBI::dbRemoveTable(con, "user_list")
+  }
+
+  DBI::dbWriteTable(con, name = "user_list",
+                    value = user_df_from_libreview,
+                    row.names = FALSE,
+                    append = TRUE)
+
+  message(sprintf("Wrote %d new records to userlist", nrow(user_df_from_libreview)))
+}
 
 # Execute from here----
 
 psi_fill_glucose_records_from_scratch()
 
 psi_fill_notes_records_from_scratch()
+psi_user_list_from_scratch()
 
 # uncomment this section to add an arbitrary new CSV file
 # be sure to set both user_ids
