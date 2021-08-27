@@ -52,6 +52,12 @@ This is easier if you store all the data in the directory with the path at
 config::get("tastermonial")$datadir
 ```
 
+Download from https://libreview.com the glucose CSV files.  Any CSV file that includes "glucose" in the name will automatically read into the database with script `psi_db_load.R`.
+
+Download Tastermonial food notes and save as a CSV file in the same directory. Run `psi_db_taster_notes.R` to read all results into a dataframe that you can write to the database.
+
+
+
 ## Deploy
 
 Run the script `psi_deploy.R`.
