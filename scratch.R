@@ -19,4 +19,7 @@ con <- DBI::dbConnect(
 
 glucose_df_from_db()
 tbl(con,"glucose_records") %>% distinct(user_id)
-tbl(con,"notes_records") %>% filter(user_id==1235) %>% filter(is.na(Start))
+tbl(con,"notes_records") #%>% filter(user_id==1235) %>% filter(is.na(Start))
+
+
+taster_df() %>% distinct(pid, productName) # %>% add_count(productName) %>% summarize(productName,n)
