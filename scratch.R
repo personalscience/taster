@@ -19,10 +19,7 @@ con <- DBI::dbConnect(
 
 glucose_df_from_db()
 tbl(con,"glucose_records") %>% distinct(user_id) %>% show_query()
-tbl(con,"notes_records") %>% filter(Activity == "Food") %>%
-  filter(Start > "2021-06-01") %>%
-  group_by(Comment) %>% add_count() %>% filter(n>2) %>% distinct(Comment) %>% collect()
-
+tbl(con,"notes_records") %>% filter(user_id == 1002) %>% filter(Activity == "Food")
 
 taster_df(file.path(config::get("tastermonial")$datadir, "table-data.csv"))
 
@@ -38,6 +35,9 @@ taster_raw() %>% transmute(Start = with_tz(lubridate::parse_date_time(startEatin
                            End = as_datetime(NA),
                            )
 
+tbl(con,"notes_records") %>%  filter(user_id == 1002) %>% filter(Activity == "Food")  %>%
+  #filter(Start > "2021-06-01") %>%
+transmute(Start, productName = Comment) %>%
+  collect() %>% filter(str_detect(productName,"Bev"))
 
-with_tz(lubridate::parse_date_time(taster_raw()$startEatingDate, orders = "dmY HM p z"),
-        tzone = Sys.timezone())
+taster_products_for_user(1002) %>% sort()

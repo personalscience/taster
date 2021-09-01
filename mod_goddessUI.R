@@ -17,12 +17,12 @@ con <- DBI::dbConnect(
     filter(Start > "2021-06-01") %>%
     group_by(Comment) %>% add_count() %>% filter(n>2) %>% distinct(Comment) %>%
     transmute(productName = Comment, user_id = user_id) %>%
-    collect()
+    collect() %>% arrange(productName)
 } else
   prods <- tbl(con,"notes_records") %>% filter(Activity == "Food") %>%
     filter(Start > "2021-06-01") %>% filter(user_id == ID) %>% distinct(Comment) %>%
     transmute(productName = Comment, user_id=ID) %>%
-    collect()
+    collect() %>% arrange(productName)
 
   DBI::dbDisconnect(con)
   return(prods)
@@ -52,10 +52,11 @@ mod_goddessUI <- function(id) {
         selected = "Ayumi Blystone"
       ),
       uiOutput(ns("food_selection1")),
+      uiOutput(ns("food_selection2")),
      # textInput(ns("food_name1"), label = "Food 1", value = "Real Food Bar"),
      # textInput(ns("food_name2"), label = "Food 2", value = "Kind, nuts & Spices"),
-      selectizeInput(ns("food_name1"), label = "Food1", choices = taster_prod_table$productName, selected=taster_food1),
-      selectizeInput(ns("food_name2"), label = "Food2", choices = taster_prod_table$productName, selected=taster_food2),
+      #selectizeInput(ns("food_name1"), label = "Food1", choices = taster_prod_table$productName, selected=taster_food1),
+      #selectizeInput(ns("food_name2"), label = "Food2", choices = taster_prod_table$productName, selected=taster_food2),
       actionButton(ns("submit_foods"), label = "Submit Foods"),
       checkboxInput(ns("normalize"), label = "Normalize"),
       downloadButton(ns("downloadFood_df"), label = "Download Results")
@@ -97,14 +98,29 @@ mod_goddessServer <- function(id,  glucose_df, title = "Name") {
 
     output$food_selection1 <- renderUI({
       taster_prod_table <- taster_products(user_id = ID())
+      prod_names <- sort(taster_prod_table$productName)
       #message(paste("finding foods for User", isolate(input$user_id)))
-      message(sprintf("User %s first food is %s",isolate(input$user_id),taster_prod_table[1,1]$productName ))
-      selectizeInput("food_name1",
-                     label = "Your foods",
-                     choices = taster_prod_table$productName,
-                     selected = taster_prod_table[1,1]$productName
+      message(sprintf("User %s first food is %s",isolate(input$user_id),prod_names[1] ))
+      selectizeInput(NS(id,"food_name1"),
+                     label = "Your food 1",
+                     choices = prod_names,
+                     selected = prod_names[1]
                     )
     })
+
+    output$food_selection2 <- renderUI({
+      taster_prod_table <- taster_products(user_id = ID())
+      prod_names <- sort(taster_prod_table$productName)
+      #message(paste("finding foods for User", isolate(input$user_id)))
+      message(sprintf("User %s second food is %s",isolate(input$user_id),prod_names[1] ))
+      selectizeInput(NS(id,"food_name2"),
+                     label = "Your food 2",
+                     choices = prod_names,
+                     selected = prod_names[1]
+      )
+    })
+
+
     output$downloadFood_df <-
       downloadHandler(
         filename = function() {

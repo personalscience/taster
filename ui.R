@@ -39,14 +39,11 @@ ui <- fluidPage(
 
         ),
 
-
-        # textOutput("auc"),
         mainPanel(
 
 
             mod_libreviewUI("modChart")
 
-            # dataTableOutput("glucoseTable")
         ))
 
 
