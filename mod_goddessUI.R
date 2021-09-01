@@ -59,6 +59,7 @@ mod_goddessUI <- function(id) {
       #selectizeInput(ns("food_name2"), label = "Food2", choices = taster_prod_table$productName, selected=taster_food2),
       actionButton(ns("submit_foods"), label = "Submit Foods"),
       checkboxInput(ns("normalize"), label = "Normalize"),
+     numericInput(ns("prefixLength"), label = "Prefix Minutes", value = 0 ),
       downloadButton(ns("downloadFood_df"), label = "Download Results")
 
     ),
@@ -90,9 +91,12 @@ mod_goddessServer <- function(id,  glucose_df, title = "Name") {
       cat(stderr(), sprintf("username=%s \n",ID()))
     )
     food_df <- reactive(bind_rows(food_times_df(user_id = ID(),
-                                                foodname = input$food_name1),
+                                                foodname = input$food_name1,
+                                                prefixLength=input$prefixLength),
+
                                   food_times_df(user_id = ID(),
-                                                foodname = input$food_name2)) %>%
+                                                foodname = input$food_name2,
+                                                prefixLength=input$prefixLength)) %>%
                           filter(!is.na(value)))
 
 
@@ -147,7 +151,8 @@ mod_goddessServer <- function(id,  glucose_df, title = "Name") {
       output$food1 <- renderPlot({
         input$submit_foods
         one_food_df <- food_times_df(user_id = ID(),
-                                     foodname = isolate(input$food_name1))
+                                     foodname = isolate(input$food_name1),
+                                     prefixLength = input$prefixLength)
         if (input$normalize) {
           g <- one_food_df %>%
             group_by(meal) %>%
@@ -166,7 +171,8 @@ mod_goddessServer <- function(id,  glucose_df, title = "Name") {
       output$food2 <- renderPlot({
         input$submit_foods
         one_food_df <- food_times_df(user_id = ID(),
-                                     foodname = isolate(input$food_name2))
+                                     foodname = isolate(input$food_name2),,
+                                     prefixLength = input$prefixLength)
         if (input$normalize) {
           g <- one_food_df %>%
             group_by(meal) %>%
