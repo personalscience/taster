@@ -9,12 +9,12 @@
 # see more examples at https://rpostgres.r-dbi.org/
 library(tidyverse)
 library(lubridate)
-
+library(psiCGM)
 
 
 # set the active configuration globally via Renviron.site or Rprofile.site
-Sys.setenv(R_CONFIG_ACTIVE = "shinyapps")
-#Sys.setenv(R_CONFIG_ACTIVE = "local")  # save to local postgres
+#Sys.setenv(R_CONFIG_ACTIVE = "shinyapps")
+Sys.setenv(R_CONFIG_ACTIVE = "local")  # save to local postgres
 # Sys.setenv(R_CONFIG_ACTIVE = "cloud") # save to cloud
 # Sys.setenv(R_CONFIG_ACTIVE = "default") # save to tastercloud
 # Sys.setenv(R_CONFIG_ACTIVE = "cloud")
@@ -282,6 +282,10 @@ psi_fill_glucose_records_from_scratch()
 
 psi_fill_notes_records_from_scratch()
 psi_user_list_from_scratch()
+
+source("psi_db_taster_notes.R")
+
+psi_fill_taster_notes_from_scratch()
 
 # uncomment this section to add an arbitrary new CSV file
 # be sure to set both user_ids

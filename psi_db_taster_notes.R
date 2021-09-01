@@ -57,6 +57,25 @@ taster_notes_df <- taster_raw %>% transmute(Start = with_tz(lubridate::parse_dat
                          user_id = map_dbl(taster_raw$user, id_from_taster))
 taster_notes_df
 
+psi_fill_taster_notes_from_scratch <- function() {
+
+conn_args <- config::get("dataconnection")
+con <- DBI::dbConnect(
+  drv = conn_args$driver,
+  user = conn_args$user,
+  host = conn_args$host,
+  port = conn_args$port,
+  dbname = conn_args$dbname,
+  password = conn_args$password
+)
+
+DBI::dbWriteTable(con, "notes_records", taster_notes_df, append = TRUE)
+message("wrote Taster Notes")
+tbl(con, "notes_records") %>% distinct(user_id)
+
+
+}
+
 # map_dbl(taster_names %>% map_chr(function(x){ if(!is.null(x)) str_sub(x, 1,3)
 #   else NA}), id_from_initial)
 #
