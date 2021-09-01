@@ -16,7 +16,7 @@ devtools::install_github("personalscience/psi-shiny-cgm",
 
 rsconnect::deployApp(#appDir = file.path(getwd(),"R"),
                      appName = "Tastermonial",
-                     appFiles = c("ui.R","server.R",
+                     appFiles = c("ui.R","server.R","global.R",
                                   "mod_goddessUI.R",
                                   "config.yml"),
                      forceUpdate = TRUE
@@ -24,4 +24,4 @@ rsconnect::deployApp(#appDir = file.path(getwd(),"R"),
 
 
 
-devtools::load_all("~/dev/psi/psiCGM/")
+#devtools::load_all("~/dev/psi/psiCGM/")
