@@ -1,6 +1,6 @@
 # Shiny Module and UI to compare foods for a single user
 
-taster_products <- function() {
+taster_products <- function(user_id = 1234) {
 conn_args <- config::get("dataconnection")
 con <- DBI::dbConnect(
   drv = conn_args$driver,
@@ -10,10 +10,18 @@ con <- DBI::dbConnect(
   dbname = conn_args$dbname,
   password = conn_args$password)
 
+  ID <- user_id
+
+  if(is.null(ID)){
   prods <- tbl(con,"notes_records") %>% filter(Activity == "Food") %>%
     filter(Start > "2021-06-01") %>%
     group_by(Comment) %>% add_count() %>% filter(n>2) %>% distinct(Comment) %>%
-    transmute(productName = Comment) %>%
+    transmute(productName = Comment, user_id = user_id) %>%
+    collect()
+} else
+  prods <- tbl(con,"notes_records") %>% filter(Activity == "Food") %>%
+    filter(Start > "2021-06-01") %>% filter(user_id == ID) %>% distinct(Comment) %>%
+    transmute(productName = Comment, user_id=ID) %>%
     collect()
 
   DBI::dbDisconnect(con)
@@ -82,6 +90,11 @@ mod_goddessServer <- function(id,  glucose_df, title = "Name") {
                                                 foodname = input$food_name2)) %>%
                           filter(!is.na(value)))
 
+
+    output$food_selections <- renderUI({
+
+      selectizeInput(ns("food_name2"), label = "Food2", choices = taster_prod_table$productName, selected=taster_food2)
+    })
     output$downloadFood_df <-
       downloadHandler(
         filename = function() {
