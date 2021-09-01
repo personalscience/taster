@@ -37,7 +37,7 @@ con <- DBI::dbConnect(
 mod_goddessUI <- function(id) {
   ns <- NS(id)
 
-  taster_prod_table <- taster_products()
+  taster_prod_table <- taster_products(user_id=NULL)
 
   #taster_prod_table <- taster_df() %>% distinct(pid, productName) %>% filter(!is.na(productName) & pid!="xxxxx")
   taster_food1 <- taster_prod_table[str_detect(taster_prod_table$productName,"KIND"),1]$productName
@@ -51,6 +51,7 @@ mod_goddessUI <- function(id) {
         choices = with(user_df_from_libreview, paste(first_name, last_name)),
         selected = "Ayumi Blystone"
       ),
+      uiOutput(ns("food_selection1")),
      # textInput(ns("food_name1"), label = "Food 1", value = "Real Food Bar"),
      # textInput(ns("food_name2"), label = "Food 2", value = "Kind, nuts & Spices"),
       selectizeInput(ns("food_name1"), label = "Food1", choices = taster_prod_table$productName, selected=taster_food1),
@@ -58,9 +59,11 @@ mod_goddessUI <- function(id) {
       actionButton(ns("submit_foods"), label = "Submit Foods"),
       checkboxInput(ns("normalize"), label = "Normalize"),
       downloadButton(ns("downloadFood_df"), label = "Download Results")
+
     ),
-    mainPanel(plotOutput(ns("libreview")),
-              dataTableOutput(ns("auc_table")))
+    mainPanel(#plotOutput(ns("libreview")),
+              #dataTableOutput(ns("auc_table")),
+              plotOutput(ns("food1")))
   )
 }
 
@@ -91,9 +94,15 @@ mod_goddessServer <- function(id,  glucose_df, title = "Name") {
                           filter(!is.na(value)))
 
 
-    output$food_selections <- renderUI({
-
-      selectizeInput(ns("food_name2"), label = "Food2", choices = taster_prod_table$productName, selected=taster_food2)
+    output$food_selection1 <- renderUI({
+      taster_prod_table <- taster_products(user_id = ID())
+      #message(paste("finding foods for User", isolate(input$user_id)))
+      message(sprintf("User %s first food is %s",isolate(input$user_id),taster_prod_table[1,1]$productName ))
+      selectizeInput("food_name1",
+                     label = "Your foods",
+                     choices = taster_prod_table$productName,
+                     selected = taster_prod_table[1,1]$productName
+                    )
     })
     output$downloadFood_df <-
       downloadHandler(
@@ -115,7 +124,25 @@ mod_goddessServer <- function(id,  glucose_df, title = "Name") {
       } else
       g <-
         isolate(food_df()) %>% ggplot(aes(t, value, color = meal)) + geom_line(size = 2)
-      g
+      g})
+
+
+      output$food1 <- renderPlot({
+        input$submit_foods
+        one_food_df <- food_times_df(user_id = ID(),
+                                     foodname = isolate(input$food_name1))
+        if (input$normalize) {
+          g <- one_food_df %>%
+            group_by(meal) %>%
+            arrange(t) %>%
+            mutate(value = value-first(value)) %>%
+            ungroup() %>%
+            arrange(meal, t) %>%
+            ggplot(aes(t, value, color = meal)) + geom_line(size = 2)
+        } else
+          g <-
+            one_food_df %>% ggplot(aes(t, value, color = meal)) + geom_line(size = 2)
+        g
 
     })
     output$auc_table <- renderDataTable({
