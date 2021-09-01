@@ -39,9 +39,7 @@ mod_goddessUI <- function(id) {
 
   taster_prod_table <- taster_products(user_id=NULL)
 
-  #taster_prod_table <- taster_df() %>% distinct(pid, productName) %>% filter(!is.na(productName) & pid!="xxxxx")
-  taster_food1 <- taster_prod_table[str_detect(taster_prod_table$productName,"KIND"),1]$productName
-  taster_food2 <- taster_prod_table[str_detect(taster_prod_table$productName,"Real Food"),1]$productName
+
 
   sidebarLayout(
     sidebarPanel(
@@ -49,24 +47,20 @@ mod_goddessUI <- function(id) {
         ns("user_id"),
         label = "User Name",
         choices = with(user_df_from_libreview, paste(first_name, last_name)),
-        selected = "Ayumi Blystone"
+        selected = "Richard Sprague"
       ),
       uiOutput(ns("food_selection1")),
       uiOutput(ns("food_selection2")),
-     # textInput(ns("food_name1"), label = "Food 1", value = "Real Food Bar"),
-     # textInput(ns("food_name2"), label = "Food 2", value = "Kind, nuts & Spices"),
-      #selectizeInput(ns("food_name1"), label = "Food1", choices = taster_prod_table$productName, selected=taster_food1),
-      #selectizeInput(ns("food_name2"), label = "Food2", choices = taster_prod_table$productName, selected=taster_food2),
-      actionButton(ns("submit_foods"), label = "Submit Foods"),
+       actionButton(ns("submit_foods"), label = "Submit Foods"),
       checkboxInput(ns("normalize"), label = "Normalize"),
-     numericInput(ns("prefixLength"), label = "Prefix Minutes", value = 0 ),
+     numericInput(ns("prefixLength"), label = "Prefix Minutes", value = 0, width = "30%" ),
       downloadButton(ns("downloadFood_df"), label = "Download Results")
 
     ),
-    mainPanel(#plotOutput(ns("libreview")),
-              #dataTableOutput(ns("auc_table")),
-              plotOutput(ns("food1")),
-              plotOutput(ns("food2")))
+    mainPanel(plotOutput(ns("food1")),
+              plotOutput(ns("food2")),
+              dataTableOutput(ns("auc_table")),
+              )
   )
 }
 
@@ -104,11 +98,11 @@ mod_goddessServer <- function(id,  glucose_df, title = "Name") {
       taster_prod_table <- taster_products(user_id = ID())
       prod_names <- sort(taster_prod_table$productName)
       #message(paste("finding foods for User", isolate(input$user_id)))
-      message(sprintf("User %s first food is %s",isolate(input$user_id),prod_names[1] ))
+      message(sprintf("User %s first food is %s",isolate(input$user_id),last(prod_names) ))
       selectizeInput(NS(id,"food_name1"),
                      label = "Your food 1",
                      choices = prod_names,
-                     selected = prod_names[1]
+                     selected = last(prod_names)
                     )
     })
 
@@ -116,11 +110,11 @@ mod_goddessServer <- function(id,  glucose_df, title = "Name") {
       taster_prod_table <- taster_products(user_id = ID())
       prod_names <- sort(taster_prod_table$productName)
       #message(paste("finding foods for User", isolate(input$user_id)))
-      message(sprintf("User %s second food is %s",isolate(input$user_id),prod_names[1] ))
+      message(sprintf("User %s second food is %s",isolate(input$user_id),last(prod_names) ))
       selectizeInput(NS(id,"food_name2"),
                      label = "Your food 2",
                      choices = prod_names,
-                     selected = prod_names[1]
+                     selected = last(prod_names)
       )
     })
 
