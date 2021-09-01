@@ -63,7 +63,8 @@ mod_goddessUI <- function(id) {
     ),
     mainPanel(#plotOutput(ns("libreview")),
               #dataTableOutput(ns("auc_table")),
-              plotOutput(ns("food1")))
+              plotOutput(ns("food1")),
+              plotOutput(ns("food2")))
   )
 }
 
@@ -145,6 +146,25 @@ mod_goddessServer <- function(id,  glucose_df, title = "Name") {
         g
 
     })
+
+      output$food2 <- renderPlot({
+        input$submit_foods
+        one_food_df <- food_times_df(user_id = ID(),
+                                     foodname = isolate(input$food_name2))
+        if (input$normalize) {
+          g <- one_food_df %>%
+            group_by(meal) %>%
+            arrange(t) %>%
+            mutate(value = value-first(value)) %>%
+            ungroup() %>%
+            arrange(meal, t) %>%
+            ggplot(aes(t, value, color = meal)) + geom_line(size = 2)
+        } else
+          g <-
+          one_food_df %>% ggplot(aes(t, value, color = meal)) + geom_line(size = 2)
+        g
+
+      })
     output$auc_table <- renderDataTable({
       input$submit_foods
       isolate(food_df()) %>% distinct() %>%
