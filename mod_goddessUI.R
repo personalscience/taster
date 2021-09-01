@@ -1,5 +1,26 @@
 # Shiny Module and UI to compare foods for a single user
 
+taster_products <- function() {
+conn_args <- config::get("dataconnection")
+con <- DBI::dbConnect(
+  drv = conn_args$driver,
+  user = conn_args$user,
+  host = conn_args$host,
+  port = conn_args$port,
+  dbname = conn_args$dbname,
+  password = conn_args$password)
+
+  prods <- tbl(con,"notes_records") %>% filter(Activity == "Food") %>%
+    filter(Start > "2021-06-01") %>%
+    group_by(Comment) %>% add_count() %>% filter(n>2) %>% distinct(Comment) %>%
+    transmute(productName = Comment) %>%
+    collect()
+
+  DBI::dbDisconnect(con)
+  return(prods)
+}
+
+
 #' @title UI for comparing two foods for a single user
 #' @description
 #' Plot glucose responses for two foods for a single user.
@@ -7,6 +28,12 @@
 #' @export
 mod_goddessUI <- function(id) {
   ns <- NS(id)
+
+  taster_prod_table <- taster_products()
+
+  #taster_prod_table <- taster_df() %>% distinct(pid, productName) %>% filter(!is.na(productName) & pid!="xxxxx")
+  taster_food1 <- taster_prod_table[str_detect(taster_prod_table$productName,"KIND"),1]$productName
+  taster_food2 <- taster_prod_table[str_detect(taster_prod_table$productName,"Real Food"),1]$productName
 
   sidebarLayout(
     sidebarPanel(
@@ -16,8 +43,10 @@ mod_goddessUI <- function(id) {
         choices = with(user_df_from_libreview, paste(first_name, last_name)),
         selected = "Ayumi Blystone"
       ),
-      textInput(ns("food_name1"), label = "Food 1", value = "Real Food Bar"),
-      textInput(ns("food_name2"), label = "Food 2", value = "Kind, nuts & Spices"),
+     # textInput(ns("food_name1"), label = "Food 1", value = "Real Food Bar"),
+     # textInput(ns("food_name2"), label = "Food 2", value = "Kind, nuts & Spices"),
+      selectizeInput(ns("food_name1"), label = "Food1", choices = taster_prod_table$productName, selected=taster_food1),
+      selectizeInput(ns("food_name2"), label = "Food2", choices = taster_prod_table$productName, selected=taster_food2),
       actionButton(ns("submit_foods"), label = "Submit Foods"),
       checkboxInput(ns("normalize"), label = "Normalize"),
       downloadButton(ns("downloadFood_df"), label = "Download Results")
