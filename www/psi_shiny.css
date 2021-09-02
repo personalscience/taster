@@ -1,0 +1,12 @@
+# CSS for Shiny App
+
+.content-wrapper, .right-side {
+
+}
+
+body {
+  font: 400 16px/1.5 Palatino, Times Roman, serif;
+  color: #111;
+  background-color: #fcfbf5;
+
+}
