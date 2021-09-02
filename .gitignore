@@ -6,5 +6,7 @@
 .Ruserdata
 .Rbuildignore
 
+*.log
+
 /rsconnect
 config.yml
