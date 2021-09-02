@@ -18,6 +18,7 @@ rsconnect::deployApp(#appDir = file.path(getwd(),"R"),
                      appName = "Tastermonial",
                      appFiles = c("ui.R","server.R","global.R",
                                   "mod_goddessUI.R",
+                                  "www/psi_shiny.css",
                                   "config.yml"),
                      forceUpdate = TRUE
                      )
