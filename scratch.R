@@ -41,3 +41,6 @@ transmute(Start, productName = Comment) %>%
   collect() %>% filter(str_detect(productName,"Bev"))
 
 taster_products_for_user(1002) %>% sort()
+
+
+
