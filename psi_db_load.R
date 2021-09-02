@@ -285,7 +285,8 @@ psi_user_list_from_scratch()
 
 source("psi_db_taster_notes.R")
 
-#psi_fill_taster_notes_from_scratch()
+# uncomment this line to add the notes from Tastermonial retool
+#psi_fill_taster_notes_from_scratch(taster_notes_df)
 
 # uncomment this section to add an arbitrary new CSV file
 # be sure to set both user_ids
