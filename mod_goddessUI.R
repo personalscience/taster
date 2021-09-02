@@ -84,14 +84,24 @@ mod_goddessServer <- function(id,  glucose_df, title = "Name") {
     observe(
       cat(stderr(), sprintf("username=%s \n",ID()))
     )
-    food_df <- reactive(bind_rows(food_times_df(user_id = ID(),
-                                                foodname = input$food_name1,
-                                                prefixLength=input$prefixLength),
+    food_df <- reactive(bind_rows(
+      validate(
+        need(input$food_name1, "Press Submit Food"),
+        need(input$food_name2, "Press Submit Food for 2nd Food")
+      ),
+      food_times_df(
+        user_id = ID(),
+        foodname = input$food_name1,
+        prefixLength = input$prefixLength
+      ),
 
-                                  food_times_df(user_id = ID(),
-                                                foodname = input$food_name2,
-                                                prefixLength=input$prefixLength)) %>%
-                          filter(!is.na(value)))
+      food_times_df(
+        user_id = ID(),
+        foodname = input$food_name2,
+        prefixLength = input$prefixLength
+      )
+    ) %>%
+      filter(!is.na(value)))
 
 
     output$food_selection1 <- renderUI({
@@ -143,7 +153,12 @@ mod_goddessServer <- function(id,  glucose_df, title = "Name") {
 
 
       output$food1 <- renderPlot({
+
         input$submit_foods
+        validate(
+          need(input$food_name1, "Press Submit Food"),
+          need(input$food_name2, "Press Submit Food for 2nd Food")
+        )
         one_food_df <- food_times_df(user_id = ID(),
                                      foodname = isolate(input$food_name1),
                                      prefixLength = input$prefixLength)
@@ -163,9 +178,14 @@ mod_goddessServer <- function(id,  glucose_df, title = "Name") {
     })
 
       output$food2 <- renderPlot({
+
         input$submit_foods
+        validate(
+          need(input$food_name1, "Press Submit Food"),
+          need(input$food_name2, "Press Submit Food for 2nd Food")
+        )
         one_food_df <- food_times_df(user_id = ID(),
-                                     foodname = isolate(input$food_name2),,
+                                     foodname = isolate(input$food_name2),
                                      prefixLength = input$prefixLength)
         if (input$normalize) {
           g <- one_food_df %>%
