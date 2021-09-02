@@ -1,0 +1,144 @@
+---
+title: "Tastermonial Food Comparisons"
+author: "Richard Sprague"
+date: "9/2/2021"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(psiCGM)
+library(tidyverse)
+library(lubridate)
+library(knitr)
+library(kableExtra)
+```
+
+
+## Setup: load theme information
+
+This section gives a central place to make templates that can be reused across reports
+```{r setup_theme}
+library(showtext)
+font_add_google("Montserrat")
+showtext_auto()
+
+psi_theme <-   theme(text = element_text(# family = "Montserrat",
+                                         face = "bold", size = 15),
+                     axis.text.x = element_text(size = 15, angle = 90, hjust = 1),
+                     legend.title = element_blank(),
+                     legend.position = "bottom")
+
+```
+
+
+# Setup: Prepare database
+
+Pull the data from the Tastermonial AWS database. Your credentials are kept in the local file `config.yml`, which is not displayed (or kept in Github)
+
+```{r prepare_database}
+conn_args <- config::get("dataconnection")
+con <- DBI::dbConnect(
+  drv = conn_args$driver,
+  user = conn_args$user,
+  host = conn_args$host,
+  port = conn_args$port,
+  dbname = conn_args$dbname,
+  password = conn_args$password
+)
+
+
+```
+
+
+Loads food times and other data from the Tastermonial retool database.
+
+```{r readTaster, warning = FALSE}
+source("psi_db_taster_notes.R")
+# from file.path(config::get("tastermonial")$datadir,"table-data.csv")
+# taster_raw <- taster_raw()
+taster_raw %>% names()
+```
+
+
+
+
+
+# Glucose Reponse for Munk products
+
+```{r showGlucose_Munk}
+
+
+# return all users who ate foodname
+glucose_for_food_df(user_id = user_df_from_db() %>% pull(user_id), foodname="munk")
+
+username_for_id(1014)  # string value for user_id = 1014
+
+# all named items in Tastermonial database that have an associated barcode and include the letters "Munk"
+
+munk <- taster_raw %>% filter(!is.na(barcode)) %>% filter(str_detect(name,"Munk")) %>% select(name) %>% pull(name) 
+
+# URL for the image associated with that name
+
+munk_img <- taster_raw %>% filter(!is.na(barcode)) %>% filter(str_detect(name,"Munk")) %>% select(name, image ) %>% pull(image) %>% first() %>% magick::image_read()
+
+#print(munk_img)
+
+# all times this user ate something by that name, including the 20 minutes beforehand
+
+munk_times <- food_times_df(user_id = lookup_id_from_name("Bude Sethaputra"), foodname = munk[1], prefixLength = 20 )
+munk_times %>% head() %>% knitr::kable() %>% kableExtra::kable_styling(latex_options = "striped", position = "float_left")
+
+# plot 
+munk_times %>% transmute(t,value,meal = str_trunc(meal,25)) %>%
+  ggplot(aes(x=t,y=value, color = meal)) + geom_line() +
+  labs(title = "Eating Munk Pack Bars", subtitle = "August 2021") + 
+  psi_theme
+
+
+```
+
+## Moon Cheese Report
+
+Note that the graph includes a smoothing curve.
+
+```{r showGlucose_Moon}
+
+mooncheese <- taster_raw %>% filter(!is.na(barcode)) %>% filter(str_detect(name,"Moon")) %>% select(name,image,type)
+moon_img <- magick::image_read(mooncheese$image)
+
+#magick::image_draw(magick::image_resize(moon_img, "200"))
+
+# return all users who ate foodname
+glucose_for_food_df(user_id = user_df_from_db() %>% pull(user_id), foodname="\\[Moon Cheese\\] White") %>% select(Start,Comment,user_id) %>% knitr::kable()
+
+username_for_id(1002)  # string value for user_id = 1002
+
+# all named items in Tastermonial database that have an associated barcode and include the reg expr "\\[Moon Cheese\\] White"
+
+mooncheese <- taster_raw %>% filter(!is.na(barcode)) %>% filter(str_detect(name,"\\[Moon Cheese\\] White")) %>% select(name) %>% pull(name)
+
+
+# all times this user ate something by that name, including the 20 minutes beforehand
+
+moon_times <- food_times_df(user_id = lookup_id_from_name("Ayumi Blystone"), foodname ="\\[Moon Cheese\\] White" , prefixLength = 20 )
+moon_times %>% head() %>%  knitr::kable() %>% kableExtra::kable_styling(latex_options = "striped", position = "float_left")
+
+# plot 
+moon_times %>% transmute(t,value,meal = str_trunc(meal,15)) %>%
+  ggplot(aes(x=t,y=value, color = meal)) + geom_line() + geom_smooth() + 
+  psi_theme
+
+
+```
+
+
+
+```{r endall}
+
+DBI::dbDisconnect(con)
+
+```
+

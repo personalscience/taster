@@ -5,9 +5,9 @@
 source("psi_taster_data.R")  # load functions to process Tastermonial files
 
 
-taster_raw(filepath = file.path(config::get("tastermonial")$datadir, "table-data.csv"))
+taster_raw <- taster_raw(filepath = file.path(config::get("tastermonial")$datadir, "table-data.csv"))
 
-taster_notes_df <- taster_raw() %>% transmute(Start = with_tz(lubridate::parse_date_time(startEatingDate, orders = "dmY HM p z"),
+taster_notes_df <- taster_raw %>% transmute(Start = with_tz(lubridate::parse_date_time(startEatingDate, orders = "dmY HM p z"),
                                                               tzone = Sys.timezone()),
                                               End = as_datetime(NA),
                                               Activity = "Food",
