@@ -29,6 +29,10 @@ taster_raw <- function( filepath = file.path(config::get("tastermonial")$datadir
 ))
 }
 
+#' @description Tastermonial users are kept in a JSON object with $email $name and $uid fields.
+#' Unfortunately, the names are often not consistent with what we find in Libreview (e.g. Bude is Buda).
+#' so this function attempts to match people based on the first name in the libreview list that matches initials.
+#'
 id_from_initial <- function(name_initials) {
   name_lookup_table <- user_df_from_libreview %>% transmute(name = paste(first_name,last_name), user_id )
   names <- name_lookup_table %>% dplyr::filter(str_detect(name,name_initials)) %>% pull(user_id)
@@ -36,6 +40,17 @@ id_from_initial <- function(name_initials) {
   return(if(is.na(first_hit)) 0 else first_hit)
 
 }
+
+
+taster_usernames <- function(taster_raw_data) {
+  map(taster_raw_data, function(x) {unlist(jsonlite::fromJSON(x)[["name"]])}) %>% unlist() %>% str_trim() %>% unique()
+}
+#taster_usernames(taster_raw()$user)
+
+taster_emails <- function(taster_raw_data) {
+  map(taster_raw_data, function(x) {unlist(jsonlite::fromJSON(x)[["email"]])}) %>% unlist() %>% str_trim() %>% unique()
+}
+#taster_emails(taster_raw()$user)
 
 name_from_taster <- function(json_object) {
   parsed <- jsonlite::parse_json(json_object)[["name"]]

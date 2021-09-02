@@ -2,7 +2,7 @@
 # WARNING: This script is intended to be run interactively only.
 # uncomment the last line to write to the database.
 
-source("psi_taster_data.R")  # load functions to process Tastermonial files
+source("psi_taster_read_data.R")  # load functions to process Tastermonial files
 
 
 taster_raw <- taster_raw(filepath = file.path(config::get("tastermonial")$datadir, "table-data.csv"))

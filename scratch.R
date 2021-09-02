@@ -12,35 +12,6 @@ con <- DBI::dbConnect(
   password = conn_args$password
 )
 
-# DBI::dbWriteTable(con, "notes_records", taster_notes_df, append = TRUE)
-# tbl(con, "notes_records") %>% distinct(user_id) %>% collect() %>% pull(user_id) #mutate(name=username_for_id(user_id))
-#
-# psi_fill_taster_notes_from_scratch()
-
-glucose_df_from_db()
-tbl(con,"glucose_records") %>% distinct(user_id) %>% show_query()
-tbl(con,"notes_records") %>% filter(user_id == 1002) %>% filter(Activity == "Food")
-
-taster_df(file.path(config::get("tastermonial")$datadir, "table-data.csv"))
-
-taster_prod_table <- taster_df() %>% distinct(productName) %>% filter(!is.na(productName) & productName!="xxxxx")
-taster_prod_table$productName %>% str_detect("KIND")
-
-food_times_df(foodname="KIND")
-glucose_for_food_df(foodname="KIND")
-
-
-taster_raw() %>% transmute(Start = with_tz(lubridate::parse_date_time(startEatingDate, orders = "dmY HM p z"),
-                                           tzone = Sys.timezone()),
-                           End = as_datetime(NA),
-                           )
-
-tbl(con,"notes_records") %>%  filter(user_id == 1002) %>% filter(Activity == "Food")  %>%
-  #filter(Start > "2021-06-01") %>%
-transmute(Start, productName = Comment) %>%
-  collect() %>% filter(str_detect(productName,"Bev"))
-
-taster_products_for_user(1002) %>% sort()
 
 
 
