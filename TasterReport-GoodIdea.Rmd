@@ -50,20 +50,34 @@ source("psi_db_taster_notes.R")
 
 # Glucose Reponse 
 
-```{r showGlucose_cow}
+```{r calcGlucose_cow}
 
 foodname <- "Cream of Wheat"
 # return all users who ate foodname
 food_results <- food_times_df(user_id = lookup_id_from_name("Richard Sprague"),
                               prefixLength = 30,
                               timeLength = 150,
-                              foodname=foodname)
+                              foodname=foodname) 
 
+
+food_results %>% group_by(meal) %>% arrange(t) %>% mutate(value = value - first(value)) %>% ungroup() %>% arrange(meal)
 
 new_foodnames <- c("Cream of Wheat (Plain)", "Cream of Wheat (Plain)", "Cream of Wheat (Goodidea)")
-food_results %>% filter(!is.na(meal)) #filter(str_detect(meal, "RSprague-8/31-Cream of Wheat"))
 
-normalize_value(food_results) %>% transmute(t,value,meal = paste(foodname,date_ch)) %>%
+
+food_results[food_results$meal=="RSprague-8/31-Cream of Wheat","meal"] <- "Cream of Wheat (Plain) #1"
+
+food_results[food_results$meal=="RSprague-9/2-Cream of Wheat","meal"] <- "Cream of Wheat (w/GoodIdea)"
+
+food_results[food_results$meal=="RSprague-9/1-Cream of Wheat","meal"] <- "Cream of Wheat (Plain) #2"
+food_results
+
+```
+
+```{r plotGlucose}
+
+
+food_results %>% group_by(meal) %>% arrange(t) %>% mutate(value = value - first(value)) %>% ungroup() %>% arrange(meal) %>% #transmute(t,value,meal = paste(foodname,date_ch)) %>%
   ggplot(aes(x=t,y=value, color = meal)) +
       geom_rect(aes(xmin=0,
                 xmax=120, #max(Date),
@@ -76,9 +90,7 @@ geom_line(size = 2) +
   ylim(-50,100)+
   psi_theme
 
-
 ```
-
 
 
 ```{r endall}

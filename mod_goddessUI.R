@@ -173,10 +173,10 @@ mod_goddessServer <- function(id,  glucose_df, title = "Name") {
             mutate(value = value-first(value)) %>%
             ungroup() %>%
             arrange(meal, t) %>%
-            ggplot(aes(t, value, color = meal)) + geom_line(size = 2)
+            ggplot(aes(t, value, color = meal)) + geom_line(size = 2) + ylim(-50,100)
         } else
           g <-
-            one_food_df %>% ggplot(aes(t, value, color = meal)) + geom_line(size = 2)
+            one_food_df %>% ggplot(aes(t, value, color = meal)) + geom_line(size = 2)+ ylim(50,150)
         g
 
     })
