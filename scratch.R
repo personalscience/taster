@@ -14,4 +14,5 @@ con <- DBI::dbConnect(
 
 
 
-
+food_results %>% filter(str_detect(meal,"RSprague-8/31")) %>% mutate(newmeal = "COW")
+food_results #%>% replace(meal, "COW")

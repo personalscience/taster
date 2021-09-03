@@ -54,6 +54,7 @@ mod_goddessUI <- function(id) {
        actionButton(ns("submit_foods"), label = "Submit Foods"),
       checkboxInput(ns("normalize"), label = "Normalize"),
      numericInput(ns("prefixLength"), label = "Prefix Minutes", value = 0, width = "30%" ),
+     numericInput(ns("timewindow"), label = "Time Window (Minutes)", value = 150, width = "30%"),
       downloadButton(ns("downloadFood_df"), label = "Download Results")
 
     ),
@@ -92,12 +93,14 @@ mod_goddessServer <- function(id,  glucose_df, title = "Name") {
       food_times_df(
         user_id = ID(),
         foodname = input$food_name1,
+        timeLength = input$timewindow,
         prefixLength = input$prefixLength
       ),
 
       food_times_df(
         user_id = ID(),
         foodname = input$food_name2,
+        timeLength = input$timewindow,
         prefixLength = input$prefixLength
       )
     ) %>%
@@ -161,6 +164,7 @@ mod_goddessServer <- function(id,  glucose_df, title = "Name") {
         )
         one_food_df <- food_times_df(user_id = ID(),
                                      foodname = isolate(input$food_name1),
+                                     timeLength = input$timewindow,
                                      prefixLength = input$prefixLength)
         if (input$normalize) {
           g <- one_food_df %>%
@@ -186,6 +190,7 @@ mod_goddessServer <- function(id,  glucose_df, title = "Name") {
         )
         one_food_df <- food_times_df(user_id = ID(),
                                      foodname = isolate(input$food_name2),
+                                     timeLength = input$timewindow,
                                      prefixLength = input$prefixLength)
         if (input$normalize) {
           g <- one_food_df %>%

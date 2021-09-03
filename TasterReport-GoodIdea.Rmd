@@ -1,0 +1,88 @@
+---
+title: "Tastermonial Food Comparisons: Goodidea Drink"
+author: "Richard Sprague"
+date: "`r Sys.Date()`"
+output:
+  html_document: default
+#  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(psiCGM)
+library(tidyverse)
+library(lubridate)
+library(knitr)
+library(kableExtra)
+```
+
+
+```{r setup_more, include = FALSE, echo = FALSE}
+library(showtext)
+font_add_google("Montserrat")
+showtext_auto()
+
+psi_theme <-   theme(text = element_text(# family = "Montserrat",
+                                         face = "bold", size = 15),
+                     axis.text.x = element_text(size = 15, angle = 90, hjust = 1),
+                     legend.title = element_blank())
+
+conn_args <- config::get("dataconnection")
+con <- DBI::dbConnect(
+  drv = conn_args$driver,
+  user = conn_args$user,
+  host = conn_args$host,
+  port = conn_args$port,
+  dbname = conn_args$dbname,
+  password = conn_args$password
+)
+
+
+```
+
+
+```{r readTaster, include = FALSE, echo = FALSE, warning = FALSE}
+source("psi_db_taster_notes.R")
+# from file.path(config::get("tastermonial")$datadir,"table-data.csv")
+# taster_raw <- taster_raw()
+#taster_raw %>% names()
+```
+
+# Glucose Reponse 
+
+```{r showGlucose_cow}
+
+foodname <- "Cream of Wheat"
+# return all users who ate foodname
+food_results <- food_times_df(user_id = lookup_id_from_name("Richard Sprague"),
+                              prefixLength = 30,
+                              timeLength = 150,
+                              foodname=foodname)
+
+
+new_foodnames <- c("Cream of Wheat (Plain)", "Cream of Wheat (Plain)", "Cream of Wheat (Goodidea)")
+food_results %>% filter(!is.na(meal)) #filter(str_detect(meal, "RSprague-8/31-Cream of Wheat"))
+
+normalize_value(food_results) %>% transmute(t,value,meal = paste(foodname,date_ch)) %>%
+  ggplot(aes(x=t,y=value, color = meal)) +
+      geom_rect(aes(xmin=0,
+                xmax=120, #max(Date),
+                ymin=-Inf,
+                ymax=Inf),
+            color = "lightgrey", 
+            alpha=0.005) +
+geom_line(size = 2) +
+  labs(title = sprintf("Eating %s",foodname), subtitle = "August 2021", x = "Minutes") + 
+  ylim(-50,100)+
+  psi_theme
+
+
+```
+
+
+
+```{r endall}
+
+DBI::dbDisconnect(con)
+
+```
