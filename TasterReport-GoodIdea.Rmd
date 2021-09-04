@@ -6,6 +6,7 @@ output:
   github_document: default
   html_document: default
   pdf_document: default
+always_allow_html: true
 ---
 
 ```{r setup, include=FALSE}
