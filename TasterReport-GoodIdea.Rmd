@@ -1,21 +1,21 @@
 ---
-title: "Tastermonial Food Comparisons: Goodidea Drink"
+title: 'Tastermonial Food Comparisons: Goodidea Drink'
 author: "Richard Sprague"
 date: "`r Sys.Date()`"
 output:
+  github_document: default
   html_document: default
-#  pdf_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
 library(psiCGM)
 library(tidyverse)
 library(lubridate)
 library(knitr)
 library(kableExtra)
 ```
-
 
 ```{r setup_more, include = FALSE, echo = FALSE}
 library(showtext)
@@ -40,7 +40,6 @@ con <- DBI::dbConnect(
 
 ```
 
-
 ```{r readTaster, include = FALSE, echo = FALSE, warning = FALSE}
 source("psi_db_taster_notes.R")
 # from file.path(config::get("tastermonial")$datadir,"table-data.csv")
@@ -48,14 +47,28 @@ source("psi_db_taster_notes.R")
 #taster_raw %>% names()
 ```
 
-# Glucose Reponse 
+# Good Idea®
 
-```{r calcGlucose_cow}
+GoodIdea®, "the Swedish sugar buster", is a sparkling soft drink formulated with a proprietary blend of ingredients that claims to lower overall glucose levels when consumed before a meal. How well does it work for me?
+
+![](images/AB5B9390-C289-4042-8775-9F7479175597_1_105_c.jpeg){width="600"}
+
+## My Personal Science Experiment
+
+Wearing a continuous glucose monitor (CGM) on three different mornings on an empty stomach, I ate a bowl of Cream of Wheat mixed with 1/4 cup heavy cream and 1 TBS butter. This meal is about 500 calories, including 50g of net carbs and 35g of fat. I wanted a food that is generally considered "healthy", with no sugar content, but high carb. I served it with a generous amount of fat to avoid significant glucose spikes.
+
+I finished within five minutes and then I remained as sedentary as possible for the next two hours.
+
+![](images/0E26FB8B-75C3-44AB-A67E-43C98772F83A_1_105_c.jpeg){width="600"}
+
+On one of those mornings I drank a can of Good Idea® fifteen minutes before the meal. 
+
+```{r calcGlucose_cow, echo = FALSE, include = FALSE}
 
 foodname <- "Cream of Wheat"
 # return all users who ate foodname
 food_results <- food_times_df(user_id = lookup_id_from_name("Richard Sprague"),
-                              prefixLength = 30,
+                              prefixLength = 0,
                               timeLength = 150,
                               foodname=foodname) 
 
@@ -74,7 +87,7 @@ food_results
 
 ```
 
-```{r plotGlucose}
+```{r plotGlucose, echo = FALSE}
 
 
 food_results %>% group_by(meal) %>% arrange(t) %>% mutate(value = value - first(value)) %>% ungroup() %>% arrange(meal) %>% #transmute(t,value,meal = paste(foodname,date_ch)) %>%
@@ -86,12 +99,35 @@ food_results %>% group_by(meal) %>% arrange(t) %>% mutate(value = value - first(
             color = "lightgrey", 
             alpha=0.005) +
 geom_line(size = 2) +
-  labs(title = sprintf("Eating %s",foodname), subtitle = "August 2021", x = "Minutes") + 
+  labs(title = sprintf("%s",foodname), subtitle = "August 2021", x = "Minutes") + 
   ylim(-50,100)+
   psi_theme
 
 ```
 
+This chart shows an obvious spike soon after plain Cream of Wheat meals, climbing at least 20 points within the first half hour. (Note: the values here are normalized so all meals start at 0).  By contrast, the meal that followed a glass of Good Idea® seemed more stable.
+
+In both of the plain meals, my glucose level was actually *lower* at the end than at the beginning, a "sugar crash" after eating such a high carbohydrate load. Good Idea®, on the other hand, gave no such crash.
+
+
+```{r auc, fig.cap = "Different meals arranged in order of \"auc\" (area under the curve)."}
+
+food_results %>% distinct() %>%
+        group_by(meal, foodname) %>%
+        summarize(
+                  auc = DescTools::AUC(t,value-first(value)),
+                  min = min(value),
+                  max = max(value),
+                  rise = last(value) - first(value),
+                  .groups = 'drop') %>%
+  select(-foodname) %>% 
+        #summarize(auc = sum((lag(value)-value)*(t-lag(t)), na.rm = TRUE)) %>%
+        arrange(auc) %>% kable() %>% kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+## Conclusions
+
+With such a small sample, we can't say definitively but the relatively small rise on the Good Idea® day points to *some* effect. 
 
 ```{r endall}
 
