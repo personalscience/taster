@@ -173,7 +173,13 @@ mod_goddessServer <- function(id,  glucose_df, title = "Name") {
         } else
           g <-
             one_food_df %>% ggplot(aes(t, value, color = meal)) + geom_line(size = 2)+ ylim(50,150)
-        g
+        g+
+          geom_rect(aes(xmin=0,
+                        xmax=isolate(input$timewindow), #max(Date),
+                        ymin=-Inf,
+                        ymax=Inf),
+                    color = "lightgrey",
+                    alpha=0.005)
 
     })
 
@@ -195,7 +201,14 @@ mod_goddessServer <- function(id,  glucose_df, title = "Name") {
         } else
           g <-
           one_food_df %>% ggplot(aes(t, value, color = meal)) + geom_line(size = 2)
-        g
+        g +
+          geom_rect(aes(xmin=0,
+                        xmax=isolate(input$timewindow), #max(Date),
+                        ymin=-Inf,
+                        ymax=Inf),
+                    color = "lightgrey",
+                    alpha=0.005)
+
 
       })
     output$auc_table <- renderDataTable({
