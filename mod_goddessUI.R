@@ -167,11 +167,7 @@ mod_goddessServer <- function(id,  glucose_df, title = "Name") {
                                      timeLength = input$timewindow,
                                      prefixLength = input$prefixLength)
         if (input$normalize) {
-          g <- one_food_df %>%
-            group_by(meal) %>%
-            arrange(t) %>%
-            mutate(value = value-first(value)) %>%
-            ungroup() %>%
+          g <- one_food_df %>% normalize_value() %>%
             arrange(meal, t) %>%
             ggplot(aes(t, value, color = meal)) + geom_line(size = 2) + ylim(-50,100)
         } else
@@ -193,11 +189,7 @@ mod_goddessServer <- function(id,  glucose_df, title = "Name") {
                                      timeLength = input$timewindow,
                                      prefixLength = input$prefixLength)
         if (input$normalize) {
-          g <- one_food_df %>%
-            group_by(meal) %>%
-            arrange(t) %>%
-            mutate(value = value-first(value)) %>%
-            ungroup() %>%
+          g <- one_food_df %>% normalize_value() %>%
             arrange(meal, t) %>%
             ggplot(aes(t, value, color = meal)) + geom_line(size = 2)
         } else
