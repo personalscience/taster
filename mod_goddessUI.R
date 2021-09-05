@@ -172,7 +172,7 @@ mod_goddessServer <- function(id,  glucose_df, title = "Name") {
             ggplot(aes(t, value, color = meal)) + geom_line(size = 2) + ylim(-50,100)
         } else
           g <-
-            one_food_df %>% ggplot(aes(t, value, color = meal)) + geom_line(size = 2)+ ylim(50,150)
+            one_food_df %>% ggplot(aes(t, value, color = meal)) + geom_line(size = 2)
         g+
           geom_rect(aes(xmin=0,
                         xmax=isolate(input$timewindow), #max(Date),
