@@ -51,7 +51,7 @@ mod_goddessUI <- function(id) {
       ),
       uiOutput(ns("food_selection1")),
       uiOutput(ns("food_selection2")),
-       actionButton(ns("submit_foods"), label = "Submit Foods"),
+       actionButton(ns("submit_foods"), label = "Calculate Stats"),
       checkboxInput(ns("normalize"), label = "Normalize"),
      numericInput(ns("prefixLength"), label = "Prefix Minutes", value = 0, width = "30%" ),
      numericInput(ns("timewindow"), label = "Time Window (Minutes)", value = 150, width = "30%"),
@@ -169,17 +169,18 @@ mod_goddessServer <- function(id,  glucose_df, title = "Name") {
         if (input$normalize) {
           g <- one_food_df %>% normalize_value() %>%
             arrange(meal, t) %>%
-            ggplot(aes(t, value, color = meal)) + geom_line(size = 2) + ylim(-50,100)
+            ggplot(aes(t, value, color = date_ch)) + geom_line(size = 2) + ylim(-50,100)
         } else
           g <-
-            one_food_df %>% ggplot(aes(t, value, color = meal)) + geom_line(size = 2)
-        g+
+            one_food_df %>% ggplot(aes(t, value, color = date_ch)) + geom_line(size = 2)
+        g+ psi_theme+
           geom_rect(aes(xmin=0,
-                        xmax=isolate(input$timewindow), #max(Date),
+                        xmax=120, #max(Date),
                         ymin=-Inf,
                         ymax=Inf),
                     color = "lightgrey",
-                    alpha=0.005)
+                    alpha=0.005) +
+          labs(title = "Glucose Response", subtitle = str_to_title(isolate(input$food_name1)))
 
     })
 
@@ -203,7 +204,7 @@ mod_goddessServer <- function(id,  glucose_df, title = "Name") {
           one_food_df %>% ggplot(aes(t, value, color = meal)) + geom_line(size = 2)
         g +
           geom_rect(aes(xmin=0,
-                        xmax=isolate(input$timewindow), #max(Date),
+                        xmax=120, #max(Date),
                         ymin=-Inf,
                         ymax=Inf),
                     color = "lightgrey",
