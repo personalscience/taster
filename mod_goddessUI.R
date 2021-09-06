@@ -46,8 +46,8 @@ mod_goddessUI <- function(id) {
       selectInput(
         ns("user_id"),
         label = "User Name",
-        choices = with(user_df_from_libreview, paste(first_name, last_name)),
-        selected = "Richard Sprague"
+        choices = with(user_df_from_libreview, paste(first_name, str_match(last_name,"[:alnum:]{2}"))),
+        selected = "Richard Sp"
       ),
       uiOutput(ns("food_selection1")),
       uiOutput(ns("food_selection2")),

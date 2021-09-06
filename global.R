@@ -18,5 +18,14 @@ psi_theme <-   theme(text = element_text(# family = "Montserrat",
   axis.text.x = element_text(size = 15, angle = 90, hjust = 1),
   legend.title = element_blank())
 
+username_for_id <- function (user_id)
+{
+  ID = user_id
+  if (ID == 0)
+    return("Unknown Name")
+  else user_df_from_libreview %>% filter(user_id == ID) %>%
+  select(first_name, last_name) %>%
+    stringr::str_flatten(collapse = " ") %>% str_match("[:alnum:]+ [:alnum:]") %>% as.character()
+}
 
 
