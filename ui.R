@@ -19,33 +19,65 @@
 #' Define UI for application that reads a CSV file
 #' @import shiny
 #' @import magrittr dplyr
-ui <- fluidPage(
+ui <- navbarPage("Tastermonial", collapsible = TRUE, inverse = TRUE,
+
+                 tabPanel("Glucose Analysis",
+                          fluidPage(
+                              h2("Your CGM Data"),
+                              mod_goddessUI("food2_compare_plot")
+                          )),
+                 tabPanel("More Foods",
+                          fluidPage(
+                              mod_foodUI("food_compare_plot")
+                          )),
+                 tabPanel("User View",
+                          fluidPage(
+                              sidebarLayout(
+                                  sidebarPanel(
+                                      mod_filterUI("psi_filter_plot")
+
+                                  ),
+
+                                  mainPanel(
 
 
-    includeCSS(file.path("www","psi_shiny.css")),
-    # Application title
-    titlePanel("Personal Science Experiments", windowTitle = "Personal Science, Inc."),
-    tags$a(href="https://personalscience.com", "More details"),
-    textOutput("currentDB"),
+                                      mod_libreviewUI("modChart")
 
-    # Application title
-    h2("Your CGM Data"),
-    mod_goddessUI("food2_compare_plot"),
-    mod_foodUI("food_compare_plot"),
-    # Show a plot of the glucose levels
-    sidebarLayout(
-        sidebarPanel(
-            mod_filterUI("psi_filter_plot")
-
-        ),
-
-        mainPanel(
+                                  ))
+                          )),
+                 tabPanel("About",
+                          fluidPage(
+                              #Application title
+                              titlePanel("Personal Science Experiments", windowTitle = "Personal Science, Inc."),
+                              tags$a(href="https://personalscience.com", "More details"),
+                              textOutput("currentDB"),
+                          ))
+                 )
 
 
-            mod_libreviewUI("modChart")
+#includeCSS(file.path("www","psi_shiny.css")),
+# Application title
+# titlePanel("Personal Science Experiments", windowTitle = "Personal Science, Inc."),
+# tags$a(href="https://personalscience.com", "More details"),
+# textOutput("currentDB"),
+#
+# # Application title
+# h2("Your CGM Data"),
+# mod_goddessUI("food2_compare_plot"),
+# mod_foodUI("food_compare_plot"),
+# # Show a plot of the glucose levels
+# sidebarLayout(
+#     sidebarPanel(
+#         mod_filterUI("psi_filter_plot")
+#
+#     ),
+#
+#     mainPanel(
+#
+#
+#         mod_libreviewUI("modChart")
+#
+#     ))
 
-        ))
 
-
-)
 

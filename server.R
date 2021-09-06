@@ -17,14 +17,14 @@
 server <- function(input, output) {
 
     # datafilepath <- psiCGM:::csvFilePathServer("datafile")
-    output$currentDB <- renderText(sprintf("DB=%s. psiCGM version = %s",
-                                           attr(config::get(),"config"),
-                                           packageVersion("psiCGM")))
-
-
-   mod_goddessServer("food2_compare_plot", active_glucose_record, title = "Tastermonial" )
-
-   active_glucose_record <- mod_filterServer("psi_filter_plot")
+     output$currentDB <- renderText(sprintf("DB=%s. psiCGM version = %s",
+                                            attr(config::get(),"config"),
+                                          packageVersion("psiCGM")))
+   #
+   #
+    mod_goddessServer("food2_compare_plot", active_glucose_record, title = "Tastermonial" )
+   #
+    active_glucose_record <- mod_filterServer("psi_filter_plot")
    username<-reactive(username_for_id(active_glucose_record()[["user_id"]][1]))
 
    observe(
