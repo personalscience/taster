@@ -55,12 +55,16 @@ mod_goddessUI <- function(id) {
       checkboxInput(ns("normalize"), label = "Normalize"),
      numericInput(ns("prefixLength"), label = "Prefix Minutes", value = 0, width = "30%" ),
      numericInput(ns("timewindow"), label = "Time Window (Minutes)", value = 150, width = "30%"),
-      downloadButton(ns("downloadFood_df"), label = "Download Results")
+      downloadButton(ns("downloadFood_df"), label = "Download Results"),
+     actionButton(ns("show_raw"), label = "Show Raw Data"),
 
     ),
     mainPanel(plotOutput(ns("food1")),
               plotOutput(ns("food2")),
+              h3("Stats Table"),
               dataTableOutput(ns("auc_table")),
+              h3("Raw Data"),
+              dataTableOutput(ns("raw_data_table"))
               )
   )
 }
@@ -214,8 +218,10 @@ mod_goddessServer <- function(id,  glucose_df, title = "Name") {
       })
     output$auc_table <- renderDataTable({
       input$submit_foods
-      isolate(food_df()) %>% distinct() %>%
-        group_by(meal, foodname) %>%
+      isolate(food_df()) %>%
+        filter(t >= -5) %>% # only look at the times after the food was eaten.
+        filter(t <= 120) %>% # and only the first 2 hours.
+        group_by(meal) %>%
         summarize(
                   auc = DescTools::AUC(t,value-first(value)),
                   min = min(value),
@@ -224,6 +230,12 @@ mod_goddessServer <- function(id,  glucose_df, title = "Name") {
                   .groups = 'drop') %>%
         #summarize(auc = sum((lag(value)-value)*(t-lag(t)), na.rm = TRUE)) %>%
         arrange(auc)
+
+    })
+
+    output$raw_data_table <- renderDataTable({
+      input$show_raw
+      isolate(food_df())
 
     })
   })
