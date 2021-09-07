@@ -51,7 +51,6 @@ mod_goddessUI <- function(id) {
         selected = "Richard Sp"
       ),
       uiOutput(ns("food_selection1")),
-      uiOutput(ns("food_selection2")),
        actionButton(ns("submit_foods"), label = "Calculate Stats"),
       checkboxInput(ns("normalize"), label = "Normalize"),
      numericInput(ns("prefixLength"), label = "Prefix Minutes", value = 0, width = "30%" ),
@@ -61,7 +60,6 @@ mod_goddessUI <- function(id) {
 
     ),
     mainPanel(plotOutput(ns("food1")),
-              plotOutput(ns("food2")),
               h3("Stats Table"),
               dataTableOutput(ns("auc_table")),
               h3("Raw Data"),
@@ -175,7 +173,7 @@ mod_goddessServer <- function(id,  glucose_df, title = "Name") {
         if (input$normalize) {
           g <- one_food_df %>% normalize_value() %>%
             arrange(meal, t) %>%
-            ggplot(aes(t, value, color = date_ch)) + geom_line(size = 2) + ylim(-50,100)
+            ggplot(aes(t, value, color = date_ch)) + geom_line(size = 2) + ylim(-50,50)
         } else
           g <-
             one_food_df %>% ggplot(aes(t, value, color = date_ch)) + geom_line(size = 2)
@@ -189,40 +187,40 @@ mod_goddessServer <- function(id,  glucose_df, title = "Name") {
           labs(title = "Glucose Response", subtitle = str_to_title(isolate(input$food_name1)))
 
     })
-
-      output$food2 <- renderPlot({
-
-        input$submit_foods
-        validate(
-          need(input$food_name1, "Waiting on database...2")
-        )
-        one_food_df <- food_times_df(user_id = ID(),
-                                     foodname = input$food_name2,
-                                     timeLength = input$timewindow,
-                                     prefixLength = input$prefixLength)
-        if (input$normalize) {
-          g <- one_food_df %>% normalize_value() %>%
-            arrange(meal, t) %>%
-            ggplot(aes(t, value, color = meal)) + geom_line(size = 2)
-        } else
-          g <-
-          one_food_df %>% ggplot(aes(t, value, color = meal)) + geom_line(size = 2)
-        g +
-          geom_rect(aes(xmin=0,
-                        xmax=120, #max(Date),
-                        ymin=-Inf,
-                        ymax=Inf),
-                    color = "lightgrey",
-                    alpha=0.005)
-
-
-      })
+#
+#       output$food2 <- renderPlot({
+#
+#         input$submit_foods
+#         validate(
+#           need(input$food_name1, "Waiting on database...2")
+#         )
+#         one_food_df <- food_times_df(user_id = ID(),
+#                                      foodname = input$food_name2,
+#                                      timeLength = input$timewindow,
+#                                      prefixLength = input$prefixLength)
+#         if (input$normalize) {
+#           g <- one_food_df %>% normalize_value() %>%
+#             arrange(meal, t) %>%
+#             ggplot(aes(t, value, color = meal)) + geom_line(size = 2)
+#         } else
+#           g <-
+#           one_food_df %>% ggplot(aes(t, value, color = meal)) + geom_line(size = 2)
+#         g +
+#           geom_rect(aes(xmin=0,
+#                         xmax=120, #max(Date),
+#                         ymin=-Inf,
+#                         ymax=Inf),
+#                     color = "lightgrey",
+#                     alpha=0.005)
+#
+#
+#       })
     output$auc_table <- renderDataTable({
       input$submit_foods
       validate(
         need(input$submit_foods, "Press Calculate Stats")
       )
-      isolate(food_df()) %>%
+      food_df() %>%
         filter(t >= -5) %>% # only look at the times after the food was eaten.
         filter(t <= 120) %>% # and only the first 2 hours.
         group_by(meal) %>%
@@ -238,11 +236,11 @@ mod_goddessServer <- function(id,  glucose_df, title = "Name") {
     })
 
     output$raw_data_table <- renderDataTable({
-      input$show_raw
+
       validate(
         need(input$show_raw, "Press Show Raw")
       )
-      isolate(food_df())
+      food_df()
 
     })
   })
