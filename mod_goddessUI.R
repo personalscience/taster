@@ -94,8 +94,8 @@ mod_goddessServer <- function(id,  glucose_df, title = "Name") {
     )
     food_df <- reactive(bind_rows(
       validate(
-        need(input$food_name1, "Press Submit Food"),
-        need(input$food_name2, "Press Submit Food for 2nd Food")
+        need(input$food_name1, "Waiting on database for food 1"),
+        need(input$food_name2, "Waiting on database for food 2")
       ),
       food_times_df(
         user_id = ID(),
