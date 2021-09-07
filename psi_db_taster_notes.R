@@ -6,7 +6,7 @@ source("psi_taster_read_data.R")  # load functions to process Tastermonial files
 
 
 taster_raw_df <- taster_raw(filepath = file.path(config::get("tastermonial")$datadir, "table-data.csv"))
-taster_raw2_df <- taster_raw(filepath = file.path(config::get("tastermonial")$datadir, "FoodLogFireBasetable-data.csv"))
+taster_raw2_df <- taster_raw(filepath = file.path(config::get("tastermonial")$datadir, "FoodLogFireBasetable-data_ingestsept6.csv"))
 
 # taster_notes_df2 <- taster_raw %>% transmute(Start = with_tz(lubridate::parse_date_time(startEatingDate, orders = "dmY HM p z"),
 #                                                               tzone = Sys.timezone()),
@@ -16,7 +16,7 @@ taster_raw2_df <- taster_raw(filepath = file.path(config::get("tastermonial")$da
 #                                               Z = as.numeric(NA),
 #                                               user_id = map_dbl(user, id_from_taster))
 
-taster_notes2_df <- taster_raw2_df %>% transmute(Start = with_tz(lubridate::parse_date_time(startEatingDate, orders = "mdy HM"),
+taster_notes2_df <- taster_raw2_df %>% filter(!is.na(user))  %>%  transmute(Start = with_tz(lubridate::parse_date_time(startEatingDate, orders = "Ymd HM"),
                                                             tzone = Sys.timezone()),
                                             End = as_datetime(NA),
                                             Activity = "Food",
@@ -24,7 +24,7 @@ taster_notes2_df <- taster_raw2_df %>% transmute(Start = with_tz(lubridate::pars
                                             Z = as.numeric(NA),
                                             user_id = map_dbl(user, id_from_taster))
 
-taster_notes_df <- taster_raw_df %>% transmute(Start = with_tz(lubridate::parse_date_time(startEatingDate, orders = "dmY HM p z"),
+taster_notes_df1 <- taster_raw_df %>% transmute(Start = with_tz(lubridate::parse_date_time(startEatingDate, orders = "dmY HM p z"),
                                                          tzone = Sys.timezone()),
                                          End = as_datetime(NA),
                                          Activity = "Food",
@@ -32,5 +32,6 @@ taster_notes_df <- taster_raw_df %>% transmute(Start = with_tz(lubridate::parse_
                                          Z = as.numeric(NA),
                                          user_id = map_dbl(user, id_from_taster))
 
+taster_notes_df <- bind_rows(taster_notes2_df,taster_notes_df1)
 
 # psi_fill_taster_notes_from_scratch(taster_notes_df)
