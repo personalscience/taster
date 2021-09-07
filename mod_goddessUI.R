@@ -1,27 +1,31 @@
 # Shiny Module and UI to compare foods for a single user
 
+#' @title List all products consumed by `user_id`
+#' @return character vector of product names sorted alphabetically
 taster_products <- function(user_id = 1234) {
-conn_args <- config::get("dataconnection")
-con <- DBI::dbConnect(
-  drv = conn_args$driver,
-  user = conn_args$user,
-  host = conn_args$host,
-  port = conn_args$port,
-  dbname = conn_args$dbname,
-  password = conn_args$password)
+  conn_args <- config::get("dataconnection")
+  con <- DBI::dbConnect(
+    drv = conn_args$driver,
+    user = conn_args$user,
+    host = conn_args$host,
+    port = conn_args$port,
+    dbname = conn_args$dbname,
+    password = conn_args$password
+  )
 
   ID <- user_id
 
-  if(is.null(ID)){
-  prods <- tbl(con,"notes_records") %>% filter(Activity == "Food") %>%
-    filter(Start > "2021-06-01") %>%
-    group_by(Comment) %>% add_count() %>% filter(n>2) %>% distinct(Comment) %>%
-    transmute(productName = Comment, user_id = user_id) %>%
-    collect() %>% arrange(productName)
-} else
-  prods <- tbl(con,"notes_records") %>% filter(Activity == "Food") %>%
+  if (is.null(ID)) {
+    prods <- tbl(con, "notes_records") %>% filter(Activity == "Food") %>%
+      filter(Start > "2021-06-01") %>%
+      group_by(Comment) %>% add_count() %>% filter(n > 2) %>% distinct(Comment) %>%
+      transmute(productName = Comment, user_id = user_id) %>%
+      collect() %>% arrange(productName)
+  } else
+    prods <-
+    tbl(con, "notes_records") %>% filter(Activity == "Food") %>%
     filter(Start > "2021-06-01") %>% filter(user_id == ID) %>% distinct(Comment) %>%
-    transmute(productName = Comment, user_id=ID) %>%
+    transmute(productName = Comment, user_id = ID) %>%
     collect() %>% arrange(productName)
 
   DBI::dbDisconnect(con)
@@ -36,9 +40,6 @@ con <- DBI::dbConnect(
 #' @export
 mod_goddessUI <- function(id) {
   ns <- NS(id)
-
-  taster_prod_table <- taster_products(user_id=NULL)
-
 
 
   sidebarLayout(
@@ -86,6 +87,8 @@ mod_goddessServer <- function(id,  glucose_df, title = "Name") {
     ID<- reactive( {message(paste("Selected User", isolate(input$user_id)))
       lookup_id_from_name(input$user_id[1])}
     )
+
+
     observe(
       cat(stderr(), sprintf("username=%s \n",ID()))
     )
@@ -163,11 +166,10 @@ mod_goddessServer <- function(id,  glucose_df, title = "Name") {
 
         input$submit_foods
         validate(
-          need(input$food_name1, "Press Submit Food"),
-          need(input$food_name2, "Press Submit Food for 2nd Food")
+          need(input$food_name1, "Waiting on database...1")
         )
         one_food_df <- food_times_df(user_id = ID(),
-                                     foodname = isolate(input$food_name1),
+                                     foodname = input$food_name1,
                                      timeLength = input$timewindow,
                                      prefixLength = input$prefixLength)
         if (input$normalize) {
@@ -192,11 +194,10 @@ mod_goddessServer <- function(id,  glucose_df, title = "Name") {
 
         input$submit_foods
         validate(
-          need(input$food_name1, "Press Submit Food"),
-          need(input$food_name2, "Press Submit Food for 2nd Food")
+          need(input$food_name1, "Waiting on database...2")
         )
         one_food_df <- food_times_df(user_id = ID(),
-                                     foodname = isolate(input$food_name2),
+                                     foodname = input$food_name2,
                                      timeLength = input$timewindow,
                                      prefixLength = input$prefixLength)
         if (input$normalize) {
@@ -218,6 +219,9 @@ mod_goddessServer <- function(id,  glucose_df, title = "Name") {
       })
     output$auc_table <- renderDataTable({
       input$submit_foods
+      validate(
+        need(input$submit_foods, "Press Calculate Stats")
+      )
       isolate(food_df()) %>%
         filter(t >= -5) %>% # only look at the times after the food was eaten.
         filter(t <= 120) %>% # and only the first 2 hours.
@@ -235,6 +239,9 @@ mod_goddessServer <- function(id,  glucose_df, title = "Name") {
 
     output$raw_data_table <- renderDataTable({
       input$show_raw
+      validate(
+        need(input$show_raw, "Press Show Raw")
+      )
       isolate(food_df())
 
     })
