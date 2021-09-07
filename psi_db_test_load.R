@@ -1,6 +1,8 @@
 # Create database entries for test purposes
 # NOTE: you need the functions in psi_db_create.R for this to work (but careful: don't set the wrong config environment)
+library(psiCGM)
 
+source("psi_db_create.R")
 
 active_env <- Sys.getenv("R_CONFIG_ACTIVE")
 Sys.setenv(R_CONFIG_ACTIVE = "localtest")
@@ -29,7 +31,7 @@ psi_fill_test_from_scratch <- function(conn_args = config::get("dataconnection")
       system.file("extdata", package = "psiCGM", "Firstname2Lastname2_glucose.csv")
     ) %>% filter(time>as_date("2021-06-01"))
 
-
+    user_df <- user_df_from_libreview
 
     martha_notes <-
       notes_df_from_csv(
@@ -45,10 +47,11 @@ psi_fill_test_from_scratch <- function(conn_args = config::get("dataconnection")
       DBI::dbRemoveTable(con, "glucose_records")
       psi_make_table_if_necessary()  #defaults to glucose_records
       psi_make_table_if_necessary(table_name = "notes_records", table = martha_notes)
+      psi_make_table_if_necessary(table_name = "user_list", table = user_df)
     }
 
-    richard_notes <-
-      notes_df_from_glucose_table(user_id=1234)
+    # richard_notes <-
+    #   notes_df_from_glucose_table(user_id=1234)
     # notes_df_from_csv(
     #   user_id = 1234,
     #   file = system.file("extdata", package = "psiCGM", "Firstname2Lastname2_notes.csv")
@@ -56,12 +59,12 @@ psi_fill_test_from_scratch <- function(conn_args = config::get("dataconnection")
 
 
     DBI::dbWriteTable(con, "glucose_records", bind_rows(martha_glucose,richard_glucose), overwrite=TRUE)
-    DBI::dbWriteTable(con, "notes_records", bind_rows(richard_notes,
-                                                      martha_notes,
+    DBI::dbWriteTable(con, "notes_records", bind_rows(martha_notes,
+                                                      notes_df_from_glucose_table(user_id=1234),
                                                       notes_df_from_glucose_table(user_id=1235)), overwrite=TRUE)
-
+    DBI::dbWriteTable(con, "user_list", user_df, overwrite=TRUE)
 }
 
-psi_fill_test_from_scratch()
+psi_fill_test_from_scratch(drop=TRUE)
 
 Sys.setenv(R_CONFIG_ACTIVE = active_env )

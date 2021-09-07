@@ -4,6 +4,8 @@
 # and it will automatically create the database 'qsdev' and a table 'glucose_records'
 # Note: nothing bad should happen if you source this on an existing database (i.e. nothing will happen)
 
+# WARNING: Be sure you know the value of R_CONFIG_ACTIVE before running this script.
+# It will blindly create whatever database is in config::get("dataconnection")
 
 library(tidyverse)
 
@@ -13,7 +15,7 @@ NOTES_DATA_FRAME <-
   tibble(Start=lubridate::now(), End =lubridate::now(), Activity = "Event", Comment = NA, Z = NA, user_id = 0)
 
 # set the active configuration globally via Renviron.site or Rprofile.site
-Sys.setenv(R_CONFIG_ACTIVE = "tastercloud")
+# Sys.setenv(R_CONFIG_ACTIVE = "tastercloud")
 #Sys.setenv(R_CONFIG_ACTIVE = "local")  # save to local postgres
 # Sys.setenv(R_CONFIG_ACTIVE = "localtest") # a database useful for testing
 # Sys.setenv(R_CONFIG_ACTIVE = "cloud") # save to cloud
