@@ -38,7 +38,7 @@ shinyapps:
 
 To run locally, you will need a Postgres database. The app will use the configuration set in the `config.yml`. To use the local database, run
 
-```r
+``` r
 Sys.setenv(R_CONFIG_ACTIVE = "local")
 ```
 
@@ -52,11 +52,15 @@ This is easier if you store all the data in the directory with the path at
 config::get("tastermonial")$datadir
 ```
 
-Download from https://libreview.com the glucose CSV files.  Any CSV file that includes "glucose" in the name will automatically read into the database with script `psi_db_load.R`.
+This data directory should contain:
 
-Download Tastermonial food notes and save as a CSV file in the same directory. Run `psi_db_taster_notes.R` to read all results into a dataframe that you can write to the database.
+-   All Libreview CSV files, exactly as downloaded from <https://libreview.com>. Any CSV file that includes "glucose" in the name will automatically read by the script `psi_db_load.R`.
+-   Latest Tastermonial firebase output, stored in the file `table-data.csv`. The script `psi_db_taster_notes.R` will read all results into a dataframe.
+-   Miscellaneous other raw files including Nutrisense-formatted files.
 
+*Important*: The most important script is `psi_db_load.R`. Run this to drop and then load from scratch everything in the current database.
 
+The very first time you set up a new Postgres database, run the script `psi_db_create.R`. It's okay to run this as many times as you like; it won't do anything if the database is already set up properly.
 
 ## Deploy
 
