@@ -90,25 +90,15 @@ mod_goddessServer <- function(id,  glucose_df, title = "Name") {
     observe(
       cat(stderr(), sprintf("username=%s \n",ID()))
     )
-    food_df <- reactive(bind_rows(
-      validate(
-        need(input$food_name1, "Waiting on database for food 1"),
-        need(input$food_name2, "Waiting on database for food 2")
-      ),
+    food_df <- reactive(
+
       food_times_df(
         user_id = ID(),
         foodname = input$food_name1,
         timeLength = input$timewindow,
         prefixLength = input$prefixLength
-      ),
-
-      food_times_df(
-        user_id = ID(),
-        foodname = input$food_name2,
-        timeLength = input$timewindow,
-        prefixLength = input$prefixLength
       )
-    ) %>%
+     %>%
       filter(!is.na(value)))
 
 
