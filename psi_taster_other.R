@@ -5,7 +5,7 @@
 
 library(psiCGM)
 
-Sys.setenv(R_CONFIG_ACTIVE = "shinyapps")
+#Sys.setenv(R_CONFIG_ACTIVE = "shinyapps")
 
 conn_args <- config::get("dataconnection")
 con <- DBI::dbConnect(
@@ -32,17 +32,18 @@ nutrisense_anthony <- glucose_df_from_nutrisense(filepath = file.path(config::ge
                                   user_id = 1021)
 
 new_nutrisense_records <- bind_rows(nutrisense_sherri,
-                                    nutrisense_anthony
+                                    nutrisense_anthony,
+                                    nutrisense_andreos
                                     )
 
-anthony_record <- tibble(first_name = "Anthony", last_name = "Davis", birthdate=as.Date("1900-01-01"),
-                         libreview_status = NA,
-                         user_id = 1021)
+# anthony_record <- tibble(first_name = "Anthony", last_name = "Davis", birthdate=as.Date("1900-01-01"),
+#                          libreview_status = NA,
+#                          user_id = 1021)
 
 
-if(nrow(tbl(con, "user_list") %>% filter(user_id ==1021) %>% collect()) > 0) message("new user already exists") else {
+if(nrow(tbl(con,"glucose_records") %>% filter(user_id == 1021) %>% collect())) message("Anthony Nutrisense glucose exists") else {
 
-DBI::dbWriteTable(con, "user_list", anthony_record, append = TRUE )
+#DBI::dbWriteTable(con, "user_list", anthony_record, append = TRUE )
 DBI::dbWriteTable(con, "glucose_records", new_nutrisense_records, append = TRUE )
 DBI::dbWriteTable(con, "notes_records",  notes_df_from_glucose_table(user_id = 1005), append = TRUE)
 

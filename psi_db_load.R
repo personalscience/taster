@@ -225,21 +225,21 @@ psi_fill_notes_records_from_scratch <- function(conn_args = config::get("datacon
                     row.names = FALSE,
                     overwrite = TRUE)
 
-  message("Write Ayumi notes")
-  ayumi_notes <-  notes_df_from_glucose_table(user_id=lookup_id_from_name("Ayumi Blystone"))
-
-  DBI::dbWriteTable(con, name = "notes_records",
-                    value = ayumi_notes,
-                    row.names = FALSE,
-                    append = TRUE)
-
-  message("Write Bude notes")
-  bude_notes <-  notes_df_from_glucose_table(user_id=lookup_id_from_name("Bude Sethaputra"))
-
-  DBI::dbWriteTable(con, name = "notes_records",
-                    value = bude_notes,
-                    row.names = FALSE,
-                    append = TRUE)
+  # message("Write Ayumi notes")
+  # ayumi_notes <-  notes_df_from_glucose_table(user_id=lookup_id_from_name("Ayumi Blystone"))
+  #
+  # DBI::dbWriteTable(con, name = "notes_records",
+  #                   value = ayumi_notes,
+  #                   row.names = FALSE,
+  #                   append = TRUE)
+  #
+  # message("Write Bude notes")
+  # bude_notes <-  notes_df_from_glucose_table(user_id=lookup_id_from_name("Bude Sethaputra"))
+  #
+  # DBI::dbWriteTable(con, name = "notes_records",
+  #                   value = bude_notes,
+  #                   row.names = FALSE,
+  #                   append = TRUE)
 
   message("Write Richard Notes records (from glucose_records")
   DBI::dbWriteTable(con, name = "notes_records",
@@ -252,6 +252,7 @@ psi_fill_notes_records_from_scratch <- function(conn_args = config::get("datacon
 }
 
 psi_user_list_from_scratch <- function(conn_args = config::get("dataconnection"),
+                                       user_list = user_df_from_libreview,
                                                 drop = TRUE) {
 
   con <- DBI::dbConnect(
@@ -269,7 +270,7 @@ psi_user_list_from_scratch <- function(conn_args = config::get("dataconnection")
   }
 
   DBI::dbWriteTable(con, name = "user_list",
-                    value = user_df_from_libreview,
+                    value = user_list,
                     row.names = FALSE,
                     append = TRUE)
 
@@ -278,15 +279,26 @@ psi_user_list_from_scratch <- function(conn_args = config::get("dataconnection")
 
 # Execute from here----
 
+# First build the user_list of all users known to the system (and their user_id)
+psi_user_list_from_scratch(user_list = user_df_from_libreview)
+
+psi_user_list_from_scratch(user_list = tibble(first_name = "Anthony", last_name = "Davis", birthdate=as.Date("1900-01-01"),
+                                              libreview_status = NA,
+                                              user_id = 1021),
+                           drop = FALSE)
+
+
+
 psi_fill_glucose_records_from_scratch()
 
 psi_fill_notes_records_from_scratch()
-psi_user_list_from_scratch()
 
 source("psi_db_taster_notes.R")
 
 # uncomment this line to add the notes from Tastermonial retool
 psi_fill_taster_notes_from_scratch(taster_notes_df)
+
+source("psi_taster_other.R")
 
 # uncomment this section to add an arbitrary new CSV file
 # be sure to set both user_ids
