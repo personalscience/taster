@@ -13,6 +13,8 @@ GLUCOSE_DATA_FRAME <-
   tibble(time=lubridate::now(), scan = 0.0, hist = 0.0, strip = 0.0, value = 0.0, food = "", user_id = 0.0)
 NOTES_DATA_FRAME <-
   tibble(Start=lubridate::now(), End =lubridate::now(), Activity = "Event", Comment = NA, Z = NA, user_id = 0)
+USER_DATA_FRAME <-
+  tibble(first_name = "first", last_name = "last", birthdate = as.Date("1900-01-01"), libreview_status = as.character(NA), user_id = 0)
 
 # set the active configuration globally via Renviron.site or Rprofile.site
 # Sys.setenv(R_CONFIG_ACTIVE = "tastercloud")
@@ -24,7 +26,7 @@ NOTES_DATA_FRAME <-
 
 
 conn_args <- config::get("dataconnection")
-conn_args
+message("Preparing to create ", conn_args$host)
 
 #' List all objects in the current PSI database
 #' @import DBI
@@ -149,9 +151,10 @@ psi_table_df <-
 psi_make_database_if_necessary()
 psi_list_objects()
 
+message("write placeholder info into each table")
 psi_make_table_if_necessary(table = glucose_df_from_libreview_csv())
 psi_make_table_if_necessary(table_name = "notes_records", table = NOTES_DATA_FRAME)
-psi_make_table_if_necessary(table_name = "user_list", table = user_df_from_libreview)
+psi_make_table_if_necessary(table_name = "user_list", table = USER_DATA_FRAME)
 
 
 
