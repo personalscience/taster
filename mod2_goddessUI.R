@@ -97,13 +97,15 @@ mod_goddessServer <- function(id, title = "Name") {
 
     food_df <- reactive({
       validate(
-        need(!is.null(taster_prod_list()),"No food times available for this person")
+        need(!is.null(taster_prod_list()),"No food times available for this person"),
+        need(!is.null(ID()), "No user selected"),
+        need(input$food_name1, "No food selected")
       )
 
       food_times_df(
         user_id = ID(),
         foodname = input$food_name1
-      ) %>%   filter(!is.na(value))
+      )
       }
       )
 
@@ -130,14 +132,23 @@ mod_goddessServer <- function(id, title = "Name") {
 
       validate(
         need(input$food_name1, "Waiting on database...1"),
-        need(food_df(), "Problem with food times")
+        need(!is.null(food_df()), "Problem with food times"),
+        need(!is.null(ID()),"No user selected")
       )
       observe(
         cat(file = stderr(), sprintf("render plot for user_id=%d and food=%s \n",
                                      isolate(ID()),
                                      isolate(input$food_name1)))
       )
-      food_df() %>% ggplot(aes(x=t,y=value, color = date_ch)) + geom_line(size = 2)
+      one_food_df <- food_df()
+
+      df <- if(input$normalize) {
+                   one_food_df %>% normalize_value()}
+      else one_food_df
+
+      g <- df %>%  ggplot(aes(x=t,y=value, color = date_ch)) + geom_line(size = 2)
+
+      g
   })
 
   })
