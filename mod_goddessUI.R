@@ -119,7 +119,7 @@ mod_goddessServer <- function(id, title = "Name") {
       )
 
      validate(
-       need(!is.null(one_food_df), "No food times available")
+       need(!is.null(one_food_df), sprintf("No glucose results after eating %s", input$food_name1))
      )
 
       df <- if(input$normalize) {
@@ -133,7 +133,7 @@ mod_goddessServer <- function(id, title = "Name") {
 
     output$food_selection <- renderUI({
       validate(
-        need(!is.null(taster_prod_list()),"No foods available for this person")
+        need(!is.null(taster_prod_list()),sprintf("No foods available for user_id %s",ID()))
       )
 
       message(paste("finding foods for User", isolate(input$user_id)))
