@@ -11,7 +11,7 @@ rsconnect::setAccountInfo(name=config::get("shiny")$name,
 
 remove.packages("psiCGM")
 devtools::install_github("personalscience/psi-shiny-cgm",
-                        ref = "851516d7505", #851516d7505
+                        ref = "dev",
                         upgrade = "never") #577dc4100cac3940") #,
                         # upgrade = "never")
 
@@ -20,6 +20,7 @@ rsconnect::deployApp(#appDir = file.path(getwd(),"R"),
                      appName = "Tastermonial",
                      appFiles = c("ui.R","server.R","global.R",
                                   "mod_goddessUI.R",
+                                  "mod_foodTaster_compare.R",
                                   "www/psi_shiny.css",
                                   "config.yml"),
                      forceUpdate = TRUE
