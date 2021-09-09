@@ -1,7 +1,5 @@
 # Shiny module to compare foods
 
-source("psi_db_taster_notes.R")
-taster_foods <- taster_notes_df %>% distinct(Comment) %>% pull(Comment)
 
 
 #' @title UI for food-related plots

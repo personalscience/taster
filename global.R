@@ -8,6 +8,9 @@ library(RPostgres)
 library(psiCGM)
 
 source("mod_goddessUI.R")
+source("psi_db_taster_notes.R")
+taster_foods <- taster_notes_df %>% distinct(Comment) %>% pull(Comment)
+
 
 library(showtext)
 font_add_google("Montserrat")
