@@ -17,9 +17,13 @@
 server <- function(input, output) {
 
     # datafilepath <- psiCGM:::csvFilePathServer("datafile")
-     output$currentDB <- renderText(sprintf("DB=%s. psiCGM version = %s",
+     output$currentDB <- renderText(sprintf("DB=%s. psiCGM version = %s, db latest = %s",
                                             attr(config::get(),"config"),
-                                          packageVersion("psiCGM")))
+                                          packageVersion("psiCGM"),
+                                          first(tbl(con,"glucose_records") %>%
+                                             filter(time == max(time)) %>%
+                                             pull(time) %>%
+                                             with_tz(tzone=Sys.timezone()))))
    #
    #
     mod_goddessServer("food2_compare_plot", active_glucose_record, title = "Tastermonial" )
@@ -28,7 +32,7 @@ server <- function(input, output) {
    username<-reactive(username_for_id(active_glucose_record()[["user_id"]][1]))
 
    observe(
-     cat(stderr(), sprintf("username=%s \n",username()))
+     cat(file = stderr(), sprintf("Username=%s \n",username()))
    )
 
    g <- mod_libreview_plotServer("modChart", active_glucose_record, title = username)
