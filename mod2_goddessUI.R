@@ -129,12 +129,13 @@ mod_goddessServer <- function(id, title = "Name") {
     output$food1 <- renderPlot({
 
       validate(
-        need(input$food_name1, "Waiting on database...1")
+        need(input$food_name1, "Waiting on database...1"),
+        need(food_df(), "Problem with food times")
       )
       observe(
         cat(file = stderr(), sprintf("render plot for user_id=%d and food=%s \n",
                                      isolate(ID()),
-                                     input$food_name1))
+                                     isolate(input$food_name1)))
       )
       food_df() %>% ggplot(aes(x=t,y=value, color = date_ch)) + geom_line(size = 2)
   })
