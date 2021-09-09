@@ -56,10 +56,19 @@ mod_goddessUI <- function(id) {
       ),
     uiOutput(ns("food_selection")),
     checkboxInput(ns("normalize"), label = "Normalize"),
+    numericInput(ns("prefixLength"), label = "Prefix Minutes", value = 0, width = "30%" ),
+    numericInput(ns("timewindow"), label = "Time Window (Minutes)", value = 150, width = "30%"),
+    actionButton(ns("show_raw"), label = "Show Raw Data"),
+    actionButton(ns("submit_foods"), label = "Calculate Stats"),
+    downloadButton(ns("downloadFood_df"), label = "Download Results"),
     ),
     mainPanel(
       textOutput(ns('show_user')),
-      plotOutput(ns("food1"))
+      plotOutput(ns("food1")),
+      h3("Stats Table"),
+      dataTableOutput(ns("auc_table")),
+      h3("Raw Data"),
+      dataTableOutput(ns("raw_data_table"))
       )
     )
 
@@ -102,10 +111,22 @@ mod_goddessServer <- function(id, title = "Name") {
         need(input$food_name1, "No food selected")
       )
 
-      food_times_df(
+     one_food_df <-  food_times_df(
         user_id = ID(),
+        timeLength = input$timewindow,
+        prefixLength = input$prefixLength,
         foodname = input$food_name1
       )
+
+     validate(
+       need(!is.null(one_food_df), "No food times available")
+     )
+
+      df <- if(input$normalize) {
+        one_food_df %>% normalize_value()}
+      else one_food_df
+
+      df
       }
       )
 
@@ -140,16 +161,59 @@ mod_goddessServer <- function(id, title = "Name") {
                                      isolate(ID()),
                                      isolate(input$food_name1)))
       )
-      one_food_df <- food_df()
 
-      df <- if(input$normalize) {
-                   one_food_df %>% normalize_value()}
-      else one_food_df
 
-      g <- df %>%  ggplot(aes(x=t,y=value, color = date_ch)) + geom_line(size = 2)
 
-      g
+      g <- food_df() %>%  ggplot(aes(x=t,y=value, color = date_ch)) + geom_line(size = 2)
+
+      g + psi_theme +
+        geom_rect(aes(xmin=0,
+                      xmax=120, #max(Date),
+                      ymin=-Inf,
+                      ymax=Inf),
+                  color = "lightgrey",
+                  alpha=0.005) +
+        labs(title = "Glucose Response", subtitle = str_to_title(isolate(input$food_name1)))
   })
+
+    output$auc_table <- renderDataTable({
+      input$submit_foods
+      validate(
+        need(input$submit_foods, "Press Calculate Stats")
+      )
+      food_df() %>%
+        filter(t >= -5) %>% # only look at the times after the food was eaten.
+        filter(t <= 120) %>% # and only the first 2 hours.
+        group_by(meal) %>%
+        summarize(
+          auc = DescTools::AUC(t,value-first(value)),
+          min = min(value),
+          max = max(value),
+          rise = last(value) - first(value),
+          .groups = 'drop') %>%
+        #summarize(auc = sum((lag(value)-value)*(t-lag(t)), na.rm = TRUE)) %>%
+        arrange(auc)
+
+    })
+
+    output$raw_data_table <- renderDataTable({
+
+      validate(
+        need(input$show_raw, "Press Show Raw")
+      )
+      food_df()
+
+    })
+
+    output$downloadFood_df <-
+      downloadHandler(
+        filename = function() {
+          sprintf("Food_data-%s-%s.csv", ID(), Sys.Date())
+        },
+        content = function(file) {
+          write_csv(food_df(), file)
+        }
+      )
 
   })
 
