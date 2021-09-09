@@ -28,7 +28,7 @@ ui <- navbarPage("Tastermonial", collapsible = TRUE, inverse = TRUE,
                           )),
                  tabPanel("More Foods",
                           fluidPage(
-                              mod_foodUI("food_compare_plot")
+                              mod_foodTasterUI("food_compare_plot")
                           )),
                  tabPanel("User View",
                           fluidPage(
