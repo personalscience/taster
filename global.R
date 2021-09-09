@@ -18,7 +18,6 @@ con <- DBI::dbConnect(
 )
 
 source("mod_goddessUI.R")
-taster_foods <- tbl(con,"notes_records") %>% filter(user_id %in% 1007:1020) %>% distinct(Comment) %>% pull(Comment)
 source("mod_foodTaster_compare.R")
 
 
