@@ -3,7 +3,7 @@
 #' @title List all products consumed by `user_id`
 #' @param user_id user ID or NULL to show all users
 #' @return character vector of product names sorted alphabetically
-taster_products <- function(user_id = 1234, db_filter = function(){filter(Start > "2021-06-01")} ) {
+food_list_db <- function(user_id = 1234  ) {
   conn_args <- config::get("dataconnection")
   con <- DBI::dbConnect(
     drv = conn_args$driver,
@@ -25,8 +25,12 @@ taster_products <- function(user_id = 1234, db_filter = function(){filter(Start 
   } else
     prods <-
     tbl(con, "notes_records") %>% filter(Activity == "Food") %>%
-    db_filter() %>% filter(user_id %in% ID) %>% distinct(Comment) %>%
-    arrange(Comment) %>% collect() %>% pull(Comment)
+    filter(Start > "2021-06-01") %>% filter(user_id %in% ID) %>% distinct(Comment) %>%
+     collect() %>% pull(Comment)
+
+  if(length(prods) > 0)
+    return(sort(prods))
+  else return(NULL)
 
   DBI::dbDisconnect(con)
   return(prods)
@@ -49,12 +53,15 @@ mod_goddessUI <- function(id) {
         label = "User Name",
         choices = with(user_df_from_db(), paste(first_name, str_match(last_name,"[:alnum:]{2}"))),
         selected = "Richard Sp"
-      )),
+      ),
+    uiOutput(ns("food_selection")),
+    checkboxInput(ns("normalize"), label = "Normalize"),
+    ),
     mainPanel(
       textOutput(ns('show_user')),
-      uiOutput(ns("food_selection"))
-)
-  )
+      plotOutput(ns("food1"))
+      )
+    )
 
 }
 
@@ -75,44 +82,68 @@ mod_goddessServer <- function(id, title = "Name") {
     ID<- reactive( {message(paste("Selected User", isolate(input$user_id)))
       lookup_id_from_name(input$user_id[1])}
     )
+    taster_prod_list <- reactive({
+      message(sprintf("seeking prod list for user %d", ID()))
+      food_list_db(user_id = ID())}
+      )
 
     output$show_user <- renderText(
 
-     sprintf("user_id = %d, username = %s, first product = %s", ID(),
+     sprintf("user_id = %d, username = %s, product = %s", ID(),
               username_for_id(ID()),
-              first(sort(taster_products(user_id = ID())$productName))
+             input$food_name1
               )
       )
 
-    taster_prod_list <- sort(taster_products(user_id = ID())$productName)
-
-    output$show_food <- renderText(
+    food_df <- reactive({
       validate(
-        need()
+        need(!is.null(taster_prod_list()),"No food times available for this person")
       )
-    )
+
+      food_times_df(
+        user_id = ID(),
+        foodname = input$food_name1
+      ) %>%   filter(!is.na(value))
+      }
+      )
+
 
     output$food_selection <- renderUI({
-      taster_prod_table <- taster_products(user_id = ID())
       validate(
-        need(nrow(taster_prod_table)>0,"No foods available for this person")
+        need(!is.null(taster_prod_list()),"No foods available for this person")
       )
-      prod_names <- sort(taster_prod_table$productName)
+
       message(paste("finding foods for User", isolate(input$user_id)))
-      message(sprintf("User %s first food is %s",isolate(input$user_id),last(prod_names) ))
+      message(sprintf("User %s first food is %s",isolate(input$user_id),first(taster_prod_list()) ))
       selectizeInput(NS(id,"food_name1"),
                      label = "Food Item",
-                     choices = prod_names,
-                     selected = last(prod_names)
+                     choices = taster_prod_list(),
+                     selected = first(taster_prod_list())
       )
     })
 
     observe(
       cat(file = stderr(), sprintf("user_id=%s \n",ID()))
     )
+
+    output$food1 <- renderPlot({
+
+      validate(
+        need(input$food_name1, "Waiting on database...1")
+      )
+      observe(
+        cat(file = stderr(), sprintf("render plot for user_id=%d and food=%s \n",
+                                     isolate(ID()),
+                                     input$food_name1))
+      )
+      food_df() %>% ggplot(aes(x=t,y=value, color = date_ch)) + geom_line(size = 2)
+  })
+
   })
 
 }
+
+
 
 demo_food2 <- function(){
 
