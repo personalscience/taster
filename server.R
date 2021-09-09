@@ -26,7 +26,7 @@ server <- function(input, output) {
                                              with_tz(tzone=Sys.timezone()))))
    #
    #
-    mod_goddessServer("food2_compare_plot", active_glucose_record, title = "Tastermonial" )
+    mod_goddessServer("food2_compare_plot", title = "Tastermonial" )
    #
     active_glucose_record <- mod_filterServer("psi_filter_plot")
    username<-reactive(username_for_id(active_glucose_record()[["user_id"]][1]))

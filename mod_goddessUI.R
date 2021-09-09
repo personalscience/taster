@@ -1,8 +1,9 @@
 # Shiny Module and UI to compare foods for a single user
 
 #' @title List all products consumed by `user_id`
+#' @param user_id user ID or NULL to show all users
 #' @return character vector of product names sorted alphabetically
-taster_products <- function(user_id = 1234) {
+food_list_db <- function(user_id = 1234  ) {
   conn_args <- config::get("dataconnection")
   con <- DBI::dbConnect(
     drv = conn_args$driver,
@@ -24,9 +25,12 @@ taster_products <- function(user_id = 1234) {
   } else
     prods <-
     tbl(con, "notes_records") %>% filter(Activity == "Food") %>%
-    filter(Start > "2021-06-01") %>% filter(user_id == ID) %>% distinct(Comment) %>%
-    transmute(productName = Comment, user_id = ID) %>%
-    collect() %>% arrange(productName)
+    filter(Start > "2021-06-01") %>% filter(user_id %in% ID) %>% distinct(Comment) %>%
+     collect() %>% pull(Comment)
+
+  if(length(prods) > 0)
+    return(sort(prods))
+  else return(NULL)
 
   DBI::dbDisconnect(con)
   return(prods)
@@ -47,25 +51,27 @@ mod_goddessUI <- function(id) {
       selectInput(
         ns("user_id"),
         label = "User Name",
-        choices = with(user_df_from_libreview, paste(first_name, str_match(last_name,"[:alnum:]{2}"))),
+        choices = with(user_df_from_db(), paste(first_name, str_match(last_name,"[:alnum:]{2}"))),
         selected = "Richard Sp"
       ),
-      uiOutput(ns("food_selection1")),
-       actionButton(ns("submit_foods"), label = "Calculate Stats"),
-      checkboxInput(ns("normalize"), label = "Normalize"),
-     numericInput(ns("prefixLength"), label = "Prefix Minutes", value = 0, width = "30%" ),
-     numericInput(ns("timewindow"), label = "Time Window (Minutes)", value = 150, width = "30%"),
-      downloadButton(ns("downloadFood_df"), label = "Download Results"),
-     actionButton(ns("show_raw"), label = "Show Raw Data"),
-
+    uiOutput(ns("food_selection")),
+    checkboxInput(ns("normalize"), label = "Normalize"),
+    numericInput(ns("prefixLength"), label = "Prefix Minutes", value = 0, width = "30%" ),
+    numericInput(ns("timewindow"), label = "Time Window (Minutes)", value = 150, width = "30%"),
+    actionButton(ns("show_raw"), label = "Show Raw Data"),
+    actionButton(ns("submit_foods"), label = "Calculate Stats"),
+    downloadButton(ns("downloadFood_df"), label = "Download Results"),
     ),
-    mainPanel(plotOutput(ns("food1")),
-              h3("Stats Table"),
-              dataTableOutput(ns("auc_table")),
-              h3("Raw Data"),
-              dataTableOutput(ns("raw_data_table"))
-              )
-  )
+    mainPanel(
+      textOutput(ns('show_user')),
+      plotOutput(ns("food1")),
+      h3("Stats Table"),
+      dataTableOutput(ns("auc_table")),
+      h3("Raw Data"),
+      dataTableOutput(ns("raw_data_table"))
+      )
+    )
+
 }
 
 
@@ -78,79 +84,97 @@ mod_goddessUI <- function(id) {
 #' @param title a title for the plot
 #' @return ggplot object representing a glucose chart
 #' @export
-mod_goddessServer <- function(id,  glucose_df, title = "Name") {
+mod_goddessServer <- function(id, title = "Name") {
 
   moduleServer(id, function(input, output, session) {
 
     ID<- reactive( {message(paste("Selected User", isolate(input$user_id)))
       lookup_id_from_name(input$user_id[1])}
     )
+    taster_prod_list <- reactive({
+      message(sprintf("seeking prod list for user %d", ID()))
+      food_list_db(user_id = ID())}
+      )
 
+    output$show_user <- renderText(
+
+     sprintf("user_id = %d, username = %s, product = %s", ID(),
+              username_for_id(ID()),
+             input$food_name1
+              )
+      )
+
+    food_df <- reactive({
+      validate(
+        need(!is.null(taster_prod_list()),"No food times available for this person"),
+        need(!is.null(ID()), "No user selected"),
+        need(input$food_name1, "No food selected")
+      )
+
+     one_food_df <-  food_times_df(
+        user_id = ID(),
+        timeLength = input$timewindow,
+        prefixLength = input$prefixLength,
+        foodname = input$food_name1
+      )
+
+     validate(
+       need(!is.null(one_food_df), "No food times available")
+     )
+
+      df <- if(input$normalize) {
+        one_food_df %>% normalize_value()}
+      else one_food_df
+
+      df
+      }
+      )
+
+
+    output$food_selection <- renderUI({
+      validate(
+        need(!is.null(taster_prod_list()),"No foods available for this person")
+      )
+
+      message(paste("finding foods for User", isolate(input$user_id)))
+      message(sprintf("User %s first food is %s",isolate(input$user_id),first(taster_prod_list()) ))
+      selectizeInput(NS(id,"food_name1"),
+                     label = "Food Item",
+                     choices = taster_prod_list(),
+                     selected = first(taster_prod_list())
+      )
+    })
 
     observe(
-      cat(stderr(), sprintf("username=%s \n",ID()))
+      cat(file = stderr(), sprintf("user_id=%s \n",ID()))
     )
-    food_df <- reactive(
 
-      food_times_df(
-        user_id = ID(),
-        foodname = input$food_name1,
-        timeLength = input$timewindow,
-        prefixLength = input$prefixLength
+    output$food1 <- renderPlot({
+
+      validate(
+        need(input$food_name1, "Waiting on database...1"),
+        need(!is.null(food_df()), "Problem with food times"),
+        need(!is.null(ID()),"No user selected")
       )
-     %>%
-      filter(!is.na(value)))
-
-
-    output$food_selection1 <- renderUI({
-      taster_prod_table <- taster_products(user_id = ID())
-      prod_names <- sort(taster_prod_table$productName)
-      #message(paste("finding foods for User", isolate(input$user_id)))
-      message(sprintf("User %s first food is %s",isolate(input$user_id),last(prod_names) ))
-      selectizeInput(NS(id,"food_name1"),
-                     label = "Your food 1",
-                     choices = prod_names,
-                     selected = last(prod_names)
-                    )
-    })
-
-    output$downloadFood_df <-
-      downloadHandler(
-        filename = function() {
-          sprintf("Food_data-%s-%s.csv", ID(), Sys.Date())
-        },
-        content = function(file) {
-          write_csv(food_df(), file)
-        }
+      observe(
+        cat(file = stderr(), sprintf("render plot for user_id=%d and food=%s \n",
+                                     isolate(ID()),
+                                     isolate(input$food_name1)))
       )
 
-      output$food1 <- renderPlot({
 
-        input$submit_foods
-        validate(
-          need(input$food_name1, "Waiting on database...1")
-        )
-        one_food_df <- food_times_df(user_id = ID(),
-                                     foodname = input$food_name1,
-                                     timeLength = input$timewindow,
-                                     prefixLength = input$prefixLength)
-        if (input$normalize) {
-          g <- one_food_df %>% normalize_value() %>%
-            arrange(meal, t) %>%
-            ggplot(aes(t, value, color = date_ch)) + geom_line(size = 2) + ylim(-50,50)
-        } else
-          g <-
-            one_food_df %>% ggplot(aes(t, value, color = date_ch)) + geom_line(size = 2)
-        g+ psi_theme+
-          geom_rect(aes(xmin=0,
-                        xmax=120, #max(Date),
-                        ymin=-Inf,
-                        ymax=Inf),
-                    color = "lightgrey",
-                    alpha=0.005) +
-          labs(title = "Glucose Response", subtitle = str_to_title(isolate(input$food_name1)))
 
-    })
+      g <- food_df() %>%  ggplot(aes(x=t,y=value, color = date_ch)) + geom_line(size = 2)
+
+      g + psi_theme +
+        geom_rect(aes(xmin=0,
+                      xmax=120, #max(Date),
+                      ymin=-Inf,
+                      ymax=Inf),
+                  color = "lightgrey",
+                  alpha=0.005) +
+        labs(title = "Glucose Response", subtitle = str_to_title(isolate(input$food_name1)))
+  })
 
     output$auc_table <- renderDataTable({
       input$submit_foods
@@ -162,11 +186,11 @@ mod_goddessServer <- function(id,  glucose_df, title = "Name") {
         filter(t <= 120) %>% # and only the first 2 hours.
         group_by(meal) %>%
         summarize(
-                  auc = DescTools::AUC(t,value-first(value)),
-                  min = min(value),
-                  max = max(value),
-                  rise = last(value) - first(value),
-                  .groups = 'drop') %>%
+          auc = DescTools::AUC(t,value-first(value)),
+          min = min(value),
+          max = max(value),
+          rise = last(value) - first(value),
+          .groups = 'drop') %>%
         #summarize(auc = sum((lag(value)-value)*(t-lag(t)), na.rm = TRUE)) %>%
         arrange(auc)
 
@@ -180,16 +204,29 @@ mod_goddessServer <- function(id,  glucose_df, title = "Name") {
       food_df()
 
     })
+
+    output$downloadFood_df <-
+      downloadHandler(
+        filename = function() {
+          sprintf("Food_data-%s-%s.csv", ID(), Sys.Date())
+        },
+        content = function(file) {
+          write_csv(food_df(), file)
+        }
+      )
+
   })
 
 }
 
+
+
 demo_food2 <- function(){
 
-  glucose_df <- glucose_df_from_db(user_id = 1235)
+
   ui <- fluidPage(mod_goddessUI("x"))
   server <- function(input, output, session) {
-    mod_goddessServer("x", reactive(glucose_df), reactiveVal("Username"))
+    mod_goddessServer("x", reactiveVal("Username"))
   }
   shinyApp(ui, server)
 
