@@ -37,7 +37,7 @@ server <- function(input, output) {
 
    g <- mod_libreview_plotServer("modChart", active_glucose_record, title = username)
 
-   mod_foodTasterServer("food_compare_plot", active_glucose_record, title = username )
+   mod_foodTasterServer("food_compare_plot", title = username )
 
 
 }

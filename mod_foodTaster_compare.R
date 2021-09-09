@@ -18,15 +18,15 @@ mod_foodTasterUI <- function(id) {
         choices = taster_foods,
         selected = "MOON CHEESE WHITE CHEDDA BLACK PEPPA I OZ OR OZ BAGS"
       ),
-      actionButton(ns("submit_food"), label = "Submit Food"),
       checkboxInput(ns("normalize"), label = "Normalize"),
-      actionButton(ns("show_raw"), label = "Show Raw Data"),
+      actionButton(ns("show_raw"), label = "Show Data and Stats"),
       downloadButton(ns("downloadFood_df"), label = "Download Results")
     ),
     mainPanel(plotOutput(ns("main_plot")),
               h3("Raw Data"),
               dataTableOutput(ns("raw_data_table")),
               hr(),
+              h3("Statistics"),
               dataTableOutput(ns("auc_table")))
   )
 }
@@ -97,7 +97,7 @@ mod_foodTasterServer <- function(id, title = "Name") {
     output$raw_data_table <- renderDataTable({
 
       validate(
-        need(input$show_raw, "Press Show Raw")
+        need(input$show_raw, "Press Show Data and Stats")
       )
       food_df()
 
@@ -113,7 +113,9 @@ mod_foodTasterServer <- function(id, title = "Name") {
         })
 
     output$auc_table <- renderDataTable({
-      input$submit_food
+      validate(
+        need(input$show_raw, "Press Show Data and Stats")
+      )
       food_df() %>% distinct() %>%
         group_by(meal) %>%
         summarize(auc = DescTools::AUC(t,value-first(value)),
