@@ -33,9 +33,9 @@ taster_products <- function(user_id = 1234) {
 }
 
 
-#' @title UI for comparing two foods for a single user
+#' @title UI for comparing food for a single user
 #' @description
-#' Plot glucose responses for two foods for a single user.
+#' Plot glucose responses for a foods for a single user.
 #' @param id Shiny id
 #' @export
 mod_goddessUI <- function(id) {
@@ -114,19 +114,6 @@ mod_goddessServer <- function(id,  glucose_df, title = "Name") {
                     )
     })
 
-    output$food_selection2 <- renderUI({
-      taster_prod_table <- taster_products(user_id = ID())
-      prod_names <- sort(taster_prod_table$productName)
-      #message(paste("finding foods for User", isolate(input$user_id)))
-      message(sprintf("User %s second food is %s",isolate(input$user_id),last(prod_names) ))
-      selectizeInput(NS(id,"food_name2"),
-                     label = "Your food 2",
-                     choices = prod_names,
-                     selected = last(prod_names)
-      )
-    })
-
-
     output$downloadFood_df <-
       downloadHandler(
         filename = function() {
@@ -136,19 +123,6 @@ mod_goddessServer <- function(id,  glucose_df, title = "Name") {
           write_csv(food_df(), file)
         }
       )
-
-
-    output$libreview <- renderPlot({
-      input$submit_foods
-      if (input$normalize) {
-        g <- isolate(food_df()) %>% group_by(meal) %>% arrange(t) %>% mutate(value = value-first(value)) %>%
-          ungroup() %>%  arrange(meal, t) %>%
-          ggplot(aes(t, value, color = meal)) + geom_line(size = 2)
-      } else
-      g <-
-        isolate(food_df()) %>% ggplot(aes(t, value, color = meal)) + geom_line(size = 2)
-      g})
-
 
       output$food1 <- renderPlot({
 
@@ -177,34 +151,7 @@ mod_goddessServer <- function(id,  glucose_df, title = "Name") {
           labs(title = "Glucose Response", subtitle = str_to_title(isolate(input$food_name1)))
 
     })
-#
-#       output$food2 <- renderPlot({
-#
-#         input$submit_foods
-#         validate(
-#           need(input$food_name1, "Waiting on database...2")
-#         )
-#         one_food_df <- food_times_df(user_id = ID(),
-#                                      foodname = input$food_name2,
-#                                      timeLength = input$timewindow,
-#                                      prefixLength = input$prefixLength)
-#         if (input$normalize) {
-#           g <- one_food_df %>% normalize_value() %>%
-#             arrange(meal, t) %>%
-#             ggplot(aes(t, value, color = meal)) + geom_line(size = 2)
-#         } else
-#           g <-
-#           one_food_df %>% ggplot(aes(t, value, color = meal)) + geom_line(size = 2)
-#         g +
-#           geom_rect(aes(xmin=0,
-#                         xmax=120, #max(Date),
-#                         ymin=-Inf,
-#                         ymax=Inf),
-#                     color = "lightgrey",
-#                     alpha=0.005)
-#
-#
-#       })
+
     output$auc_table <- renderDataTable({
       input$submit_foods
       validate(
