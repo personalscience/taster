@@ -7,9 +7,19 @@ library(RPostgres)
 
 library(psiCGM)
 
+conn_args <- config::get("dataconnection")
+con <- DBI::dbConnect(
+  drv = conn_args$driver,
+  user = conn_args$user,
+  host = conn_args$host,
+  port = conn_args$port,
+  dbname = conn_args$dbname,
+  password = conn_args$password
+)
+
 source("mod_goddessUI.R")
-source("psi_db_taster_notes.R")
-taster_foods <- taster_notes_df %>% distinct(Comment) %>% pull(Comment)
+taster_foods <- tbl(con,"notes_records") %>% filter(user_id %in% 1007:1020) %>% distinct(Comment) %>% pull(Comment)
+source("mod_foodTaster_compare.R")
 
 
 library(showtext)
