@@ -63,12 +63,14 @@ mod_goddessUI <- function(id) {
     downloadButton(ns("downloadFood_df"), label = "Download Results"),
     ),
     mainPanel(
-      textOutput(ns('show_user')),
+
       plotOutput(ns("food1")),
       h3("Stats Table"),
       dataTableOutput(ns("auc_table")),
       h3("Raw Data"),
-      dataTableOutput(ns("raw_data_table"))
+      dataTableOutput(ns("raw_data_table")),
+      hr(),
+      textOutput(ns('show_user'))
       )
     )
 
