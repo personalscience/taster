@@ -16,13 +16,17 @@ mod_foodTasterUI <- function(id) {
         ns("food_name"),
         label = "User Name",
         choices = taster_foods,
-        selected = "REAL FOOD BAR"
+        selected = "MOON CHEESE WHITE CHEDDA BLACK PEPPA I OZ OR OZ BAGS"
       ),
       actionButton(ns("submit_food"), label = "Submit Food"),
       checkboxInput(ns("normalize"), label = "Normalize"),
+      actionButton(ns("show_raw"), label = "Show Raw Data"),
       downloadButton(ns("downloadFood_df"), label = "Download Results")
     ),
-    mainPanel(plotOutput(ns("libreview")),
+    mainPanel(plotOutput(ns("main_plot")),
+              h3("Raw Data"),
+              dataTableOutput(ns("raw_data_table")),
+              hr(),
               dataTableOutput(ns("auc_table")))
   )
 }
@@ -32,27 +36,71 @@ mod_foodTasterUI <- function(id) {
 #' Given a (reactive) libreview dataframe, this Shiny module will
 #' generate a valid ggplot object and display it in an accompanying UI
 #' @param id shiny module id
-#' @param glucose_df reactive for a valid glucose dataframe
 #' @param title a title for the plot
 #' @return ggplot object representing a glucose chart
 #' @export
-mod_foodTasterServer <- function(id,  glucose_df, title = "Name") {
+mod_foodTasterServer <- function(id, title = "Name") {
 
   moduleServer(id, function(input, output, session) {
 
 
-    all_food_df <- reactive(food_times_df(foodname = input$food_name) %>% filter(!is.na(value)))
+    food_df <- reactive({
+      validate(
+        need(input$food_name, "No food selected")
+      )
 
-    food_df <-  reactive(if (input$normalize) {
-      all_food_df() %>% group_by(meal) %>% arrange(t) %>% mutate(value = value-first(value)) %>%
-        ungroup() %>%  arrange(meal, t)
-    } else  all_food_df())
+      one_food_df <-  food_times_df(
+        user_id = NULL,
+        timeLength = 150,
+        prefixLength = 20,
+        foodname = input$food_name
+      )
 
+      validate(
+        need(!is.null(one_food_df), sprintf("No glucose results for food %s", input$food_name1))
+      )
+
+      df <- if(input$normalize) {
+        one_food_df %>% normalize_value()}
+      else one_food_df
+
+      df
+    }
+    )
     #foodname <- input$food_name
-    output$libreview <- renderPlot({
-      input$submit_food
-      plot_food_compare(food_times = food_df(),
-                        foodname = isolate(input$food_name))
+    output$main_plot <- renderPlot({
+
+      validate(
+        need(input$food_name, "Waiting on database..."),
+        need(!is.null(food_df()), "Problem with food times")
+      )
+      observe(
+        cat(file = stderr(), sprintf("render plot for food=%s \n",
+                                     isolate(input$food_name)))
+      )
+
+
+
+    g <- food_df() %>% ggplot(aes(x=t,y=value,color=date_ch)) + geom_line(size=2)
+
+    g + psi_theme +
+      geom_rect(aes(xmin=0,
+                    xmax=120, #max(Date),
+                    ymin=-Inf,
+                    ymax=Inf),
+                color = "lightgrey",
+                alpha=0.005) +
+      labs(title = "Glucose Response", subtitle = str_to_title(isolate(input$food_name)))
+
+    })
+
+    output$raw_data_table <- renderDataTable({
+
+      validate(
+        need(input$show_raw, "Press Show Raw")
+      )
+      food_df()
+
     })
 
     output$downloadFood_df <-
@@ -82,10 +130,10 @@ mod_foodTasterServer <- function(id,  glucose_df, title = "Name") {
 
 demo_food <- function(){
 
-  glucose_df <- glucose_df_from_db(user_id = 1235)
+
   ui <- fluidPage(mod_foodTasterUI("x"))
   server <- function(input, output, session) {
-    mod_foodTasterServer("x", reactive(glucose_df), reactiveVal("Username"))
+    mod_foodTasterServer("x", reactiveVal("Username"))
   }
   shinyApp(ui, server)
 
