@@ -103,9 +103,13 @@ mod_foodTasterServer <- function(id, title = "Name") {
     foods_to_show <- food_df() %>%
       filter(meal %in% input$meal_items)
 
+    validate(
+      need(nrow(foods_to_show)>0, "Please select a meal")
+    )
+
     g <- foods_to_show %>%
       filter(meal %in% input$meal_items) %>%
-      ggplot(aes(x=t,y=value,color=date_ch)) + geom_line(size=2)
+      ggplot(aes(x=t,y=value,color=date_ch)) + geom_line(size=2) + geom_smooth(method = "loess")
 
     g + psi_theme +
       geom_rect(aes(xmin=0,
