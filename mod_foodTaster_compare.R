@@ -19,6 +19,7 @@ mod_foodTasterUI <- function(id) {
         selected = "MOON CHEESE WHITE CHEDDA BLACK PEPPA I OZ OR OZ BAGS"
       ),
       checkboxInput(ns("normalize"), label = "Normalize"),
+      checkboxInput(ns("smooth"), label = "Smooth"),
       actionButton(ns("show_raw"), label = "Show Data and Stats"),
       downloadButton(ns("downloadFood_df"), label = "Download Results"),
       hr(),
@@ -109,7 +110,8 @@ mod_foodTasterServer <- function(id, title = "Name") {
 
     g <- foods_to_show %>%
       filter(meal %in% input$meal_items) %>%
-      ggplot(aes(x=t,y=value,color=date_ch)) + geom_line(size=2) + geom_smooth(method = "loess")
+      ggplot(aes(x=t,y=value,color=date_ch)) + geom_line(size=2) +
+      if(input$smooth) geom_smooth(method = "loess") else NULL
 
     g + psi_theme +
       geom_rect(aes(xmin=0,
