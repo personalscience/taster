@@ -22,7 +22,9 @@ taster_classify_food("KIND")
 taster_classify_food(taster_notes_df$Comment[100])
 sapply(taster_notes_df$Comment, function(x) taster_classify_food(x))
 
-map_chr(taster_notes_df$Comment, taster_classify_food)
+taster_notes_df %>% mutate(Comment = taster_classify_food(Comment))
+
+taster_notes_df$Comment <- map_chr(taster_notes_df$Comment, taster_classify_food)
 
 taster_notes_df %>% group_by(Comment) %>% summarize(n=n()) %>% clipr::write_clip()
 

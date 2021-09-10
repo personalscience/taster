@@ -55,7 +55,7 @@ mod_foodTasterServer <- function(id, title = "Name") {
       one_food_df <-  food_times_df(
         user_id = NULL,
         timeLength = 150,
-        prefixLength = 20,
+        prefixLength = 30,
         foodname = input$food_name
       )
 
@@ -63,9 +63,7 @@ mod_foodTasterServer <- function(id, title = "Name") {
         need(!is.null(one_food_df), sprintf("No glucose results for food %s", input$food_name1))
       )
 
-      df <- if(input$normalize) {
-        one_food_df %>% normalize_value()}
-      else one_food_df
+      df <- one_food_df
 
       df
     }
@@ -101,7 +99,11 @@ mod_foodTasterServer <- function(id, title = "Name") {
         message(sprintf("currently selected choices:%s", input$meal_items))}
       )
 
-    foods_to_show <- food_df() %>%
+      food_df <-  if(input$normalize) {food_df() %>% normalize_value()}
+      else food_df()
+
+
+    foods_to_show <- food_df %>%
       filter(meal %in% input$meal_items)
 
     validate(
@@ -111,7 +113,7 @@ mod_foodTasterServer <- function(id, title = "Name") {
     g <- foods_to_show %>%
       filter(meal %in% input$meal_items) %>%
       ggplot(aes(x=t,y=value,color=date_ch))  +
-      if(input$smooth) geom_smooth(method = "loess") else geom_line(size=2)
+      if(input$smooth) geom_smooth(method = "loess", aes(fill=date_ch)) else geom_line(size=2)
 
     g + psi_theme +
       geom_rect(aes(xmin=0,
@@ -124,9 +126,9 @@ mod_foodTasterServer <- function(id, title = "Name") {
 
     })
 
-    observeEvent(input$show_raw, {
-      updateActionButton(inputId = "show_raw", label = "Hide Raw Data and Stats")
-    })
+    # observeEvent(input$show_raw, {
+    #   updateActionButton(inputId = "show_raw", label = "Hide Raw Data and Stats")
+    # })
 
     observeEvent(input$food_name,{
       validate(
