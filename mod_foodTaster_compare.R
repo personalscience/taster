@@ -101,6 +101,10 @@ mod_foodTasterServer <- function(id, title = "Name") {
     })
 
     observeEvent(input$food_name,{
+      validate(
+        need(input$food_name, "Waiting on database..."),
+        need(!is.null(food_df()), "Problem with food times")
+      )
       updateCheckboxGroupInput(inputId = "meal_items",
                                label = "Select Meals",
                                choices = food_df() %>% distinct(meal) %>% pull(meal))
