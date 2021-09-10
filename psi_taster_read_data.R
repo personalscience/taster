@@ -69,8 +69,10 @@ id_from_taster <- function(json_object) {
 }
 
 ### How I made the conversion file
-# t <- taster_raw_all %>% transmute(name,productFdcID=as.character(productFdcID),type,barcode,notes)
-#
+# t <- taster_raw_all %>%
+#   transmute(name = str_to_upper(str_squish(str_replace_all(name, "[^A-Za-z0-9']", " "))),
+#             productFdcID=as.character(productFdcID),
+#             type,barcode)
 # pids <- t %>% drop_na(productFdcID) %>% distinct(pid =productFdcID) %>% pull(pid)
 # up <- t %>% filter(productFdcID %in% pids) %>% distinct(name,productFdcID)
 # up %>% group_by(pid = productFdcID) %>% summarize(n=n(), names = paste0(name)) %>% mutate(pid = paste0("\'",pid)) %>%
@@ -82,7 +84,7 @@ id_from_taster <- function(json_object) {
 #' a CSV file with columns `pid`, `names`, and `simpleName` to convert from each format
 taster_names_convert_table <- read_csv(file=file.path(config::get("tastermonial")$datadir,
                                                       "Tastermonial Name Mapping.csv"), col_types = "cdcc") %>%
-  transmute(pid = str_replace_all(pid, "\'",""),names,simpleName)
+  mutate(name = Comment)
 
 #' Classify a Tastermonial food into limited categories
 #' @param foodname a string representation of a name
@@ -90,7 +92,7 @@ taster_names_convert_table <- read_csv(file=file.path(config::get("tastermonial"
 taster_classify_food <- function(foodname) {
 
   if(!is.null(foodname)){
-  s <- taster_names_convert_table %>% filter(names %in% foodname) #%>% pull(simpleName)
+  s <- taster_names_convert_table %>% filter(name == foodname) #%>% pull(simpleName)
   if(nrow(s)>0) return(s %>% pull(simpleName))
   else return(foodname)}
   else return(NA)

@@ -14,15 +14,16 @@ library(psiCGM)
 # )
 
 
-t <- taster_raw_all %>% transmute(name,productFdcID=as.character(productFdcID),type,barcode,notes)
+taster_raw_all$name[210]
+taster_classify_food(taster_raw_all$name[210])
 
-pids <- t %>% drop_na(productFdcID) %>% distinct(pid =productFdcID) %>% pull(pid)
-up <- t %>% filter(productFdcID %in% pids) %>% distinct(name,productFdcID)
-up %>% group_by(pid = productFdcID) %>% summarize(n=n(), names = paste0(name)) %>% bind_rows(tibble(pid="a",n=1,names="c"))  %>%
-  clipr::write_clip(object_type = c("table"))
+taster_classify_food("KIND")
 
-name_convert_file <- read_csv(file=file.path(config::get("tastermonial")$datadir, "Tastermonial Name Mapping.csv"), col_types = "cdcc") %>%
-  transmute(pid = str_replace_all(pid, "\'",""),names,simpleName)
+taster_classify_food(taster_notes_df$Comment[100])
+sapply(taster_notes_df$Comment, function(x) taster_classify_food(x))
 
-up %>% group_by(pid = productFdcID) %>% summarize(n=n(), names = paste0(name)) %>% mutate(pid = paste0("\'",pid)) %>%
-  clipr::write_clip(object_type = c("table"))
+map_chr(taster_notes_df$Comment, taster_classify_food)
+
+taster_notes_df %>% group_by(Comment) %>% summarize(n=n()) %>% clipr::write_clip()
+
+taster_notes_df$Comment
