@@ -78,6 +78,15 @@ mod_foodTasterServer <- function(id, title = "Name") {
       one_food_df %>% distinct(meal) %>% pull(meal)}
     )
 
+    food_filter <- reactive({
+      one_food_df <- food_df()
+      validate(
+        need(!is.null(one_food_df), sprintf("No glucose results for food %s", input$food_name1))
+      )
+
+      message(sprintf("currently selected choices:%s", input$meal_items))
+    })
+
 
     output$main_plot <- renderPlot({
 
@@ -86,13 +95,17 @@ mod_foodTasterServer <- function(id, title = "Name") {
         need(!is.null(food_df()), "Problem with food times")
       )
       observe(
-        cat(file = stderr(), sprintf("render plot for food=%s \n",
+        {cat(file = stderr(), sprintf("render plot for food=%s \n",
                                      isolate(input$food_name)))
+        message(sprintf("currently selected choices:%s", input$meal_items))}
       )
 
+    foods_to_show <- food_df() %>%
+      filter(meal %in% input$meal_items)
 
-
-    g <- food_df() %>% ggplot(aes(x=t,y=value,color=date_ch)) + geom_line(size=2)
+    g <- foods_to_show %>%
+      filter(meal %in% input$meal_items) %>%
+      ggplot(aes(x=t,y=value,color=date_ch)) + geom_line(size=2)
 
     g + psi_theme +
       geom_rect(aes(xmin=0,
