@@ -26,7 +26,7 @@ ui <- navbarPage("Tastermonial", collapsible = TRUE, inverse = TRUE,
                               h2("Your CGM Data"),
                               mod_goddessUI("food2_compare_plot")
                           )),
-                 tabPanel("More Foods",
+                 tabPanel("All Foods",
                           fluidPage(
                               mod_foodTasterUI("food_compare_plot")
                           )),

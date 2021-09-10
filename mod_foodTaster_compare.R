@@ -69,7 +69,16 @@ mod_foodTasterServer <- function(id, title = "Name") {
       df
     }
     )
-    #foodname <- input$food_name
+
+    meals_all <- reactive({
+      one_food_df <- food_df()
+      validate(
+        need(!is.null(one_food_df), sprintf("No glucose results for food %s", input$food_name1))
+      )
+      one_food_df %>% distinct(meal) %>% pull(meal)}
+    )
+
+
     output$main_plot <- renderPlot({
 
       validate(
@@ -107,7 +116,7 @@ mod_foodTasterServer <- function(id, title = "Name") {
       )
       updateCheckboxGroupInput(inputId = "meal_items",
                                label = "Select Meals",
-                               choices = food_df() %>% distinct(meal) %>% pull(meal))
+                               choices = meals_all())
     })
 
 
