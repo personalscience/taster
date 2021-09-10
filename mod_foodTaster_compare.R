@@ -110,8 +110,8 @@ mod_foodTasterServer <- function(id, title = "Name") {
 
     g <- foods_to_show %>%
       filter(meal %in% input$meal_items) %>%
-      ggplot(aes(x=t,y=value,color=date_ch)) + geom_line(size=2) +
-      if(input$smooth) geom_smooth(method = "loess") else NULL
+      ggplot(aes(x=t,y=value,color=date_ch))  +
+      if(input$smooth) geom_smooth(method = "loess") else geom_line(size=2)
 
     g + psi_theme +
       geom_rect(aes(xmin=0,
