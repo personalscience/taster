@@ -7,7 +7,7 @@ source("psi_taster_read_data.R")  # load functions to process Tastermonial files
 
 taster_raw_df <- taster_raw(filepath = file.path(config::get("tastermonial")$datadir, "table-data.csv"))
 taster_raw2_df <- taster_raw(filepath = file.path(config::get("tastermonial")$datadir, "FoodLogFireBasetable-data_ingestsept6.csv"))
-
+taster_raw_all <- bind_rows(taster_raw_df,taster_raw2_df)
 # taster_notes_df2 <- taster_raw %>% transmute(Start = with_tz(lubridate::parse_date_time(startEatingDate, orders = "dmY HM p z"),
 #                                                               tzone = Sys.timezone()),
 #                                               End = as_datetime(NA),

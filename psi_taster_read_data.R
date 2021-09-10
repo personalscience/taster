@@ -68,6 +68,11 @@ id_from_taster <- function(json_object) {
 
 }
 
+#' Classify a Tastermonial food into limited categories
+taster_classify_foods <- function(foodname) {
+
+
+}
 
 psi_fill_taster_notes_from_scratch <- function(taster_notes_df) {
 
