@@ -68,9 +68,19 @@ id_from_taster <- function(json_object) {
 
 }
 
-#' Classify a Tastermonial food into limited categories
-taster_classify_foods <- function(foodname) {
+#' a CSV file with columns `pid`, `names`, and `simpleName` to convert from each format
+taster_names_convert_table <- read_csv(file=file.path(config::get("tastermonial")$datadir,
+                                                      "Tastermonial Name Mapping.csv"), col_types = "cdcc") %>%
+  transmute(pid = str_replace_all(pid, "\'",""),names,simpleName)
 
+#' Classify a Tastermonial food into limited categories
+#' @param foodname a string representation of a name
+#' @return character string representing simplifed name
+taster_classify_food <- function(foodname) {
+
+  s <- taster_names_convert_table %>% filter(names == foodname) #%>% pull(simpleName)
+  if(nrow(s)>0) return(s %>% pull(simpleName))
+  else return(foodname)
 
 }
 

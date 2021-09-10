@@ -14,3 +14,5 @@ library(psiCGM)
 # )
 
 
+t <- taster_raw_all %>% select(name,productFdcID=as.character(productFdcID),type,barcode,notes)
+t %>% distinct(name,productFdcID)
