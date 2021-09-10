@@ -14,5 +14,15 @@ library(psiCGM)
 # )
 
 
-t <- taster_raw_all %>% select(name,productFdcID=as.character(productFdcID),type,barcode,notes)
-t %>% distinct(name,productFdcID)
+t <- taster_raw_all %>% transmute(name,productFdcID=as.character(productFdcID),type,barcode,notes)
+
+pids <- t %>% drop_na(productFdcID) %>% distinct(pid =productFdcID) %>% pull(pid)
+up <- t %>% filter(productFdcID %in% pids) %>% distinct(name,productFdcID)
+up %>% group_by(pid = productFdcID) %>% summarize(n=n(), names = paste0(name)) %>% bind_rows(tibble(pid="a",n=1,names="c"))  %>%
+  clipr::write_clip(object_type = c("table"))
+
+name_convert_file <- read_csv(file=file.path(config::get("tastermonial")$datadir, "Tastermonial Name Mapping.csv"), col_types = "cdcc") %>%
+  transmute(pid = str_replace_all(pid, "\'",""),names,simpleName)
+
+up %>% group_by(pid = productFdcID) %>% summarize(n=n(), names = paste0(name)) %>% mutate(pid = paste0("\'",pid)) %>%
+  clipr::write_clip(object_type = c("table"))
