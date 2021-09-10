@@ -21,9 +21,9 @@ server <- function(input, output) {
                                             attr(config::get(),"config"),
                                           packageVersion("psiCGM"),
                                           first(tbl(con,"glucose_records") %>%
-                                             filter(time == max(time)) %>%
+                                             filter(time == max(time, na.rm=TRUE)) %>%
                                              pull(time) %>%
-                                             with_tz(tzone=Sys.timezone()))))
+                                             with_tz(tzone="America/Los_Angeles"))))
    #
    #
     mod_goddessServer("food2_compare_plot", title = "Tastermonial" )

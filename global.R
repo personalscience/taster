@@ -18,6 +18,7 @@ con <- DBI::dbConnect(
 )
 
 source("mod_goddessUI.R")
+taster_foods <- food_list_db(user_id = c(1001:1004,1007:1021))
 source("mod_foodTaster_compare.R")
 
 
