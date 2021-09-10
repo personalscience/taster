@@ -33,6 +33,7 @@ taster_notes_df1 <- taster_raw_df %>% transmute(Start = with_tz(lubridate::parse
                                          user_id = map_dbl(user, id_from_taster))
 
 taster_notes_df <- bind_rows(taster_notes2_df,taster_notes_df1)
+taster_notes_df$Comment <- map_chr(taster_notes_df$Comment, taster_classify_food)
 rm(taster_notes_df1,taster_notes2_df,taster_raw2_df,taster_raw_df)
 
 
