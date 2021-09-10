@@ -14,13 +14,15 @@ mod_foodTasterUI <- function(id) {
     sidebarPanel(
       selectInput(
         ns("food_name"),
-        label = "User Name",
+        label = "Select Food",
         choices = taster_foods,
         selected = "MOON CHEESE WHITE CHEDDA BLACK PEPPA I OZ OR OZ BAGS"
       ),
       checkboxInput(ns("normalize"), label = "Normalize"),
       actionButton(ns("show_raw"), label = "Show Data and Stats"),
-      downloadButton(ns("downloadFood_df"), label = "Download Results")
+      downloadButton(ns("downloadFood_df"), label = "Download Results"),
+      hr(),
+      checkboxGroupInput(ns("meal_items"),label = "Meal", choices = NULL)
     ),
     mainPanel(plotOutput(ns("main_plot")),
               h3("Raw Data"),
@@ -93,6 +95,17 @@ mod_foodTasterServer <- function(id, title = "Name") {
       labs(title = "Glucose Response", subtitle = str_to_title(isolate(input$food_name)))
 
     })
+
+    observeEvent(input$show_raw, {
+      updateActionButton(inputId = "show_raw", label = "Hide Raw Data and Stats")
+    })
+
+    observeEvent(input$food_name,{
+      updateCheckboxGroupInput(inputId = "meal_items",
+                               label = "Select Meals",
+                               choices = food_df() %>% distinct(meal) %>% pull(meal))
+    })
+
 
     output$raw_data_table <- renderDataTable({
 
