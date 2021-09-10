@@ -20,6 +20,7 @@ mod_goddessUI <- function(id) {
       ),
     uiOutput(ns("food_selection")),
     checkboxInput(ns("normalize"), label = "Normalize"),
+    checkboxInput(ns("smooth"), label = "Smooth"),
     numericInput(ns("prefixLength"), label = "Prefix Minutes", value = 0, width = "30%" ),
     numericInput(ns("timewindow"), label = "Time Window (Minutes)", value = 150, width = "30%"),
     actionButton(ns("show_raw"), label = "Show Raw Data"),
@@ -88,9 +89,7 @@ mod_goddessServer <- function(id, title = "Name") {
        need(!is.null(one_food_df), sprintf("No glucose results after eating %s", input$food_name1))
      )
 
-      df <- if(input$normalize) {
-        one_food_df %>% normalize_value()}
-      else one_food_df
+      df <- one_food_df
 
       df
       }
@@ -130,7 +129,11 @@ mod_goddessServer <- function(id, title = "Name") {
 
 
 
-      g <- food_df() %>%  ggplot(aes(x=t,y=value, color = date_ch)) + geom_line(size = 2)
+      food_df <-  if(input$normalize) {food_df() %>% normalize_value()}
+      else food_df()
+
+      g <- food_df %>% ggplot(aes(x=t,y=value, color = date_ch)) +
+        if(input$smooth) geom_smooth(method = "loess", aes(fill = date_ch)) else geom_line(size=2)
 
       g + psi_theme +
         geom_rect(aes(xmin=0,
