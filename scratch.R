@@ -13,7 +13,11 @@ library(psiCGM)
 #   password = conn_args$password
 # )
 
+tbl(con,"notes_records") %>% filter(Start < "2021-01-01" & user_id!=1234)
+taster_notes2_df %>% filter(Start < "2021-01-01")
 
+
+taster_raw_all %>% select(startEatingDate)
 taster_raw_all$name[210]
 taster_classify_food(taster_raw_all$name[210])
 

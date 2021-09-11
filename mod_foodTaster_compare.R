@@ -45,14 +45,26 @@ mod_foodTasterUI <- function(id) {
 mod_foodTasterServer <- function(id, title = "Name") {
 
   moduleServer(id, function(input, output, session) {
+    conn_args <-  config::get("dataconnection")
+    con <- DBI::dbConnect(
+      drv = conn_args$driver,
+      user = conn_args$user,
+      host = conn_args$host,
+      port = conn_args$port,
+      dbname = conn_args$dbname,
+      password = conn_args$password)
 
+    glucose_records <- tbl(con,"glucose_records") %>% collect()
+    notes_records <- tbl(con, "notes_records") %>% collect()
 
     food_df <- reactive({
       validate(
         need(input$food_name, "No food selected")
       )
 
-      one_food_df <-  food_times_df(
+      one_food_df <-  food_times_df_fast(
+        glucose_df = glucose_records,
+        notes_df = notes_records,
         user_id = NULL,
         timeLength = 150,
         prefixLength = 30,
