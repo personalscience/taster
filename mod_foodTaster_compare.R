@@ -26,12 +26,13 @@ mod_foodTasterUI <- function(id) {
       checkboxGroupInput(ns("meal_items"),label = "Meal", choices = NULL)
     ),
     mainPanel(plotOutput(ns("main_plot")),
-              h3("Raw Data"),
-              dataTableOutput(ns("raw_data_table")),
-              hr(),
               h3("Statistics"),
-              dataTableOutput(ns("auc_table")))
-  )
+              wellPanel(dataTableOutput(ns("auc_table"))),
+              hr(),
+              h3("Raw Data"),
+              dataTableOutput(ns("raw_data_table"))
+    ))
+
 }
 
 #' @title Plot glucose reaction for all foods that match an input text.

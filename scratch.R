@@ -13,8 +13,11 @@ library(psiCGM)
 #   password = conn_args$password
 # )
 
-tbl(con,"notes_records") %>% filter(Start < "2021-01-01" & user_id!=1234)
-taster_notes2_df %>% filter(Start < "2021-01-01")
+
+system.time({notes_records <- tbl(con,"notes_records")  %>% collect()
+glucose_records <- tbl(con,"glucose_records") %>% collect()})
+
+system.time(food_times_df(foodname="Munk Pack"))-system.time(food_times_df_fast(glucose_records,notes_records, foodname="Munk Pack"))
 
 
 taster_raw_all %>% select(startEatingDate)
