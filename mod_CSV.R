@@ -3,19 +3,34 @@
 
 
 
-libreview_ui <- function(id) {
+showLibreviewUI <- function(id) {
   ns <- NS(id)
   fluidRow(
-    fileInput("ask_filename", "Choose CSV File", accept = ".csv"),
-    dataTableOutput(NS(id, "glucoseTable"))
+    fileInput(ns("ask_filename"), label = "Choose CSV File", accept = ".csv"),
+    plotOutput(ns("modChart")),
+    hr(),
+    wellPanel(dataTableOutput(ns("glucoseTable")))
   )
 
 }
 
-test_server <- function(id) {
-  message(librelink_csv)
+csv_read_server <- function(id) {
+
   moduleServer(id, function(input, output, session) {
-    glucose_df <- reactive(glucose_df_from_libreview_csv(file = input$ask_filename))
+
+    filepath<- reactive({
+      validate(
+        need(input$ask_filename,"Please select a file")
+      )
+      input$ask_filename})
+
+
+    glucose_df <- reactive(glucose_df_from_libreview_csv(file=filepath()$datapath))
+
+    output$modChart <- renderPlot({
+      plot_glucose(glucose_df(),"Glucose Results")
+    }
+    )
 
     output$glucoseTable <- renderDataTable(
       glucose_df(),
@@ -29,9 +44,9 @@ test_server <- function(id) {
 libreCSV_demo <- function() {
 
 
-  ui <- fluidPage(libreview_ui("x"))
+  ui <- fluidPage(showLibreviewUI("x"))
   server <- function(input, output, session) {
-    test_server("x")
+    csv_read_server("x")
   }
   shinyApp(ui, server)
 
