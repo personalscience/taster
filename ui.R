@@ -47,6 +47,7 @@ ui <- navbarPage("Tastermonial", collapsible = TRUE, inverse = TRUE,
                           )),
                  tabPanel("CSV Load",
                           fluidPage(
+                            titlePanel("Upload your own Libreview CSV results"),
                             showLibreviewUI("fromCSV")
                           )),
                  tabPanel("About",
