@@ -12,10 +12,10 @@ libreview_ui <- function(id) {
 
 }
 
-test_server <- function(id,  librelink_csv) {
+test_server <- function(id) {
   message(librelink_csv)
   moduleServer(id, function(input, output, session) {
-    glucose_df <- reactive(glucose_from_csv(librelink_csv))
+    glucose_df <- reactive(glucose_df_from_libreview_csv(file = input$ask_filename))
 
     output$glucoseTable <- renderDataTable(
       glucose_df(),
@@ -31,7 +31,7 @@ libreCSV_demo <- function() {
 
   ui <- fluidPage(libreview_ui("x"))
   server <- function(input, output, session) {
-    test_server("x", DEFAULT_LIBRELINK_FILE_PATH)
+    test_server("x")
   }
   shinyApp(ui, server)
 
