@@ -45,6 +45,10 @@ ui <- navbarPage("Tastermonial", collapsible = TRUE, inverse = TRUE,
 
                                   ))
                           )),
+                 tabPanel("CSV Load",
+                          fluidPage(
+                            showLibreviewUI("fromCSV")
+                          )),
                  tabPanel("About",
                           fluidPage(
                               #Application title

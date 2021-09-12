@@ -35,6 +35,8 @@ server <- function(input, output) {
      cat(file = stderr(), sprintf("Username=%s \n",username()))
    )
 
+   csv_read_server("fromCSV")
+
    g <- mod_libreview_plotServer("modChart", active_glucose_record, title = username)
 
    mod_foodTasterServer("food_compare_plot", title = username )
