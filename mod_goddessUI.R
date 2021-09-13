@@ -158,6 +158,7 @@ mod_goddessServer <- function(id, title = "Name") {
           auc = DescTools::AUC(t,value-first(value)),
           min = min(value),
           max = max(value),
+          sd = sd(value),
           rise = last(value) - first(value),
           .groups = 'drop') %>%
         #summarize(auc = sum((lag(value)-value)*(t-lag(t)), na.rm = TRUE)) %>%
