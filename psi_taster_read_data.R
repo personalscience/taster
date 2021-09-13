@@ -94,7 +94,7 @@ taster_classify_food <- function(foodname) {
   if(!is.null(foodname)){
   s <- taster_names_convert_table %>% filter(name == foodname) #%>% pull(simpleName)
   if(nrow(s)>0) return(s %>% pull(simpleName))
-  else return(foodname)}
+  else return("other")}
   else return(NA)
 
 }
