@@ -56,6 +56,7 @@ mod_foodTasterServer <- function(id, title = "Name") {
       password = conn_args$password)
 
 
+    # food_df ----
     food_df <- reactive({
       validate(
         need(input$food_name, "No food selected")
@@ -80,6 +81,7 @@ mod_foodTasterServer <- function(id, title = "Name") {
     }
     )
 
+    # meals_all ----
     meals_all <- reactive({
       one_food_df <- food_df()
       validate(
@@ -88,16 +90,7 @@ mod_foodTasterServer <- function(id, title = "Name") {
       one_food_df %>% distinct(meal) %>% pull(meal)}
     )
 
-    food_filter <- reactive({
-      one_food_df <- food_df()
-      validate(
-        need(!is.null(one_food_df), sprintf("No glucose results for food %s", input$food_name1))
-      )
-
-      message(sprintf("currently selected choices:%s", input$meal_items))
-    })
-
-
+    # output$main_plot  ----
     output$main_plot <- renderPlot({
 
       validate(
@@ -113,7 +106,7 @@ mod_foodTasterServer <- function(id, title = "Name") {
       food_df <-  if(input$normalize) {food_df() %>% normalize_value()}
       else food_df()
 
-
+# foods_to_show ----
     foods_to_show <- food_df %>%
       filter(meal %in% input$meal_items)
 
@@ -151,7 +144,7 @@ mod_foodTasterServer <- function(id, title = "Name") {
                                choices = meals_all())
     })
 
-
+# output$raw_data_table ----
     output$raw_data_table <- renderDataTable({
 
       validate(

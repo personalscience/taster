@@ -1,5 +1,18 @@
 # Shiny Module and UI to compare foods for a single user
 
+glucose_range_for_id <- function(user_id){
+
+  ID = user_id
+  GLUCOSE_RECORDS %>% filter(user_id == ID) %>%
+
+    mutate(time = with_tz(time, tzone=Sys.timezone())) %>%
+    filter(hour(time) >=1 & hour(time) <=4 & !is.na(value)) %>%
+    group_by(date=date(time)) %>% summarize(mean = mean(value, na.rm = TRUE)) %>% ungroup() %>%
+    summarize(range = as.integer(range(mean))) %>% pull(range)
+
+}
+
+
 
 #' @title UI for comparing food for a single user
 #' @description
@@ -65,9 +78,10 @@ mod_goddessServer <- function(id, title = "Name") {
 
     output$show_user <- renderText(
 
-     sprintf("user_id = %d, username = %s, product = %s", ID(),
+     sprintf("user_id = %d, username = %s, product = %s, range=%s", ID(),
               username_for_id(ID()),
-             input$food_name1
+             input$food_name1,
+             paste0(glucose_range_for_id(ID()), collapse=":")
               )
       )
 
