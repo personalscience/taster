@@ -84,7 +84,7 @@ mod_foodTasterServer <- function(id, title = "Name") {
     )
 
     # output$ranges ----
-    output$ranges <- renderText(paste0(map_chr(be$user_id %>% unique(),
+    output$ranges <- renderText(paste0(map_chr(food_df()$user_id %>% unique(),
                                     function(x) {sprintf("%s =(%s)", username_for_id(x), glucose_range_for_id(x) %>% paste0(collapse=","))
                                     }
     )
