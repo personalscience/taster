@@ -55,8 +55,6 @@ mod_foodTasterServer <- function(id, title = "Name") {
       dbname = conn_args$dbname,
       password = conn_args$password)
 
-    glucose_records <- tbl(con,"glucose_records") %>% collect()
-    notes_records <- tbl(con, "notes_records") %>% collect()
 
     food_df <- reactive({
       validate(
@@ -64,8 +62,8 @@ mod_foodTasterServer <- function(id, title = "Name") {
       )
 
       one_food_df <-  food_times_df_fast(
-        glucose_df = glucose_records,
-        notes_df = notes_records,
+        glucose_df = GLUCOSE_RECORDS,
+        notes_df = NOTES_RECORDS,
         user_id = NULL,
         timeLength = 150,
         prefixLength = 30,

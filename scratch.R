@@ -13,26 +13,29 @@ library(psiCGM)
 #   password = conn_args$password
 # )
 
+# calculate baseline
+lookup_id_from_name("Bude S")
 
-system.time({notes_records <- tbl(con,"notes_records")  %>% collect()
-glucose_records <- tbl(con,"glucose_records") %>% collect()})
+bs <- tbl(con, "glucose_records") %>% filter(user_id == 1014) %>% collect()
+rl <- tbl(con, "glucose_records") %>% filter(user_id == 1008) %>% collect()
 
-system.time(food_times_df(foodname="Munk Pack"))-system.time(food_times_df_fast(glucose_records,notes_records, foodname="Munk Pack"))
+bs %>% mutate(time = with_tz(time, tzone=Sys.timezone())) %>%
+  filter(hour(time) >=0 & hour(time) <=5 & !is.na(value)) %>%
+  group_by(date(time)) %>% summarize(mean(value, na.rm = TRUE)) %>% pull(2) %>% range()
+
+rs <- tbl(con, "glucose_records") %>% filter(user_id == 1234) %>% collect()
+rs %>% filter(hour(time) >=0 & hour(time) <=5 & !is.na(value)) %>% group_by(date(time)) %>% summarize(mean(value, na.rm = TRUE)) %>% View()
 
 
-taster_raw_all %>% select(startEatingDate)
-taster_raw_all$name[210]
-taster_classify_food(taster_raw_all$name[210])
+gdf <- tbl(con, "glucose_records")  %>% filter(!is.na(value) ) %>% collect()
 
-taster_classify_food("KIND")
+gdf  %>% mutate(time = with_tz(time, tzone=Sys.timezone())) %>%
+  group_by(user_id) %>% add_count() %>%
+  filter(hour(time) >=0 & hour(time) <=5) %>%
+  group_by(date = date(time)) %>% summarize(mean = mean(value), user_id, n) %>%
+  ungroup() %>% select(mean, user_id)  %>%
+  group_by(user_id) %>%
+  summarize(mean) %>% distinct(user_id, mean)
 
-taster_classify_food(taster_notes_df$Comment[100])
-sapply(taster_notes_df$Comment, function(x) taster_classify_food(x))
 
-taster_notes_df %>% mutate(Comment = taster_classify_food(Comment))
 
-taster_notes_df$Comment <- map_chr(taster_notes_df$Comment, taster_classify_food)
-
-taster_notes_df %>% group_by(Comment) %>% summarize(n=n()) %>% clipr::write_clip()
-
-taster_notes_df$Comment

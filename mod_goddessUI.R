@@ -71,6 +71,7 @@ mod_goddessServer <- function(id, title = "Name") {
               )
       )
 
+
     food_df <- reactive({
       validate(
         need(!is.null(taster_prod_list()),"No food times available for this person"),
@@ -78,6 +79,18 @@ mod_goddessServer <- function(id, title = "Name") {
         need(input$food_name1, "No food selected")
       )
 
+      one_food_df <-  food_times_df_fast(
+        glucose_df = GLUCOSE_RECORDS,
+        notes_df = NOTES_RECORDS,
+        user_id = ID(),
+        timeLength = input$timewindow,
+        prefixLength = input$prefixLength,
+        foodname = input$food_name1
+      )
+
+      validate(
+        need(!is.null(one_food_df), sprintf("No glucose results for food %s", input$food_name1))
+      )
      one_food_df <-  food_times_df(
         user_id = ID(),
         timeLength = input$timewindow,
@@ -153,7 +166,7 @@ mod_goddessServer <- function(id, title = "Name") {
       food_df() %>%
         filter(t >= -5) %>% # only look at the times after the food was eaten.
         filter(t <= 120) %>% # and only the first 2 hours.
-        group_by(meal) %>%
+        group_by(meal) %>% arrange(t) %>%
         summarize(
           auc = DescTools::AUC(t,value-first(value)),
           min = min(value),

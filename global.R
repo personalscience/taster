@@ -17,6 +17,10 @@ con <- DBI::dbConnect(
   password = conn_args$password
 )
 
+
+GLUCOSE_RECORDS<- tbl(con,"glucose_records") %>% collect()
+NOTES_RECORDS <- tbl(con, "notes_records") %>% collect()
+
 source("mod_goddessUI.R")
 source("mod_CSV.R")
 taster_foods <- food_list_db(user_id = c(1001:1004,1007:1021))
