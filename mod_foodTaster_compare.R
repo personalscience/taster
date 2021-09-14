@@ -173,16 +173,23 @@ mod_foodTasterServer <- function(id, title = "Name") {
           write_csv(food_df(), file)
         })
 
+    # output$auc_table ----
     output$auc_table <- renderDataTable({
       validate(
         need(input$show_raw, "Press Show Data and Stats")
       )
+
       food_df() %>% distinct() %>%
-        group_by(meal) %>%
-        summarize(auc = DescTools::AUC(t,value-first(value)),
-                  min = min(value),
-                  max = max(value),
-                  rise = last(value) - first(value)) %>%
+        filter(t >= -5) %>% # only look at the times after the food was eaten.
+        filter(t <= 120) %>% # and only the first 2 hours.
+        group_by(meal) %>% arrange(t) %>%
+        summarize(
+          auc = DescTools::AUC(t,value-first(value)),
+          min = min(value),
+          max = max(value),
+          sd = sd(value),
+          rise = last(value) - first(value),
+          .groups = 'drop') %>%
         #summarize(auc = sum((lag(value)-value)*(t-lag(t)), na.rm = TRUE)) %>%
         arrange(auc)
 

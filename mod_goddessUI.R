@@ -5,7 +5,7 @@ glucose_range_for_id <- function(user_id){
   ID = user_id
   GLUCOSE_RECORDS %>% filter(user_id == ID) %>%
 
-    mutate(time = with_tz(time, tzone=Sys.timezone())) %>%
+    mutate(time = with_tz(time, tzone="America/Los_Angeles")) %>%
     filter(hour(time) >=1 & hour(time) <=4 & !is.na(value)) %>%
     group_by(date=date(time)) %>% summarize(mean = mean(value, na.rm = TRUE)) %>% ungroup() %>%
     summarize(range = as.integer(range(mean))) %>% pull(range)
