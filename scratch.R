@@ -14,9 +14,11 @@ library(psiCGM)
 # )
 
 be <- food_times_df(prefixLength = 20, foodname = "Beviva")
-be$user_id %>% unique()
-paste0(map_chr(be$user_id %>% unique(),
-               function(x) {sprintf("%s =(%s)", username_for_id(x), glucose_range_for_id(x) %>% paste0(collapse=","))
-                 }
-               )
-       ) %>% paste0(collapse = ",")
+
+be %>% ggplot(aes(t,value, color = date_ch)) + geom_line(size=2)
+
+be %>% group_by(meal) %>%  mutate(ave = mean(value))  %>%
+  ggplot(aes(t,value, color = date_ch)) + geom_line(size=2) +# geom_point(size = 2, color = "black") +
+  geom_point(inherit.aes = FALSE, aes(t,ave)) # + geom_line(inherit.aes = FALSE, aes(t,ave))
+
+be %>% group_by(t,meal) %>% mutate(ave = mean(value))

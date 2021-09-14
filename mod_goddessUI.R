@@ -169,7 +169,8 @@ mod_goddessServer <- function(id, title = "Name") {
                       ymax=Inf),
                   color = "lightgrey",
                   alpha=0.005) +
-        labs(title = "Glucose Response", subtitle = str_to_title(isolate(input$food_name1)))
+        labs(title = "Glucose Response", subtitle = str_to_title(isolate(input$food_name1)),
+             x = "", y = "")
   })
 
     output$auc_table <- renderDataTable({

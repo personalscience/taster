@@ -136,7 +136,8 @@ mod_foodTasterServer <- function(id, title = "Name") {
                     ymax=Inf),
                 color = "lightgrey",
                 alpha=0.005) +
-      labs(title = "Glucose Response", subtitle = str_to_title(isolate(input$food_name)))
+      labs(title = "Glucose Response", subtitle = str_to_title(isolate(input$food_name)),
+           x = "minutes", y = "")
 
     })
 
