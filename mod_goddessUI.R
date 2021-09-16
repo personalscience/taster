@@ -32,6 +32,7 @@ mod_goddessUI <- function(id) {
         selected = "Richard Sp"
       ),
     uiOutput(ns("food_selection")),
+    uiOutput(ns("food_selection2")),
     checkboxInput(ns("normalize"), label = "Normalize"),
     checkboxInput(ns("smooth"), label = "Smooth"),
     numericInput(ns("prefixLength"), label = "Prefix Minutes", value = 0, width = "30%" ),
@@ -43,6 +44,7 @@ mod_goddessUI <- function(id) {
     mainPanel(
 
       plotOutput(ns("food1")),
+      plotOutput(ns("food2")),
       h3("Stats Table"),
       dataTableOutput(ns("auc_table")),
       h3("Raw Data"),
@@ -85,7 +87,44 @@ mod_goddessServer <- function(id, title = "Name") {
               )
       )
 
+# food_df2() ----
+    food_df2 <- reactive({
+      validate(
+        need(!is.null(taster_prod_list()),"No food times available for this person"),
+        need(!is.null(ID()), "No user selected"),
+        need(input$food_name1, "No food selected")
+      )
 
+      one_food_df <-  food_times_df_fast(
+        glucose_df = GLUCOSE_RECORDS,
+        notes_df = NOTES_RECORDS,
+        user_id = ID(),
+        timeLength = input$timewindow,
+        prefixLength = input$prefixLength,
+        foodname = input$food_name2
+      )
+
+      validate(
+        need(!is.null(one_food_df), sprintf("No glucose results for food %s", input$food_name1))
+      )
+     one_food_df <-  food_times_df(
+        user_id = ID(),
+        timeLength = input$timewindow,
+        prefixLength = input$prefixLength,
+        foodname = input$food_name2
+      )
+
+     validate(
+       need(!is.null(one_food_df), sprintf("No glucose results after eating %s", input$food_name1))
+     )
+
+      df <- one_food_df
+
+      df
+      }
+      )
+
+    # food_df() ----
     food_df <- reactive({
       validate(
         need(!is.null(taster_prod_list()),"No food times available for this person"),
@@ -105,24 +144,23 @@ mod_goddessServer <- function(id, title = "Name") {
       validate(
         need(!is.null(one_food_df), sprintf("No glucose results for food %s", input$food_name1))
       )
-     one_food_df <-  food_times_df(
+      one_food_df <-  food_times_df(
         user_id = ID(),
         timeLength = input$timewindow,
         prefixLength = input$prefixLength,
         foodname = input$food_name1
       )
 
-     validate(
-       need(!is.null(one_food_df), sprintf("No glucose results after eating %s", input$food_name1))
-     )
+      validate(
+        need(!is.null(one_food_df), sprintf("No glucose results after eating %s", input$food_name1))
+      )
 
       df <- one_food_df
 
       df
-      }
-      )
-
-
+    }
+    )
+# output$food_selection ----
     output$food_selection <- renderUI({
       validate(
         need(!is.null(taster_prod_list()),sprintf("No foods available for user_id %s",ID()))
@@ -173,12 +211,62 @@ mod_goddessServer <- function(id, title = "Name") {
              x = "", y = "")
   })
 
+    # output$food_selection2 ----
+    output$food_selection2 <- renderUI({
+      validate(
+        need(!is.null(taster_prod_list()),sprintf("No foods available for user_id %s",ID()))
+      )
+
+      message(paste("finding foods for User", isolate(input$user_id)))
+      message(sprintf("User %s first food is %s",isolate(input$user_id),first(taster_prod_list()) ))
+      selectizeInput(NS(id,"food_name2"),
+                     label = "Food Item",
+                     choices = taster_prod_list(),
+                     selected = first(taster_prod_list())
+      )
+    })
+
+    observe(
+      cat(file = stderr(), sprintf("user_id=%s \n",ID()))
+    )
+
+    output$food2 <- renderPlot({
+
+      validate(
+        need(input$food_name1, "Waiting on database...1"),
+        need(!is.null(food_df2()), "Problem with food times"),
+        need(!is.null(ID()),"No user selected")
+      )
+      observe(
+        cat(file = stderr(), sprintf("render plot for user_id=%d and food=%s \n",
+                                     isolate(ID()),
+                                     isolate(input$food_name2)))
+      )
+
+
+
+      food_df <-  if(input$normalize) {food_df2() %>% normalize_value()}
+      else food_df2()
+
+      g <- food_df %>% ggplot(aes(x=t,y=value, color = date_ch)) +
+        if(input$smooth) geom_smooth(method = "loess", aes(fill = date_ch)) else geom_line(size=2)
+
+      g + psi_theme +
+        geom_rect(aes(xmin=0,
+                      xmax=120, #max(Date),
+                      ymin=-Inf,
+                      ymax=Inf),
+                  color = "lightgrey",
+                  alpha=0.005) +
+        labs(title = "Glucose Response", subtitle = str_to_title(isolate(input$food_name2)),
+             x = "", y = "")
+    })
     output$auc_table <- renderDataTable({
       input$submit_foods
       validate(
         need(input$submit_foods, "Press Calculate Stats")
       )
-      food_df() %>%
+      bind_rows(food_df(),food_df2()) %>% distinct() %>%
         filter(t >= -5) %>% # only look at the times after the food was eaten.
         filter(t <= 120) %>% # and only the first 2 hours.
         group_by(meal) %>% arrange(t) %>%
@@ -199,7 +287,7 @@ mod_goddessServer <- function(id, title = "Name") {
       validate(
         need(input$show_raw, "Press Show Raw")
       )
-      food_df()
+      bind_rows(food_df(),food_df2()) %>% distinct() %>% arrange(meal)
 
     })
 
@@ -209,7 +297,7 @@ mod_goddessServer <- function(id, title = "Name") {
           sprintf("Food_data-%s-%s.csv", ID(), Sys.Date())
         },
         content = function(file) {
-          write_csv(food_df(), file)
+          write_csv(bind_rows(food_df(),food_df2()) %>% distinct() %>% arrange(meal), file)
         }
       )
 
