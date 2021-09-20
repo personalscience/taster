@@ -261,6 +261,8 @@ mod_goddessServer <- function(id, title = "Name") {
         labs(title = "Glucose Response", subtitle = str_to_title(isolate(input$food_name2)),
              x = "", y = "")
     })
+
+    # output$auc_table ----
     output$auc_table <- renderDataTable({
       input$submit_foods
       validate(
@@ -271,7 +273,9 @@ mod_goddessServer <- function(id, title = "Name") {
         filter(t <= 120) %>% # and only the first 2 hours.
         group_by(meal) %>% arrange(t) %>%
         summarize(
-          auc = DescTools::AUC(t,value-first(value)),
+
+          auc_total = DescTools::AUC(t,value-first(value)),
+          auc = auc_calc(tibble(time=t,value=value)),
           min = min(value),
           max = max(value),
           sd = sd(value),
