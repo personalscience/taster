@@ -184,15 +184,16 @@ mod_foodTasterServer <- function(id, title = "Name") {
         filter(t >= -5) %>% # only look at the times after the food was eaten.
         filter(t <= 120) %>% # and only the first 2 hours.
         group_by(meal) %>% arrange(t) %>%
-        summarize(        auc_total = DescTools::AUC(t,value-first(value)),
-                          auc = auc_calc(tibble(time=t,value=value)),
+        summarize( iAUC = auc_calc(tibble(time=t,value=value)),
+                   auc_total = DescTools::AUC(t,value-first(value)),
+
           min = min(value),
           max = max(value),
           sd = sd(value),
           rise = last(value) - first(value),
           .groups = 'drop') %>%
         #summarize(auc = sum((lag(value)-value)*(t-lag(t)), na.rm = TRUE)) %>%
-        arrange(auc)
+        arrange(iAUC)
 
     })
     })

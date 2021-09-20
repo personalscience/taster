@@ -274,15 +274,16 @@ mod_goddessServer <- function(id, title = "Name") {
         group_by(meal) %>% arrange(t) %>%
         summarize(
 
+          iAUC = auc_calc(tibble(time=t,value=value)),
           auc_total = DescTools::AUC(t,value-first(value)),
-          auc = auc_calc(tibble(time=t,value=value)),
+
           min = min(value),
           max = max(value),
           sd = sd(value),
           rise = last(value) - first(value),
           .groups = 'drop') %>%
         #summarize(auc = sum((lag(value)-value)*(t-lag(t)), na.rm = TRUE)) %>%
-        arrange(auc)
+        arrange(iAUC)
 
     })
 
