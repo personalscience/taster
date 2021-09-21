@@ -32,11 +32,11 @@ ui <-
                  tabPanel("Glucose Analysis",
                           fluidPage(
                               h2("Your CGM Data"),
-                              mod_goddessUI("food2_compare_plot")
+                          reqSignin(mod_goddessUI("food2_compare_plot"))
                           )),
                  tabPanel("All Foods",
                           fluidPage(
-                              mod_foodTasterUI("food_compare_plot")
+                              reqSignin(mod_foodTasterUI("food_compare_plot"))
                           )),
                  tabPanel("User View",
                           fluidPage(
