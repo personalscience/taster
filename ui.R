@@ -19,7 +19,7 @@
 #' Define UI for application that reads a CSV file
 #' @import shiny
 #' @import magrittr dplyr
-ui <- navbarPage("Tastermonial", collapsible = TRUE, inverse = TRUE,
+ui <- fluidPage(navbarPage("Tastermonial", collapsible = TRUE, inverse = TRUE,
 
                  tabPanel("Glucose Analysis",
                           fluidPage(
@@ -58,6 +58,7 @@ ui <- navbarPage("Tastermonial", collapsible = TRUE, inverse = TRUE,
                               textOutput("currentDB"),
                           ))
                  )
+)
 
 
 #includeCSS(file.path("www","psi_shiny.css")),

@@ -4,6 +4,7 @@ library(tidyverse)
 library(lubridate)
 library(DBI)
 library(RPostgres)
+library(firebase)
 
 library(psiCGM)
 
