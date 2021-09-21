@@ -42,14 +42,14 @@ ui <-
                           fluidPage(
                               sidebarLayout(
                                   sidebarPanel(
-                                      mod_filterUI("psi_filter_plot")
+                                    reqSignin(mod_filterUI("psi_filter_plot"))
 
                                   ),
 
                                   mainPanel(
 
 
-                                      mod_libreviewUI("modChart")
+                                    reqSignin(mod_libreviewUI("modChart"))
 
                                   ))
                           )),
