@@ -19,9 +19,11 @@
 #' Define UI for application that reads a CSV file
 #' @import shiny
 #' @import magrittr dplyr
-ui <- fluidPage(navbarPage("Tastermonial", collapsible = TRUE, inverse = TRUE,
+ui <- fluidPage(  useFirebase(), # import dependencies
+                  useFirebaseUI(), # import UI,
+                  navbarPage("Tastermonial", collapsible = TRUE, inverse = TRUE,
 
-                 tabPanel("Glucose Analysis",
+                 reqSignin(tabPanel("Glucose Analysis",
                           fluidPage(
                               h2("Your CGM Data"),
                               mod_goddessUI("food2_compare_plot")
@@ -44,7 +46,8 @@ ui <- fluidPage(navbarPage("Tastermonial", collapsible = TRUE, inverse = TRUE,
                                       mod_libreviewUI("modChart")
 
                                   ))
-                          )),
+                          ))
+                 ),
                  tabPanel("CSV Load",
                           fluidPage(
                             titlePanel("Upload your own Libreview CSV results"),

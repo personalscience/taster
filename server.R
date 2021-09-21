@@ -16,6 +16,14 @@
 #' @import magrittr dplyr
 server <- function(input, output) {
 
+   f <- FirebaseUI$
+      new()$ # instantiate
+      set_providers( # define providers
+         email = TRUE,
+         google = TRUE
+      )$
+   launch()
+
     # datafilepath <- psiCGM:::csvFilePathServer("datafile")
      output$currentDB <- renderText(sprintf("DB=%s. psiCGM version = %s, db latest = %s",
                                             attr(config::get(),"config"),
