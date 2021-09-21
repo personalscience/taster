@@ -46,4 +46,9 @@ username_for_id <- function (user_id)
     stringr::str_flatten(collapse = " ") %>% str_match("[:alnum:]+ [:alnum:]") %>% as.character()
 }
 
+# Firebase ----
+# If you are using Firebase, you must
+# run once:
+# firebase::firebase_config(api_key = config::get("tastermonial")$firebaseapiKey,
+#                           project_id = config::get("tastermonial")$firebasePID)
 

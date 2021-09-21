@@ -3,6 +3,7 @@
 # install.packages(c("tidyverse", "DBI", "config", "RPostgres", "shiny", "devtools"))
 # install.packages(c("devtools", "roxygen2", "testthat", "knitr"))
 # install.packages(c("bslib"))
+# install.packages(c("firebase"))
 
 rsconnect::setAccountInfo(name=config::get("shiny")$name,
                           token=config::get("shiny")$token,
@@ -23,7 +24,8 @@ rsconnect::deployApp(#appDir = file.path(getwd(),"R"),
                                   "mod_CSV.R",
                                   "mod_foodTaster_compare.R",
                                   "www/psi_shiny.css",
-                                  "config.yml"),
+                                  "config.yml",
+                                  "firebase.rds"),
                      forceUpdate = TRUE
                      )
 
