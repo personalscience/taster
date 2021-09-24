@@ -27,3 +27,15 @@ glucose_range_for_id <- function(user_id){
 }
 
 glucose_range_for_id(1234)
+
+sample <- food_times_df()
+sample %>% ggplot(aes(x=t,y=value,color=meal)) + geom_line() +
+  geom_rect(aes(xmin = -Inf,
+                xmax = Inf,
+                ymin = gr$mean - gr$sd,
+                ymax = gr$mean + gr$sd),
+            fill = "green",
+            alpha = 0.005,
+            inherit.aes = FALSE)
+
+gr <- sample %>% distinct(user_id) %>% pull(user_id) %>% first() %>% glucose_range_for_id()

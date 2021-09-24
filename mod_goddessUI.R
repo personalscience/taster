@@ -296,7 +296,7 @@ mod_goddessServer <- function(id, title = "Name") {
                       ymin = gr$mean - gr$sd,
                       ymax = gr$mean + gr$sd),
                   fill = "green",
-                  alpha = 0.005,
+                  alpha = 0.01,
                   inherit.aes = FALSE)
       }
     })
