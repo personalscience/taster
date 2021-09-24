@@ -13,12 +13,17 @@ library(psiCGM)
 #   password = conn_args$password
 # )
 
-be <- food_times_df(prefixLength = 20, foodname = "Beviva")
+glucose_range_for_id <- function(user_id){
 
-be %>% ggplot(aes(t,value, color = date_ch)) + geom_line(size=2)
+  ID = user_id
+  GLUCOSE_RECORDS %>% filter(user_id == ID) %>%
 
-be %>% group_by(meal) %>%  mutate(ave = mean(value))  %>%
-  ggplot(aes(t,value, color = date_ch)) + geom_line(size=2) +# geom_point(size = 2, color = "black") +
-  geom_point(inherit.aes = FALSE, aes(t,ave)) # + geom_line(inherit.aes = FALSE, aes(t,ave))
+    mutate(time = with_tz(time, tzone="America/Los_Angeles")) %>%
+    filter(hour(time) >=1 & hour(time) <=4 & !is.na(value)) %>%
+    group_by(date=date(time)) %>% summarize(mean = mean(value, na.rm = TRUE), sd = sd(value,na.rm = TRUE)) %>% ungroup() %>%
+    select(mean,sd) %>% summarize(mean=mean(mean),sd=mean(sd))
+   # summarize(range = as.integer(range(mean)))
 
-be %>% group_by(t,meal) %>% mutate(ave = mean(value))
+}
+
+glucose_range_for_id(1234)

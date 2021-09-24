@@ -12,6 +12,18 @@ glucose_range_for_id <- function(user_id){
 
 }
 
+glucose_ranges_for_id <- function(user_id){
+
+  ID = user_id
+  GLUCOSE_RECORDS %>% filter(user_id == ID) %>%
+
+    mutate(time = with_tz(time, tzone="America/Los_Angeles")) %>%
+    filter(hour(time) >=1 & hour(time) <=4 & !is.na(value)) %>%
+    group_by(date=date(time)) %>% summarize(mean = mean(value, na.rm = TRUE), sd = sd(value,na.rm = TRUE)) %>% ungroup() %>%
+    select(mean,sd) %>% summarize(mean=mean(mean),sd=mean(sd))
+
+
+}
 
 
 #' @title UI for comparing food for a single user
@@ -35,6 +47,7 @@ mod_goddessUI <- function(id) {
     uiOutput(ns("food_selection2")),
     checkboxInput(ns("normalize"), label = "Normalize"),
     checkboxInput(ns("smooth"), label = "Smooth"),
+    checkboxInput(ns("baseline"), label = "Show Baseline"),
     numericInput(ns("prefixLength"), label = "Prefix Minutes", value = 0, width = "30%" ),
     numericInput(ns("timewindow"), label = "Time Window (Minutes)", value = 150, width = "30%"),
     actionButton(ns("show_raw"), label = "Show Raw Data"),
@@ -179,6 +192,7 @@ mod_goddessServer <- function(id, title = "Name") {
       cat(file = stderr(), sprintf("user_id=%s \n",ID()))
     )
 
+    # output$food1 Render Plot----
     output$food1 <- renderPlot({
 
       validate(
@@ -197,18 +211,30 @@ mod_goddessServer <- function(id, title = "Name") {
       food_df <-  if(input$normalize) {food_df() %>% normalize_value()}
       else food_df()
 
+
+      gr <- glucose_ranges_for_id(ID())
       g <- food_df %>% ggplot(aes(x=t,y=value, color = date_ch)) +
         if(input$smooth) geom_smooth(method = "loess", aes(fill = date_ch)) else geom_line(size=2)
 
-      g + psi_theme +
+      gg <- g + psi_theme +
         geom_rect(aes(xmin=0,
                       xmax=120, #max(Date),
                       ymin=-Inf,
                       ymax=Inf),
                   color = "lightgrey",
                   alpha=0.005) +
-        labs(title = "Glucose Response", subtitle = str_to_title(isolate(input$food_name1)),
+        labs(title = "Glucose Response", subtitle = str_to_title(isolate(input$food_name2)),
              x = "", y = "")
+
+      gg + if(input$baseline & !input$normalize){
+        geom_rect(aes(xmin = -Inf,
+                      xmax = Inf,
+                      ymin = gr$mean - gr$sd,
+                      ymax = gr$mean + gr$sd),
+                  fill = "green",
+                  alpha = 0.005,
+                  inherit.aes = FALSE)
+      }
   })
 
     # output$food_selection2 ----
@@ -230,6 +256,7 @@ mod_goddessServer <- function(id, title = "Name") {
       cat(file = stderr(), sprintf("user_id=%s \n",ID()))
     )
 
+    # output$food2 Render Plot ----
     output$food2 <- renderPlot({
 
       validate(
@@ -248,10 +275,12 @@ mod_goddessServer <- function(id, title = "Name") {
       food_df <-  if(input$normalize) {food_df2() %>% normalize_value()}
       else food_df2()
 
+      gr <- glucose_ranges_for_id(ID())
+
       g <- food_df %>% ggplot(aes(x=t,y=value, color = date_ch)) +
         if(input$smooth) geom_smooth(method = "loess", aes(fill = date_ch)) else geom_line(size=2)
 
-      g + psi_theme +
+      gg <- g + psi_theme +
         geom_rect(aes(xmin=0,
                       xmax=120, #max(Date),
                       ymin=-Inf,
@@ -260,6 +289,16 @@ mod_goddessServer <- function(id, title = "Name") {
                   alpha=0.005) +
         labs(title = "Glucose Response", subtitle = str_to_title(isolate(input$food_name2)),
              x = "", y = "")
+
+      gg + if(input$baseline & !input$normalize){
+        geom_rect(aes(xmin = -Inf,
+                      xmax = Inf,
+                      ymin = gr$mean - gr$sd,
+                      ymax = gr$mean + gr$sd),
+                  fill = "green",
+                  alpha = 0.005,
+                  inherit.aes = FALSE)
+      }
     })
 
     # output$auc_table ----
