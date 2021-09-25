@@ -284,7 +284,7 @@ psi_user_list_from_scratch(user_list = user_df_from_libreview)
 
 psi_user_list_from_scratch(user_list = tibble(first_name = "Anthony", last_name = "Davis", birthdate=as.Date("1900-01-01"),
                                               libreview_status = NA,
-                                              user_id = 1021),
+                                              user_id = 1100),
                            drop = FALSE)
 
 

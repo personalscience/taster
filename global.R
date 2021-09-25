@@ -42,7 +42,7 @@ username_for_id <- function (user_id)
   ID = user_id
   if (ID == 0)
     return("Unknown Name")
-  else user_df_from_libreview %>% filter(user_id == ID) %>%
+  else user_df_from_db() %>% filter(user_id == ID) %>%
   select(first_name, last_name) %>%
     stringr::str_flatten(collapse = " ") %>% str_match("[:alnum:]+ [:alnum:]") %>% as.character()
 }

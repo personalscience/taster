@@ -36,7 +36,7 @@ csv_read_server <- function(id) {
       glucose_df(),
       options = list(pageLength = 5))
 
-
+  return(glucose_df)
   })
 
 }
