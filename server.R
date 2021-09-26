@@ -35,7 +35,7 @@ server <- function(input, output) {
    #
    #
     observe({
-       f$req_sign_in()  # require sign in
+       #f$req_sign_in()  # require sign in
        mod_goddessServer("food2_compare_plot", title = "Tastermonial" )
        }
     )
