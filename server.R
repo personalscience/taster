@@ -48,13 +48,13 @@ server <- function(input, output) {
    )
 
    glucose_df <- csv_read_server("fromCSV")
-   observeEvent(glucose_df(),
-                {     cat(file=stderr(),
-                          sprintf("User %s dataframe still has %d rows\n","CSV File", nrow(glucose_df())))
-                   g <- mod_libreview_plotServer("modChart", glucose_df, title = username)
-                }
-   )
-
+   # observeEvent(glucose_df(),
+   #              {     cat(file=stderr(),
+   #                        sprintf("User %s dataframe still has %d rows\n","CSV File", nrow(glucose_df())))
+   #                 g <- mod_libreview_plotServer("modChart", glucose_df, title = username)
+   #              }
+   # )
+   g <- mod_libreview_plotServer("modChart", glucose_df, title = reactiveVal("User"))
    g <- mod_libreview_plotServer("modChart", active_glucose_record, title = username)
 
    mod_foodTasterServer("food_compare_plot", title = username )
