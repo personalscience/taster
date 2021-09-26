@@ -47,7 +47,13 @@ server <- function(input, output) {
      cat(file = stderr(), sprintf("Username=%s \n",username()))
    )
 
-   active_glucose_record <- csv_read_server("fromCSV")
+   glucose_df <- csv_read_server("fromCSV")
+   observeEvent(glucose_df(),
+                {     cat(file=stderr(),
+                          sprintf("User %s dataframe still has %d rows\n","CSV File", nrow(glucose_df())))
+                   g <- mod_libreview_plotServer("modChart", glucose_df, title = username)
+                }
+   )
 
    g <- mod_libreview_plotServer("modChart", active_glucose_record, title = username)
 
