@@ -161,7 +161,7 @@ mod_foodTasterServer <- function(id, title = "Name") {
       validate(
         need(input$show_raw, "Press Show Data and Stats")
       )
-      food_df()
+      food_df() %>% mutate(timestamp = with_tz(timestamp, tzone = "America/Los_Angeles"))
 
     })
 

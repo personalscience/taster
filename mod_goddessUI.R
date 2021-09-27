@@ -326,12 +326,15 @@ mod_goddessServer <- function(id, title = "Name") {
 
     })
 
+    # output$raw_data_table ----
     output$raw_data_table <- renderDataTable({
 
       validate(
         need(input$show_raw, "Press Show Raw")
       )
-      bind_rows(food_df(),food_df2()) %>% distinct() %>% arrange(meal)
+      bind_rows(food_df(),food_df2()) %>%
+        mutate(timestamp = with_tz(timestamp, tzone = "America/Los_Angeles")) %>%
+        distinct() %>% arrange(meal)
 
     })
 
