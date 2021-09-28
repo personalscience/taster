@@ -229,8 +229,8 @@ mod_goddessServer <- function(id, title = "Name") {
       gg + if(input$baseline & !input$normalize){
         geom_rect(aes(xmin = -Inf,
                       xmax = Inf,
-                      ymin = gr$mean - gr$sd,
-                      ymax = gr$mean + gr$sd),
+                      ymin = gr$mean - gr$sd*2,
+                      ymax = gr$mean + gr$sd*2),
                   fill = "green",
                   alpha = 0.005,
                   inherit.aes = FALSE)
