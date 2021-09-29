@@ -120,16 +120,7 @@ mod_goddessServer <- function(id, title = "Name") {
       validate(
         need(!is.null(one_food_df), sprintf("No glucose results for food %s", input$food_name1))
       )
-     one_food_df <-  food_times_df(
-        user_id = ID(),
-        timeLength = input$timewindow,
-        prefixLength = input$prefixLength,
-        foodname = input$food_name2
-      )
 
-     validate(
-       need(!is.null(one_food_df), sprintf("No glucose results after eating %s", input$food_name1))
-     )
 
       df <- one_food_df
 
@@ -156,16 +147,6 @@ mod_goddessServer <- function(id, title = "Name") {
 
       validate(
         need(!is.null(one_food_df), sprintf("No glucose results for food %s", input$food_name1))
-      )
-      one_food_df <-  food_times_df(
-        user_id = ID(),
-        timeLength = input$timewindow,
-        prefixLength = input$prefixLength,
-        foodname = input$food_name1
-      )
-
-      validate(
-        need(!is.null(one_food_df), sprintf("No glucose results after eating %s", input$food_name1))
       )
 
       df <- one_food_df
