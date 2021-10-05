@@ -11,7 +11,7 @@ always_allow_html: true
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
-library(psiCGM)
+library(cgmr)
 library(tidyverse)
 library(lubridate)
 library(knitr)
@@ -42,7 +42,7 @@ con <- DBI::dbConnect(
 ```
 
 ```{r readTaster, include = FALSE, echo = FALSE, warning = FALSE}
-source("psi_db_taster_notes.R")
+#source("psi_db_taster_notes.R")
 # from file.path(config::get("tastermonial")$datadir,"table-data.csv")
 # taster_raw <- taster_raw()
 #taster_raw %>% names()
@@ -66,9 +66,13 @@ On one of those mornings I drank a can of Good Idea® fifteen minutes before the
 
 ```{r calcGlucose_cow, echo = FALSE, include = FALSE}
 
+r_glucose <- tbl(con, "glucose_records") %>% filter(user_id == 1234) %>% collect()
+r_notes <- tbl(con, "notes_records") %>% filter(user_id == 1234) %>% collect()
+
 foodname <- "Cream of Wheat"
 # return all users who ate foodname
-food_results <- food_times_df(user_id = lookup_id_from_name("Richard Sprague"),
+food_results <- cgmr::food_times_df(glucose_df = r_glucose,
+                                    notes_df = r_notes,
                               prefixLength = 0,
                               timeLength = 150,
                               foodname=foodname) 
@@ -79,11 +83,13 @@ food_results %>% group_by(meal) %>% arrange(t) %>% mutate(value = value - first(
 new_foodnames <- c("Cream of Wheat (Plain)", "Cream of Wheat (Plain)", "Cream of Wheat (Goodidea)")
 
 
-food_results[food_results$meal=="RSprague-8/31-Cream of Wheat","meal"] <- "Cream of Wheat (Plain) #1"
+food_results[food_results$meal=="1234-8/31-Cream of Wheat","meal"] <- "Cream of Wheat (Plain) #1"
 
-food_results[food_results$meal=="RSprague-9/2-Cream of Wheat","meal"] <- "Cream of Wheat (w/GoodIdea)"
+food_results[food_results$meal=="1234-9/2-Cream of Wheat","meal"] <- "Cream of Wheat (w/GoodIdea)"
 
-food_results[food_results$meal=="RSprague-9/1-Cream of Wheat","meal"] <- "Cream of Wheat (Plain) #2"
+food_results[food_results$meal=="1234-9/1-Cream of Wheat","meal"] <- "Cream of Wheat (Plain) #2"
+food_results[food_results$meal=="1234-9/5-Cream of Wheat","meal"] <- "Cream of Wheat (Plain) #3"
+food_results[food_results$meal=="1234-9/8-Cream of Wheat","meal"] <- "Cream of Wheat (Plain) #4"
 food_results
 
 ```
@@ -116,6 +122,7 @@ In both of the plain meals, my glucose level was actually *lower* at the end tha
 food_results %>% distinct() %>%
         group_by(meal, foodname) %>%
         summarize(
+                  iAUC = cgmr::auc_calc(tibble(time=t,value=value)),
                   auc = DescTools::AUC(t,value-first(value)),
                   min = min(value),
                   max = max(value),

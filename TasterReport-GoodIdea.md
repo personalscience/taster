@@ -1,7 +1,7 @@
 Tastermonial Food Comparisons: Goodidea Drink
 ================
 Richard Sprague
-2021-09-03
+2021-10-05
 
 # Good Idea®
 
@@ -47,6 +47,9 @@ carbohydrate load. Good Idea®, on the other hand, gave no such crash.
 meal
 </th>
 <th style="text-align:right;">
+iAUC
+</th>
+<th style="text-align:right;">
 auc
 </th>
 <th style="text-align:right;">
@@ -66,7 +69,10 @@ rise
 Cream of Wheat (Plain) #1
 </td>
 <td style="text-align:right;">
--587.0
+765.000
+</td>
+<td style="text-align:right;">
+-558.5
 </td>
 <td style="text-align:right;">
 73
@@ -75,7 +81,27 @@ Cream of Wheat (Plain) #1
 125
 </td>
 <td style="text-align:right;">
--16
+-1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Cream of Wheat (Plain) #4
+</td>
+<td style="text-align:right;">
+754.496
+</td>
+<td style="text-align:right;">
+-319.0
+</td>
+<td style="text-align:right;">
+84
+</td>
+<td style="text-align:right;">
+128
+</td>
+<td style="text-align:right;">
+1
 </td>
 </tr>
 <tr>
@@ -83,16 +109,19 @@ Cream of Wheat (Plain) #1
 Cream of Wheat (w/GoodIdea)
 </td>
 <td style="text-align:right;">
-516.5
+669.750
+</td>
+<td style="text-align:right;">
+418.5
 </td>
 <td style="text-align:right;">
 83
 </td>
 <td style="text-align:right;">
-108
+102
 </td>
 <td style="text-align:right;">
-19
+-3
 </td>
 </tr>
 <tr>
@@ -100,16 +129,39 @@ Cream of Wheat (w/GoodIdea)
 Cream of Wheat (Plain) #2
 </td>
 <td style="text-align:right;">
-540.5
+1125.000
 </td>
 <td style="text-align:right;">
-85
+615.0
+</td>
+<td style="text-align:right;">
+86
 </td>
 <td style="text-align:right;">
 125
 </td>
 <td style="text-align:right;">
--15
+-14
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Cream of Wheat (Plain) #3
+</td>
+<td style="text-align:right;">
+1939.000
+</td>
+<td style="text-align:right;">
+1939.0
+</td>
+<td style="text-align:right;">
+80
+</td>
+<td style="text-align:right;">
+111
+</td>
+<td style="text-align:right;">
+16
 </td>
 </tr>
 </tbody>
