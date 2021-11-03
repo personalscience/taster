@@ -34,7 +34,7 @@ taster_raw <- function( filepath = file.path(config::get("tastermonial")$datadir
 #' so this function attempts to match people based on the first name in the libreview list that matches initials.
 #'
 id_from_initial <- function(name_initials) {
-  name_lookup_table <- user_df_from_libreview %>% transmute(name = paste(first_name,last_name), user_id )
+  name_lookup_table <- user_df_from_db() %>% transmute(name = paste(first_name,last_name), user_id )
   names <- name_lookup_table %>% dplyr::filter(str_detect(name,name_initials)) %>% pull(user_id)
   first_hit <- as.numeric(first(names))
   return(if(is.na(first_hit)) 0 else first_hit)

@@ -1,0 +1,157 @@
+---
+title: "iAUC Analysis Across Brands"
+author: "Richard Sprague"
+date: "`r Sys.Date()`"
+output:
+  github_document: default
+  html_document: default
+  pdf_document: default
+always_allow_html: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(fig.height=12)
+library(cgmr)
+library(tastermonial)
+devtools::load_all(path="/Users/sprague/dev/psi/tasterdb")
+library(tidyverse)
+library(lubridate)
+library(knitr)
+library(kableExtra)
+library(showtext)
+font_add_google("Montserrat")
+showtext_auto()
+
+psi_theme <-  function() {
+  theme(text = element_text(family = "Montserrat",
+                                         face = "bold", size = 15),
+                     axis.text.x = element_text(size = 15, angle = 90, hjust = 1),
+                     legend.title = element_blank())
+} 
+
+conn_args <- config::get("dataconnection")
+con <- DBI::dbConnect(
+  drv = conn_args$driver,
+  user = conn_args$user,
+  host = conn_args$host,
+  port = conn_args$port,
+  dbname = conn_args$dbname,
+  password = conn_args$password
+)
+
+```
+
+I plotted iAUC for all the brands to get an idea of the variability between testers.
+
+
+```{r gatherData}
+
+GLUCOSE_RECORDS <- tbl(con, "glucose_records")  %>% filter(time > "2021-06-01") %>% collect()
+NOTES_RECORDS <- tbl(con, "notes_records") %>% filter(Start > "2021-06-01") %>% collect()
+
+foodname <- "Munk Pack"
+start_limit = 100
+# return all users who ate foodname
+food_results <- cgmr::food_times_df(glucose_df = GLUCOSE_RECORDS,
+                                    notes_df = NOTES_RECORDS,
+                              prefixLength = 0,
+                              timeLength = 150,
+                              foodname=foodname) 
+
+
+
+AUC_for_food <- function(foodname) {
+  cgmr::auc_for_food(foodname, glucose_records = GLUCOSE_RECORDS,
+                                    notes_records = NOTES_RECORDS)
+}
+
+munk_pack = AUC_for_food("Munk Pack") %>% select(meal, ave, sd, AUC, iAUC) 
+
+build_all_AUC <- function(s_list) {
+  df <- cgmr::df_for_all_auc(s_list, glucose_records = GLUCOSE_RECORDS,
+                                    notes_records = NOTES_RECORDS)
+  return(df %>% mutate(user_id = meal %>% stringr::str_extract("^([:digit:])+(?=-)") %>% as.numeric()))
+}
+
+
+all_foods <- tibble(foodname = food_list_db() ,
+                    iAUC = purrr::map_dbl(food_list_db(), function(x) {AUC_for_food(x) %>% pull(iAUC) %>% mean()}),
+                    n = purrr::map_dbl(food_list_db(), function(x) {AUC_for_food(x) %>% nrow()}))
+
+auc_df <- build_all_AUC(food_list_db()) 
+auc_df
+
+
+```
+
+
+
+```{r foodData, fig.height = 12}
+
+
+all_foods %>% arrange(iAUC) %>% ggplot(aes(x=reorder(foodname, -iAUC),y=iAUC)) + 
+  geom_col() + 
+ annotate(geom="text", x=all_foods$foodname, y = all_foods$iAUC+ 300 , label = all_foods$n) + 
+  labs(title = "Tastermonial Product Test Results", x = "", y = "Average iAUC Among All Testers") + 
+  psi_theme()
+
+```
+
+## Boxplot: range of data for each food
+
+In this boxplot graph, the white rectangle represents the middle 50% of the iAUC testers found for that product. The line in the middle is the median.
+
+
+```{r foodboxPlot, fig.height = 12}
+auc_df %>% pivot_longer(cols=ave:iAUC, names_to = "param") %>% 
+  filter(param == "iAUC") %>% 
+  ggplot(aes(x=foodname, y=value)) + 
+  geom_boxplot()+ 
+ # geom_point( aes(x=foodname,y=value), color = "red") + 
+  #geom_point( data = auc_df %>% filter(user_id == 1013), aes(x=foodname, y = iAUC), color = "blue", size = 3) + 
+  #geom_facet(rows=vars(user_id)) + 
+  labs(title = "Tastermonial Product Test Results", x = "", y = "iAUC Among All Testers") + 
+  psi_theme()
+
+
+```
+
+
+## Boxplot (including names)
+
+
+
+```{r, withNames}
+auc_dfs <- auc_df %>% mutate(username = purrr::map_chr(user_id, tasterdb::name_for_user_id))
+
+auc_dfs %>% filter(foodname != "other") %>%  pivot_longer(cols=ave:iAUC, names_to = "param") %>%
+  filter(param == "iAUC") %>%
+  ggplot(aes(x=foodname, y=value)) +
+  geom_boxplot()+
+   geom_point( aes(x=foodname,y=value), color = "red") +
+   #geom_point( aes(x=foodname, y = value, color = username), size = 3) +
+  geom_text(aes(x = foodname, y = value, label = username), size = 2, check_overlap = TRUE) +
+  #facet_grid(rows=vars(user_id)) +
+  labs(title = "Tastermonial Product Test Results", x = "", y = "iAUC Among All Testers") +
+  psi_theme()
+```
+
+Lots of caveats: this data may be incomplete and some of my data may be incorrect due to mistaken interpretation of food start eating times)
+
+## Why is Kind Bar so low?
+
+This is a good way to tease out possible problems in the data. For example, Kind bar looks suspiciously low iAUC, which indicates there may have been a data collection or processing issue.
+
+```{r KindBar}
+
+kind_bar <- AUC_for_food("Kind Bar Dark Chocolate") %>% select(meal, ave, sd, AUC, iAUC) 
+kind_bar %>% arrange(desc(iAUC)) %>% kable(digits = 3) %>% kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+
+```
+.
+
+
+
+Note: in both charts, I threw out all data where the person began the experiment with a glucose level great than 100 mg/dL
+

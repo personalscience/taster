@@ -9,6 +9,14 @@
 
 library(tidyverse)
 
+GLUCOSE_LAZY_FRAME <- dbplyr::tbl_lazy(tibble(time=lubridate::now(),
+                                         scan = 0.0,
+                                         hist = 0.0,
+                                         strip = 0.0,
+                                         value = 0.0,
+                                         food = "",
+                                         user_id = 0.0),
+                                       con = dbplyr::simulate_postgres())
 GLUCOSE_DATA_FRAME <-
   tibble(time=lubridate::now(), scan = 0.0, hist = 0.0, strip = 0.0, value = 0.0, food = "", user_id = 0.0)
 NOTES_DATA_FRAME <-
@@ -91,7 +99,9 @@ psi_make_database_if_necessary <- function(conn_args = config::get("dataconnecti
 
 }
 
-#' Make new database tables if necessary
+#' @title Make new database tables if necessary
+#' @param conn_args connection
+#' @param table_name character string name for the table.
 #' @param table a valid glucose data frame. Never use the default value unless you are testing.
 #' @import DBI
 #' @return NULL if table already exists. Otherwise creates the table and returns TRUE invisibly.
@@ -148,6 +158,43 @@ psi_table_df <-
   }
 
 
+#' @title Make a new database tables with `index`
+#' @param conn_args connection
+#' @param table_name character string name for the table.
+#' @param table a valid glucose data frame. Never use the default value unless you are testing.
+#' @param index (list) table column to be used for index
+#' @import DBI
+#' @return NULL if table already exists. Otherwise creates the table and returns TRUE invisibly.
+psi_make_table_with_index <- function(conn_args = config::get("dataconnection"),
+                                      table_name = "experiments",
+                                      table = NULL,
+                                      index = NULL
+                                      ){
+  con <- DBI::dbConnect(
+    drv = conn_args$driver,
+    user = conn_args$user,
+    host = conn_args$host,
+    port = conn_args$port,
+    dbname = conn_args$dbname,
+    password = conn_args$password
+  )
+
+  if (DBI::dbExistsTable(con, table_name))
+  {message(paste0("Table '",table_name,"' already exists"))
+  } else {
+
+    message(sprintf("Writing new table %s with index %s", table_name, index))
+    # Lets you create an index
+    dplyr::copy_to(con, experiments, name = table_name, index = index, temporary = FALSE)
+  }
+
+  DBI::dbDisconnect(con)
+}
+
+# Start Here ----
+# Makes a naked database filled with some sample values
+
+
 psi_make_database_if_necessary()
 psi_list_objects()
 
@@ -155,6 +202,12 @@ message("write placeholder info into each table")
 psi_make_table_if_necessary(table = glucose_df_from_libreview_csv())
 psi_make_table_if_necessary(table_name = "notes_records", table = NOTES_DATA_FRAME)
 psi_make_table_if_necessary(table_name = "user_list", table = USER_DATA_FRAME)
+psi_make_table_with_index(table_name = "experiments",
+                          table = read_csv(file=file.path(config::get("tastermonial")$datadir,
+                                                                                      "tastermonial_experiments.csv"), col_types = "dcc",
+                                                                       show_col_types = FALSE),
+                          index = list("experiment_id")
+                          )
 
 
 

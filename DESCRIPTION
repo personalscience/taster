@@ -1,0 +1,46 @@
+Package: tastermonial
+Title: Personal Science CGM Analysis Web App
+Version: 0.0.3.0001
+Authors@R: 
+    person(given = "Richard",
+           family = "Sprague",
+           role = c("aut", "cre"),
+           email = "sprague@personalscience.com",
+           comment = c(ORCID = "0000-0002-3789-5747"))
+Description: What the package does (one paragraph).
+License: MIT + file LICENSE
+Imports: 
+    attempt,
+    bslib,
+    cgmr (>= 0.0.2.2),
+    config (>= 0.3.1),
+    DBI,
+    dbplyr,
+    DescTools,
+    dplyr,
+    DT,
+    ggplot2,
+    glue,
+    golem (>= 0.3.1),
+    htmltools,
+    lubridate,
+    magrittr,
+    pkgload,
+    processx,
+    readr,
+    rlang,
+    RPostgres,
+    shiny (>= 1.7.0),
+    stringr,
+    tibble
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.1.2
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+Language: en-US
+Remotes: 
+    personalscience/cgmr
+URL: https://github.com/personalscience/taster
+BugReports: https://github.com/personalscience/taster/issues

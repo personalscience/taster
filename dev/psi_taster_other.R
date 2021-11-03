@@ -23,7 +23,7 @@ nutrisense_andreos <- glucose_df_from_nutrisense(filepath = file.path(config::ge
                                                 user_id = 1006)
 
 nutrisense_sherri <- glucose_df_from_nutrisense(filepath = file.path(config::get("tastermonial")$datadir,
-                                                       "1627653419114_export-SherriJo.csv"),
+                                                       "nutrisense_1627653419114_export-SherriJo.csv"),
                                                 user_id = 1005)
 
 nutrisense_anthony <- glucose_df_from_nutrisense(filepath = file.path(config::get("tastermonial")$datadir,

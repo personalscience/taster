@@ -1,13 +1,18 @@
 *.Rproj
-
+.Renviron
 .Rproj.user
 .Rhistory
 .RData
 .Ruserdata
 .Rbuildignore
+.DS_Store
 
 *.log
 *.rds
 
 /rsconnect
 config.yml
+.env
+
+
+

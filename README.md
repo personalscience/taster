@@ -1,10 +1,12 @@
 # Taster
 
-This is a front end to the R Package [psiCGM](https://github.com/personalscience/psi-shiny-cgm)
+This is a Golem-based implementation of an R Shiny app to view, explore, and analyze CGM glucose results obtained from [Tastermonial](https://tastermonial.com) users.
 
 ## Requirements
 
 To host on `shinyapps.io` you will first need to create an account. I recommend using your Github account credentials. Once you have enabled your `shinyapps` account, follow the instructions to get your "token" and "secret".
+
+## Using Config.yml (deprecated in this version)
 
 This directory needs a `config.yml` file to deploy on <https://shinyapps.io>. Be sure to fill in all the values below correctly:
 
@@ -42,11 +44,41 @@ To run locally, you will need a Postgres database. The app will use the configur
 Sys.setenv(R_CONFIG_ACTIVE = "local")
 ```
 
+## Docker
+
+Make a Docker version using the `Dockerfile`.
+
+I copy all the files from my local machine to the remote machine like this:
+
+``` sh
+scp -r * myname@remoteserver:/path/to/remote/dir
+```
+
+Assuming Docker is already available on the remote machine, build the container:
+
+``` sh
+docker build -t tastermonial .
+```
+
+Keep the database credentials as system environment variables in a file `.env` that looks like this:
+
+``` sh
+TASTER_HOST=12.34.56.78
+TASTER_USER=postgres
+TASTER_PASSWORD=<your password>
+TASTER_DBNAME=<db name, usually qsdb>
+TASTER_PORT=<port number>
+```
+
+Run the docker container while loading the environment variables
+
+``` sh
+docker run -p 8085:80 --env-file .env --name taster -d tastermonial
+```
+
 ## Database
 
-The app requires a database. You can load data with the scripts `psi_db*`
-
-This is easier if you store all the data in the directory with the path at
+The app requires a database. The database loading is handled by the separate package `tasterdb`, which expects all Libreview files and other raw data to be in the directory specified by:
 
 ``` r
 config::get("tastermonial")$datadir
@@ -55,12 +87,18 @@ config::get("tastermonial")$datadir
 This data directory should contain:
 
 -   All Libreview CSV files, exactly as downloaded from <https://libreview.com>. Any CSV file that includes "glucose" in the name will automatically read by the script `psi_db_load.R`.
--   Latest Tastermonial firebase output, stored in the file `table-data.csv`. The script `psi_db_taster_notes.R` will read all results into a dataframe.
+-   Latest Tastermonial firebase output, stored in the file `table-data.csv`.
 -   Miscellaneous other raw files including Nutrisense-formatted files.
 
-*Important*: The most important script is `psi_db_load.R`. Run this to drop and then load from scratch everything in the current database.
+Load the local Postgres database automatically like this:
 
-The very first time you set up a new Postgres database, run the script `psi_db_create.R`. It's okay to run this as many times as you like; it won't do anything if the database is already set up properly.
+``` r
+my_local_db <- tasterdb::load_db("local")
+```
+
+To populate the remote, AWS-stored database or any other specified in your `config.yml`, pass the string name to `tasterdb::load_db()`.
+
+See `tasterdb` instructions for more details.
 
 ## Deploy
 

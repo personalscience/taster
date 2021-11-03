@@ -10,7 +10,7 @@
 library(tidyverse)
 library(lubridate)
 library(psiCGM)
-
+source(file.path(here::here(),"dev", "psi_db_users.R"))
 
 # set the active configuration globally via Renviron.site or Rprofile.site
 #Sys.setenv(R_CONFIG_ACTIVE = "shinyapps")
@@ -144,8 +144,8 @@ psi_fill_database_from_scratch <- function(conn_args = config::get("dataconnecti
         message("removing notes records")
         DBI::dbRemoveTable(con, "notes_records")
     }
-    martha_glucose <- file.path("/Users/sprague/dev/psi/psiCGM/inst/extdata/Firstname1Lastname1_glucose.csv")
-    richard_glucose <- file.path("/Users/sprague/dev/psi/psiCGM/inst/extdata/Firstname2Lastname2_glucose.csv")
+    martha_glucose <- system.file("extdata", package = "psiCGM", "Firstname1Lastname1_glucose.csv")
+    richard_glucose <- system.file("extdata", package = "psiCGM", "Firstname2Lastname2_glucose.csv")
     message("write Martha glucose records")
     psi_write_glucose(conn_args = conn_args,
                       user_id = 1235,
@@ -282,23 +282,18 @@ psi_user_list_from_scratch <- function(conn_args = config::get("dataconnection")
 # First build the user_list of all users known to the system (and their user_id)
 psi_user_list_from_scratch(user_list = user_df_from_libreview)
 
-psi_user_list_from_scratch(user_list = tibble(first_name = "Anthony", last_name = "Davis", birthdate=as.Date("1900-01-01"),
-                                              libreview_status = NA,
-                                              user_id = 1100),
-                           drop = FALSE)
-
 
 
 psi_fill_glucose_records_from_scratch()
 
 psi_fill_notes_records_from_scratch()
 
-source("psi_db_taster_notes.R")
+source(file.path(here::here(),"dev","psi_db_taster_notes.R"))
 
 # uncomment this line to add the notes from Tastermonial retool
 psi_fill_taster_notes_from_scratch(taster_notes_df)
 
-source("psi_taster_other.R")
+source(file.path(here::here(),"dev", "psi_taster_other.R"))
 
 # uncomment this section to add an arbitrary new CSV file
 # be sure to set both user_ids
