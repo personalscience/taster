@@ -4,11 +4,11 @@ default:
   app_prod: no
   dataconnection:
     driver: !expr RPostgres::Postgres()
-    host: !expr Sys.getenv("TASTER_HOST")
-    user: !expr Sys.getenv("TASTER_USER")
-    password: !expr Sys.getenv("TASTER_PASSWORD")
-    port: !expr Sys.getenv("TASTER_PORT")
-    dbname: !expr Sys.getenv("TASTER_DBNAME")
+    host: !expr Sys.getenv("DEFAULT_HOST")
+    user: !expr Sys.getenv("DEFAULT_USER")
+    password: !expr Sys.getenv("DEFAULT_PASSWORD")
+    port: !expr Sys.getenv("DEFAULT_PORT")
+    dbname: !expr Sys.getenv("DEFAULT_DBNAME")
     glucose_table: 'glucose_records'
 local:
   golem_name: tastermonial
