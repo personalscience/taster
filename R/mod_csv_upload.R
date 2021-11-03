@@ -35,10 +35,17 @@ mod_csv_upload_server <- function(id, con){
       input$ask_filename})
 
 
-    glucose_df <- reactive(cgmr::glucose_df_from_libreview_csv(file=filepath()$datapath))
+    glucose_df_raw <- reactive(cgmr::libreview_csv_df(file=filepath()$datapath))
+    glucose_df <- reactive(glucose_df_raw()[["glucose_raw"]] %>%     transmute(`time` = `timestamp`,
+                                                                               scan = glucose_scan,
+                                                                               hist = glucose_historic,
+                                                                               strip = strip_glucose,
+                                                                               value = hist,
+                                                                               food = notes))
+    libreview_name <- reactive(glucose_df_raw()[["name"]])
 
     output$modChart <- renderPlot({
-      plot_glucose(glucose_df(),"Glucose Results")
+      plot_glucose(glucose_df(),sprintf("Glucose Results for %s",libreview_name()))
     }
     )
 
@@ -61,7 +68,7 @@ mod_csv_upload_server <- function(id, con){
 #'
 demo_csv <- function() {
   ui <- fluidPage(mod_csv_upload_ui("csv_upload_ui_1"))
-  sample_glucose <- cgmr::glucose_df_from_libreview_csv()
+  #sample_glucose <- cgmr::glucose_df_from_libreview_csv()
   server <- function(input, output, session) {
     mod_csv_upload_server("csv_upload_ui_1")
 
