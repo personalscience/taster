@@ -26,8 +26,9 @@ mod_about_server <- function(id, con){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     output$about_page <- renderText("Be Your Own Scientist")
-    output$currentDB <- renderText(sprintf("DB=%s. cgmr version = %s, db  = %s",
+    output$currentDB <- renderText(sprintf("DB=%s. version = %s, cgmr = %s, db  = %s",
                                            substr(get_golem_config("dataconnection")$host, 1,5),
+                                           utils::packageVersion("tastermonial"),
                                            utils::packageVersion("cgmr"),
                                            first(tbl(con,"glucose_records") %>%
                                                    filter(time == max(time, na.rm=TRUE)) %>%
