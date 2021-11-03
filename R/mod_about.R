@@ -19,7 +19,7 @@ mod_about_ui <- function(id){
 }
 
 #' about Server Functions
-#'
+#' @param con database connection
 #' @importFrom stats na.omit
 #' @noRd
 mod_about_server <- function(id, con){

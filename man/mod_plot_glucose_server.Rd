@@ -4,12 +4,14 @@
 \alias{mod_plot_glucose_server}
 \title{Plot a glucose chart - server}
 \usage{
-mod_plot_glucose_server(id, glucose_df)
+mod_plot_glucose_server(id, glucose_df, con)
 }
 \arguments{
 \item{id}{shiny module id}
 
 \item{glucose_df}{reactive for a valid glucose dataframe}
+
+\item{con}{database connection}
 }
 \value{
 ggplot object representing a glucose chart

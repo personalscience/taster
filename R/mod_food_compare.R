@@ -40,11 +40,13 @@ mod_food_compare_ui <- function(id){
 #' food_compare Server Functions
 #'
 #' @noRd
+#' @param id valid id
+#' @param con database connection
 #' @import dplyr
 #' @import ggplot2
 #' @importFrom magrittr %>%
 #' @importFrom stats sd
-mod_food_compare_server <- function(id){
+mod_food_compare_server <- function(id, con){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     con <- db_connection()

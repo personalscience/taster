@@ -45,9 +45,10 @@ mod_user_view_ui <- function(id){
 }
 
 #' user_view Server Functions
-#'
+#' @param id Shiny module id
+#' @param con database connection
 #' @noRd
-mod_user_view_server <- function(id){
+mod_user_view_server <- function(id, con){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     con <- db_connection()

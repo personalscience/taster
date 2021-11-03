@@ -20,10 +20,11 @@ mod_plot_glucose_ui <- function(id){
 #' Given a (reactive) libreview dataframe, this Shiny module will
 #' generate a valid ggplot object and display it in an accompanying UI
 #' @param id shiny module id
+#' @param con database connection
 #' @param glucose_df reactive for a valid glucose dataframe
 #' @return ggplot object representing a glucose chart
 #' @export
-mod_plot_glucose_server <- function(id, glucose_df){
+mod_plot_glucose_server <- function(id, glucose_df, con){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
 

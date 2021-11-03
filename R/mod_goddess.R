@@ -48,11 +48,13 @@ mod_goddess_ui <- function(id){
 }
 
 #' goddess Server Functions
+#' @param id id
+#' @param con database connection
 #' @import dplyr
 #' @import ggplot2
 #' @importFrom magrittr %>%
 #' @noRd
-mod_goddess_server <- function(id){
+mod_goddess_server <- function(id, con){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     con <- db_connection()

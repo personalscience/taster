@@ -31,8 +31,9 @@ mod_filter_results_ui <- function(id){
 
 #' filter_results Server Functions
 #'
+#' @param con database connection
 #' @noRd
-mod_filter_results_server <- function(id, glucose_df){
+mod_filter_results_server <- function(id, glucose_df, con){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
 
