@@ -13,7 +13,12 @@ mod_filter_results_ui <- function(id){
 
     sidebarLayout(
 
-      sidebarPanel(
+      sidebarPanel(        selectInput(
+        ns("user"),
+        label = "Select User",
+        choices = c(0,user_df_from_db()[["user_id"]]),
+        selected = 0
+      ),
     dateInput(ns("start_date"), label = "Start Date", value = lubridate::as_datetime("2021-06-17", tz = Sys.timezone() )),
     sliderInput(ns("start_hour"), label = "Start Time (Hour)", value = 12, min = 0, max = 23),
     sliderInput(ns("time_length"), label = "Time length (Min)", value = 120, min = 10, max = 480, step = 30),
@@ -31,7 +36,8 @@ mod_filter_results_ui <- function(id){
 
 #' filter_results Server Functions
 #'
-#' @param con database connection
+#' @param con database connection'
+#' @param glucose_df a glucose dataframe (not a reactive)
 #' @noRd
 mod_filter_results_server <- function(id, glucose_df, con){
   moduleServer( id, function(input, output, session){
@@ -41,12 +47,22 @@ mod_filter_results_server <- function(id, glucose_df, con){
                                     tzone=Sys.timezone()) +
                              lubridate::hours(input$start_hour))
 
+    glucose_user <- reactive({input$user})
+    glucose_df_from_user <- reactive({
+      if (input$user == 0)
+        { message("user is 0")
+        glucose_df}
+      else {
 
+      tbl(con, "glucose_records") %>% filter(user_id == !!glucose_user()) %>% collect()
+      }
+
+})
     glucose_new <- reactive({
 
       if(input$zoom_to_date) {
 
-        glucose_df %>%
+        glucose_df_from_user %>%
           filter(time >= s_datetime()) %>%
           filter(time <= s_datetime() + lubridate::minutes(input$time_length))
       } else  glucose_df %>% filter(.data[["time"]] >= s_datetime())
@@ -55,7 +71,8 @@ mod_filter_results_server <- function(id, glucose_df, con){
 
     output$glucose_plot <- renderPlot({
       cat(file=stderr(), sprintf("rendering glucose_df...%d rows", nrow(glucose_new())))
-      plot_glucose(glucose_new())
+      plot_glucose(glucose_new(), subtitle = sprintf("%d values for %s",
+                                                     nrow(glucose_df_from_user()),glucose_user()))
     })
 
     return(glucose_new)
@@ -74,8 +91,9 @@ mod_filter_results_server <- function(id, glucose_df, con){
 demo_filter <- function() {
   ui <- fluidPage(mod_filter_results_ui("x"))
   sample_glucose <- cgmr::glucose_df_from_libreview_csv()
+  con <- db_connection()
   server <- function(input, output, session) {
-    mod_filter_results_server("x", sample_glucose)
+    mod_filter_results_server("x", sample_glucose, con = con )
 
   }
   shinyApp(ui, server)
