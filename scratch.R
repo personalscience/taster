@@ -7,7 +7,7 @@ library(lubridate)
 devtools::load_all(path="/Users/sprague/dev/psi/tasterdb")
 
 
-#Sys.setenv(R_CONFIG_ACTIVE = "shinyapps")
+#Sys.setenv(R_CONFIG_ACTIVE = "tastercloud")
 Sys.setenv(R_CONFIG_ACTIVE = "local")
 conn_args <- config::get("dataconnection")
 con <- DBI::dbConnect(
@@ -22,8 +22,8 @@ con <- DBI::dbConnect(
 
 glucose_records <- tbl(con,"glucose_records")
 notes_records <- tbl(con,"notes_records")
-notes_records
-
+notes_records %>% filter(user_id == 1017 & Comment == "Real Food Bar") %>% collect() %>% print(n=100)
+glucose_records %>% filter(user_id == 1017) %>% filter(time > "2021-11-02")
 
 cgmr::food_times_df_fast(glucose_records,notes_records, prefixLength = 10)
 
