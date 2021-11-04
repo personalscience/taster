@@ -7,7 +7,7 @@
 #' @param glucose_records well-formed glucose dataframe
 #' @param notes_records well-formed notes dataframe
 #' @return dataframe
-#' @import magrittr
+#' @importFrom magrittr %>%
 build_all_AUC <- function(s_list, glucose_records, notes_records) {
   df <- cgmr::df_for_all_auc(s_list, glucose_records,
                              notes_records)

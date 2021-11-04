@@ -19,7 +19,12 @@ mod_analysis_ui <- function(id){
           choices = user_df_from_db() %>% pull(user_id),
           selected = 1234
         ),
+        markdown("White boxes represent 50% of the iAUC results from all users of that product.
+
+                 The line in the middle of each white box is the median iAUC"
+        ),
       ),
+
       mainPanel(
 
         plotOutput(ns("boxplot"), height="800px"),
@@ -61,7 +66,7 @@ mod_analysis_server <- function(id, glucose_df, con){
         ggplot(aes(x=foodname, y=value)) +
         geom_boxplot()+
         # geom_point( aes(x=foodname,y=value), color = "red") +
-        geom_point( data = auc_df %>% filter(user_id == input$user_id), aes(x=foodname, y = iAUC), color = "blue", size = 3) +
+        geom_point( data = auc_df %>% filter(user_id == input$user_id), aes(x=foodname, y = iAUC), color = "blue", size = 4) +
         #geom_facet(rows=vars(user_id)) +
         labs(title = "Tastermonial Product Test Results", x = "", y = "iAUC Among All Testers") +
         psi_theme()})
