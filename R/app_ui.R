@@ -28,6 +28,12 @@ app_ui <- function(request) {
                                 mod_filter_results_ui("filter_results_ui_1")
 
                           )),
+                 tabPanel("Analysis",
+                          fluidPage(
+                            mod_analysis_ui("analysis_ui_1")
+
+                          )),
+
 
                  tabPanel("CSV Load",
                           fluidPage(

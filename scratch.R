@@ -24,7 +24,8 @@ glucose_records <- tbl(con,"glucose_records")
 notes_records <- tbl(con,"notes_records")
 notes_records
 
-cgmr::food_times_df_fast(glucose_records,notes_records)
+
+cgmr::food_times_df_fast(glucose_records,notes_records, prefixLength = 10)
 
 # ldb <- tasterdb::load_db("local")
 # user_df_from_db() %>% print(n=Inf) %>% select(first_name, last_name, user_id) %>% knitr::kable() %>% clipr::write_clip()
