@@ -30,7 +30,7 @@ mod_csv_upload_server <- function(id, con){
 
     filepath<- reactive({
       validate(
-        need(input$ask_filename,"Please select a file")
+        need(input$ask_filename,"Please select a Libreview CSV file")
       )
       input$ask_filename})
 

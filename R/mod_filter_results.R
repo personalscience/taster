@@ -24,11 +24,13 @@ mod_filter_results_ui <- function(id){
     sliderInput(ns("time_length"), label = "Time length (Min)", value = 120, min = 10, max = 480, step = 30),
     checkboxInput(ns("zoom_to_date"), label = "Zoom Day", value = FALSE),
     checkboxInput(ns("chk_sleep"), label = "Sleep", value = FALSE),
+    actionButton(ns("show_raw"), label = "Show Raw Data"),
     textOutput(ns("show_food"))
       ),
 
     mainPanel(
-    plotOutput(ns("glucose_plot"))
+    plotOutput(ns("glucose_plot")),
+    dataTableOutput(ns("raw_data_table")),
     )
   )
   )
@@ -47,14 +49,21 @@ mod_filter_results_server <- function(id, glucose_df, con){
                                     tzone=Sys.timezone()) +
                              lubridate::hours(input$start_hour))
 
+    filepath<- reactive({
+
+      input$ask_filename})
+
     glucose_user <- reactive({input$user})
     glucose_df_from_user <- reactive({
-      if (input$user == 0)
-        { message("user is 0")
+      if (glucose_user() == 0)
+      {       validate(
+        need(nrow(glucose_df)>0,"Please go to the CSV tab and upload a Libreview file.")
+      )
+        message("user is 0")
         glucose_df}
       else {
 
-      tbl(con, "glucose_records") %>% filter(user_id == !!glucose_user()) %>% collect()
+        tbl(con, "glucose_records") %>% filter(user_id == !!glucose_user()) %>% collect()
       }
 
 })
@@ -62,10 +71,10 @@ mod_filter_results_server <- function(id, glucose_df, con){
 
       if(input$zoom_to_date) {
 
-        glucose_df_from_user %>%
+        glucose_df_from_user() %>%
           filter(time >= s_datetime()) %>%
           filter(time <= s_datetime() + lubridate::minutes(input$time_length))
-      } else  glucose_df %>% filter(.data[["time"]] >= s_datetime())
+      } else  glucose_df_from_user() %>% filter(.data[["time"]] >= s_datetime())
     }
     )
 
@@ -73,6 +82,17 @@ mod_filter_results_server <- function(id, glucose_df, con){
       cat(file=stderr(), sprintf("rendering glucose_df...%d rows", nrow(glucose_new())))
       plot_glucose(glucose_new(), subtitle = sprintf("%d values for %s",
                                                      nrow(glucose_df_from_user()),glucose_user()))
+    })
+
+    # output$raw_data_table ----
+    output$raw_data_table <- renderDataTable({
+
+      validate(
+        need(input$show_raw, "Press Show Raw")
+      )
+      glucose_new() %>%
+        mutate(time = lubridate::with_tz(time, tzone = "America/Los_Angeles"))
+
     })
 
     return(glucose_new)
