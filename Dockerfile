@@ -18,6 +18,7 @@ RUN Rscript -e 'remotes::install_version("testthat",upgrade="never", version = "
 RUN Rscript -e 'remotes::install_version("shiny",upgrade="never", version = "1.7.1")'
 RUN Rscript -e 'remotes::install_version("config",upgrade="never", version = "0.3.1")'
 RUN Rscript -e 'remotes::install_version("dplyr",upgrade="never", version = "1.0.7")'
+RUN Rscript -e 'remotes::install_version("tidyr",upgrade="never", version = "1.1.4")'
 RUN Rscript -e 'remotes::install_version("RPostgres",upgrade="never", version = "1.4.1")'
 RUN Rscript -e 'remotes::install_version("readr",upgrade="never", version = "2.0.2")'
 RUN Rscript -e 'remotes::install_version("golem",upgrade="never", version = "0.3.1")'
