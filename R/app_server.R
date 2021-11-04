@@ -17,5 +17,6 @@ app_server <- function( input, output, session ) {
   mod_food_compare_server("food_compare_plot", con)
   mod_goddess_server("food2_compare_plot", con)
   mod_filter_results_server("filter_results_ui_1", glucose_df(), con)
+  mod_analysis_server("analysis_ui_1", glucose_df(), con)
   mod_plot_glucose_server("plot_glucose_ui_1", glucose_df, con)
 }
