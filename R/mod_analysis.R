@@ -42,7 +42,9 @@ mod_analysis_server <- function(id, glucose_df, con){
                             glucose_records = GLUCOSE_RECORDS,
                             notes_records = NOTES_RECORDS)
 
+
     output$boxplot <- renderPlot({auc_df %>% tidyr::pivot_longer(cols=ave:iAUC, names_to = "param") %>%
+
         filter(param == "iAUC") %>%
         ggplot(aes(x=foodname, y=value)) +
         geom_boxplot()+
