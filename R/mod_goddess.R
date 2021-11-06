@@ -62,28 +62,23 @@ mod_goddess_server <- function(id, con){
     GLUCOSE_RECORDS<- tbl(con,"glucose_records") %>% collect()
     NOTES_RECORDS <- tbl(con, "notes_records") %>% collect()
 
-    glucose_ranges_for_id <- function(user_id){
 
-      ID = user_id
-      GLUCOSE_RECORDS %>% filter(user_id == ID) %>%
-
-        mutate(time = lubridate::with_tz(time, tzone="America/Los_Angeles")) %>%
-        filter(lubridate::hour(time) >=1 & lubridate::hour(time) <=4 & !is.na(value)) %>%
-        group_by(date=lubridate::date(time)) %>%
-        summarize(mean = mean(value, na.rm = TRUE), sd = sd(value,na.rm = TRUE)) %>%
-        ungroup() %>%
-        select(mean,sd) %>%
-        summarize(mean=mean(mean),sd=mean(sd))
-
-
-    }
 
 
     ID<- reactive( {cat(file=stderr(), paste("Selected User", isolate(input$user_id)))
       as.numeric(input$user_id)}
     )
     taster_prod_list <- reactive({
+      glucose_date <- GLUCOSE_RECORDS %>% filter(user_id==ID()) %>% pull(time) %>% range()
+      notes_dates <- NOTES_RECORDS %>% filter(user_id == ID()) %>% pull(Start) %>% range()
+      gi <- lubridate::interval(glucose_date[1],glucose_date[2])
+      ni <- lubridate::interval(notes_dates[1],notes_dates[1])
+
       cat(file=stderr(), sprintf("seeking prod list for user %d", ID()))
+       validate(
+         need(lubridate::int_overlaps(gi,ni),"missing records for user")
+       )
+
       food_list_db(user_id = ID())}
     )
 
@@ -94,7 +89,7 @@ mod_goddess_server <- function(id, con){
       sprintf("user_id = %d, product = %s, range=%s", ID(),
 
               input$food_name1,
-              paste0(glucose_ranges_for_id(ID()), collapse=" : ")
+              paste0(glucose_ranges_for_id(ID(), GLUCOSE_RECORDS), collapse=" : ")
       )
     )
 
@@ -206,7 +201,7 @@ mod_goddess_server <- function(id, con){
       else food_df()
 
 
-      gr <- glucose_ranges_for_id(ID())
+      gr <- glucose_ranges_for_id(ID(), GLUCOSE_RECORDS)
 
       g <- plot_compare_glucose(food_df,
                                 combine = FALSE, #input$combine,
@@ -265,7 +260,7 @@ mod_goddess_server <- function(id, con){
       food_df <-  if(input$normalize) {food_df2() %>% cgmr::normalize_value()}
       else food_df2()
 
-      gr <- glucose_ranges_for_id(ID())
+      gr <- glucose_ranges_for_id(ID(), GLUCOSE_RECORDS)
 
       g <- plot_compare_glucose(food_df,
                                 combine = FALSE, #input$combine,
