@@ -12,6 +12,7 @@ mod_csv_upload_ui <- function(id){
   tagList(
     fluidRow(
       fileInput(ns("ask_filename"), label = "Choose CSV File", accept = ".csv"),
+      uiOutput(ns("ask_to_write_db")),
       plotOutput(ns("modChart")),
       hr(),
       wellPanel(dataTableOutput(ns("glucoseTable")))
@@ -49,6 +50,26 @@ mod_csv_upload_server <- function(id, con){
     }
     )
 
+    output$ask_to_write_db <- renderUI({
+      validate(
+        need(!is.null(glucose_df()),sprintf("Please upload a CSV file"))
+      )
+      actionButton(NS(id,"write_db"),
+                     label = "Write to Database")
+
+
+    })
+
+
+    observeEvent(input$write_db, {
+      if(input$write_db) {
+      message(sprintf('writing to %s database now', class(con)))
+        db_write_table(con=con,
+                       table_name = "raw_glucose",
+                       table_df = glucose_df_raw()[["glucose_raw"]])
+      }
+    })
+
     output$glucoseTable <- renderDataTable(
       glucose_df(),
       options = list(pageLength = 5))
@@ -70,7 +91,7 @@ demo_csv <- function() {
   ui <- fluidPage(mod_csv_upload_ui("csv_upload_ui_1"))
   #sample_glucose <- cgmr::glucose_df_from_libreview_csv()
   server <- function(input, output, session) {
-    mod_csv_upload_server("csv_upload_ui_1")
+    mod_csv_upload_server("csv_upload_ui_1", con = db_connection())
 
   }
   shinyApp(ui, server)

@@ -16,6 +16,29 @@ db_connection <- function() {
   return(con)
 }
 
+#' @title Write a table to the database
+#' @param con valid database connection
+#' @param table_name char string for table name
+#' @param table_df valid dataframe to write to the database
+db_write_table <- function(con = db_connection(), table_name = "raw_glucose", table_df) {
+  if (DBI::dbExistsTable(con, table_name)) {
+    # check that you're not adding another copy of the same table
+    sn <- unique(table_df$serial_number)
+    if(nrow(tbl(con, "raw_glucose") %>% filter(.data[["serial_number"]] == sn) %>% collect()) > 0){
+      message(sprintf("Already have that serial number %s", sn))
+      return(NULL)
+    } else {
+      message("writing to database")
+    }
+
+    } else {
+
+
+  DBI::dbWriteTable(con, table_name, table_df)
+    }
+
+}
+
 
 #' @title List all products consumed by `user_id`
 #' @description Return all products consumed by this user.
