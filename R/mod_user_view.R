@@ -32,6 +32,7 @@ mod_user_view_ui <- function(id){
       mainPanel(
 
         plotOutput(ns("glucose_plot")),
+        plotOutput(ns("all_foods")),
         h3("Stats Table"),
         dataTableOutput(ns("auc_table")),
         h3("Raw Data"),
@@ -156,6 +157,10 @@ mod_user_view_server <- function(id, con){
     )
 
 
+    # output$all_foods ----
+    output$all_foods <- renderPlot({
+
+    })
 
 
     # output$raw_data_table ----

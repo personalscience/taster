@@ -65,17 +65,12 @@ mod_goddess_server <- function(id, con, GLUCOSE_RECORDS, NOTES_RECORDS){
       as.numeric(input$user_id)}
     )
     taster_prod_list <- reactive({
-      glucose_date <- GLUCOSE_RECORDS %>% filter(user_id==ID()) %>% pull(time) %>% range()
-      notes_dates <- NOTES_RECORDS %>% filter(user_id == ID()) %>% pull(Start) %>% range()
-      gi <- lubridate::interval(glucose_date[1],glucose_date[2])
-      ni <- lubridate::interval(notes_dates[1],notes_dates[1])
-
       cat(file=stderr(), sprintf("seeking prod list for user %d", ID()))
-       validate(
-         need(lubridate::int_overlaps(gi,ni),"missing records for user")
-       )
-
-      food_list_db(user_id = ID())}
+      foods <- food_list_db(user_id = ID())
+      validate(
+        need(!is.null(foods),"missing records for user")
+      )
+      return(foods)}
     )
 
 
