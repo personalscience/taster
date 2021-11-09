@@ -42,17 +42,17 @@ mod_food_compare_ui <- function(id){
 #' @noRd
 #' @param id valid id
 #' @param con database connection
+#' @param GLUCOSE_RECORDS valid glucose df
+#' @param NOTES_RECORDS valid notes df
 #' @import dplyr
 #' @import ggplot2
 #' @importFrom magrittr %>%
 #' @importFrom stats sd
-mod_food_compare_server <- function(id, con){
+mod_food_compare_server <- function(id, con, GLUCOSE_RECORDS, NOTES_RECORDS){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     con <- db_connection()
 
-    GLUCOSE_RECORDS<- tbl(con,"glucose_records") %>% collect()
-    NOTES_RECORDS <- tbl(con, "notes_records") %>% collect()
 
     # food_df ----
     food_df <- reactive({
@@ -197,8 +197,13 @@ mod_food_compare_server <- function(id, con){
 demo_food <- function() {
   ui <- fluidPage(mod_food_compare_ui("x"))
   sample_glucose <- cgmr::glucose_df_from_libreview_csv()
+
+  con <- db_connection()
+  GLUCOSE_RECORDS<- tbl(con,"glucose_records") %>% collect()
+  NOTES_RECORDS <- tbl(con, "notes_records") %>% collect()
+
   server <- function(input, output, session) {
-    mod_food_compare_server("x")
+    mod_food_compare_server("x", con, GLUCOSE_RECORDS, NOTES_RECORDS)
 
   }
   shinyApp(ui, server)

@@ -50,20 +50,16 @@ mod_goddess_ui <- function(id){
 #' goddess Server Functions
 #' @param id id
 #' @param con database connection
+#' @param GLUCOSE_RECORDS valid glucose df
+#' @param NOTES_RECORDS valid notes df
 #' @import dplyr
 #' @import ggplot2
 #' @importFrom magrittr %>%
 #' @noRd
-mod_goddess_server <- function(id, con){
+mod_goddess_server <- function(id, con, GLUCOSE_RECORDS, NOTES_RECORDS){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     con <- db_connection()
-
-    GLUCOSE_RECORDS<- tbl(con,"glucose_records") %>% collect()
-    NOTES_RECORDS <- tbl(con, "notes_records") %>% collect()
-
-
-
 
     ID<- reactive( {cat(file=stderr(), paste("Selected User", isolate(input$user_id)))
       as.numeric(input$user_id)}
@@ -346,8 +342,13 @@ mod_goddess_server <- function(id, con){
 demo_goddess <- function() {
   ui <- fluidPage(mod_goddess_ui("x"))
   sample_glucose <- cgmr::glucose_df_from_libreview_csv()
+
+  con <- db_connection()
+  GLUCOSE_RECORDS<- tbl(con,"glucose_records") %>% collect()
+  NOTES_RECORDS <- tbl(con, "notes_records") %>% collect()
+
   server <- function(input, output, session) {
-    mod_goddess_server("x")
+    mod_goddess_server("x", con, GLUCOSE_RECORDS, NOTES_RECORDS)
 
   }
   shinyApp(ui, server)

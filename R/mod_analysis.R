@@ -23,6 +23,7 @@ mod_analysis_ui <- function(id){
 
                  The line in the middle of each white box is the median iAUC"
         ),
+        actionButton(ns("calc"), label = "Calculate"),
       ),
 
       mainPanel(
@@ -60,7 +61,13 @@ mod_analysis_server <- function(id, glucose_df, con){
                         iAUC = purrr::map_dbl(food_list_db(), function(x) {AUC_for_food(x) %>% pull(iAUC) %>% mean()}),
                         n = purrr::map_dbl(food_list_db(), function(x) {AUC_for_food(x) %>% nrow()}))
 
-    output$boxplot <- renderPlot({auc_df %>% tidyr::pivot_longer(cols=ave:iAUC, names_to = "param") %>%
+    output$boxplot <- renderPlot({
+
+      validate(
+        need(input$calc,"Press Calculate to see Analytics")
+      )
+
+        auc_df %>% tidyr::pivot_longer(cols=ave:iAUC, names_to = "param") %>%
 
         filter(param == "iAUC") %>%
         ggplot(aes(x=foodname, y=value)) +
