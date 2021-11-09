@@ -23,12 +23,13 @@ db_connection <- function() {
 db_write_table <- function(con = db_connection(), table_name = "raw_glucose", table_df) {
   if (DBI::dbExistsTable(con, table_name)) {
     # check that you're not adding another copy of the same table
-    sn <- unique(table_df$serial_number)
+    sn <- first(unique(table_df$serial_number))
     if(nrow(tbl(con, "raw_glucose") %>% filter(.data[["serial_number"]] == sn) %>% collect()) > 0){
       message(sprintf("Already have that serial number %s", sn))
       return(NULL)
     } else {
-      message("writing to database")
+      message(sprintf("writing %d rows to table %s",nrow(table_df), table_name))
+      DBI::dbAppendTable(con, table_name, table_df)
     }
 
     } else {
