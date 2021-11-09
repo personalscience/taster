@@ -57,21 +57,16 @@ mod_user_view_server <- function(id, con){
     GLUCOSE_RECORDS<- tbl(con,"glucose_records") %>% collect()
     NOTES_RECORDS <- tbl(con, "notes_records") %>% collect()
 
-    glucose_ranges_for_id <- function(user_id){
 
-      ID = user_id
-      GLUCOSE_RECORDS %>% filter(user_id == ID) %>%
-
-        mutate(time = lubridate::with_tz(time, tzone="America/Los_Angeles")) %>%
-        filter(lubridate::hour(time) >=1 & lubridate::hour(time) <=4 & !is.na(value)) %>%
-        group_by(date=lubridate::date(time)) %>%
-        summarize(mean = mean(value, na.rm = TRUE), sd = sd(value,na.rm = TRUE)) %>%
-        ungroup() %>%
-        select(mean,sd) %>%
-        summarize(mean=mean(mean),sd=mean(sd))
-
-
-    }
+    # taster_prod_list ----
+    taster_prod_list <- reactive({
+      cat(file=stderr(), sprintf("seeking prod list for user %d", ID()))
+      foods <- food_list_db(user_id = ID())
+      validate(
+        need(!is.null(foods),"missing records for user")
+      )
+      return(foods)}
+    )
 
 
     ID<- reactive( {cat(file=stderr(), paste("Selected User", isolate(input$user_id)))
@@ -87,7 +82,7 @@ mod_user_view_server <- function(id, con){
       sprintf("user_id = %d, product = %s, range=%s", ID(),
 
               input$food_name,
-              paste0(glucose_ranges_for_id(ID()), collapse=" : ")
+              paste0(glucose_ranges_for_id(ID(), GLUCOSE_RECORDS), collapse=" : ")
       )
     )
 
