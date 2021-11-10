@@ -38,14 +38,16 @@ mod_analysis_ui <- function(id){
 }
 
 #' analysis Server Functions
+#' @param con database connection
+#' @param GLUCOSE_RECORDS valid glucose df
+#' @param NOTES_RECORDS valid notes df
 #' @importFrom tidyr pivot_longer
 #' @importFrom purrr map_dbl
 #' @noRd
-mod_analysis_server <- function(id, glucose_df, con){
+mod_analysis_server <- function(id, glucose_df, con, GLUCOSE_RECORDS, NOTES_RECORDS){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
-    GLUCOSE_RECORDS <- tbl(con, "glucose_records") %>% collect()
-    NOTES_RECORDS <- tbl(con, "notes_records") %>% collect()
+
 
     auc_df <- build_all_AUC(s_list = food_list_db(),
                             glucose_records = GLUCOSE_RECORDS,

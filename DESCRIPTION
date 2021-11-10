@@ -1,6 +1,6 @@
 Package: tastermonial
 Title: Personal Science CGM Analysis Web App
-Version: 0.0.5.4
+Version: 0.0.5.5
 Authors@R: 
     person(given = "Richard",
            family = "Sprague",

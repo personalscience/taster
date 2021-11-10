@@ -20,6 +20,7 @@ mod_user_view_ui <- function(id){
           selected = 1234
         ),
         uiOutput(ns("food_selection")),
+        uiOutput(ns("meal_selection")),
         checkboxInput(ns("normalize"), label = "Normalize"),
         checkboxInput(ns("smooth"), label = "Smooth"),
         checkboxInput(ns("baseline"), label = "Show Baseline"),
@@ -47,15 +48,15 @@ mod_user_view_ui <- function(id){
 
 #' user_view Server Functions
 #' @param id Shiny module id
+#' @param csv_user_gdf a glucose dataframe (not a reactive)
 #' @param con database connection
+#' @param GLUCOSE_RECORDS valid glucose df
+#' @param NOTES_RECORDS valid notes df
 #' @noRd
-mod_user_view_server <- function(id, con){
+mod_user_view_server <- function(id, con, csv_user_gdf,GLUCOSE_RECORDS, NOTES_RECORDS  ){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     con <- db_connection()
-
-    GLUCOSE_RECORDS<- tbl(con,"glucose_records") %>% collect()
-    NOTES_RECORDS <- tbl(con, "notes_records") %>% collect()
 
 
     # taster_prod_list ----
@@ -72,10 +73,6 @@ mod_user_view_server <- function(id, con){
     ID<- reactive( {cat(file=stderr(), paste("Selected User", isolate(input$user_id)))
       as.numeric(input$user_id)}
     )
-    taster_prod_list <- reactive({
-      cat(file=stderr(), sprintf("seeking prod list for user %d", ID()))
-      food_list_db(user_id = ID())}
-    )
 
     output$show_user <- renderText(
 
@@ -86,24 +83,55 @@ mod_user_view_server <- function(id, con){
       )
     )
 
+    # food_start_times ----
+    food_start_times <- reactive({
+      cat(file=stderr(), sprintf("generating food start times for user %s\n", ID()))
+      validate(
+        need(!is.null(input$food_name), "waiting for food menu")
+      )
+      cat(file=stderr(), sprintf("generating notes based on %s\n", input$food_name))
+      n_df <- NOTES_RECORDS %>% filter(user_id == ID()) %>% filter(Comment == input$food_name)
+
+      return(n_df)
+    })
+
     # glucose_df ----
     # return a glucose dataframe
     glucose_df <- reactive({
-      cat(file=stderr(), sprintf("generating new glucose_df for user %s", ID()))
-      cat(file=stderr(), sprintf("generating notes based on %s", input$food_name))
-      n_df <- NOTES_RECORDS %>% filter(user_id == ID()) %>% filter(Comment == input$food_name)
-      food_start <- n_df %>% pull(Start) %>% last() %>% as_datetime()
-      cat(file=stderr(), sprintf("start time = %s", food_start))
+      cat(file=stderr(), sprintf("generating new glucose_df for user %s\n", ID()))
+      validate(
+        need(!is.null(input$food_name), "waiting for food menu"),
+        need(!is.null(input$meal_name), "waiting for meal name")
+      )
+      meal_datetime <- as_datetime(input$meal_name)
+
+      cat(file=stderr(),sprintf("meal_datetime = %s\n", meal_datetime))
+
       g_df <- GLUCOSE_RECORDS %>% filter(user_id == ID()) %>%
-        filter(time > food_start) %>%
-        filter(time <= food_start + lubridate::minutes(input$timewindow))
-      cat(file=stderr(), sprintf("g_df is %d rows",nrow(g_df)))
+        filter(time >= meal_datetime - lubridate::minutes(input$prefixLength)) %>%
+        filter(time <=  meal_datetime + lubridate::minutes(input$timewindow))
+      cat(file=stderr(), sprintf("g_df is %d rows\n",nrow(g_df)))
 
       return(g_df)
 
     }
 
     )
+
+    # output$meal_selection ----
+    output$meal_selection <- renderUI({
+      cat(file=stderr(), paste("trying to render meal selection for ", isolate(input$user_id)))
+      # validate(
+      #   need(!is.null(food_start_times(), sprintf("No Foods available")))
+      # )
+      meal_names <- food_start_times()[["Start"]]
+
+      selectizeInput(NS(id,"meal_name"),
+                     label = "Meal (Timezone = UTC)",
+                     choices = meal_names,
+                     selected = first(meal_names)
+      )
+    })
 
     # output$food_selection ----
     output$food_selection <- renderUI({
@@ -195,9 +223,13 @@ mod_user_view_server <- function(id, con){
 #'
 demo_user <- function() {
   ui <- fluidPage(mod_user_view_ui("x"))
+  con <- db_connection()
+  GLUCOSE_RECORDS<- tbl(con,"glucose_records") %>% collect()
+  NOTES_RECORDS <- tbl(con, "notes_records") %>% collect()
+
   sample_glucose <- cgmr::glucose_df_from_libreview_csv()
   server <- function(input, output, session) {
-    mod_user_view_server("x")
+    mod_user_view_server("x", con, csv_user_gdf = sample_glucose, GLUCOSE_RECORDS, NOTES_RECORDS)
 
   }
   shinyApp(ui, server)

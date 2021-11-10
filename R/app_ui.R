@@ -14,19 +14,23 @@ app_ui <- function(request) {
 
                   theme = bslib::bs_theme(bootswatch = "cerulean"),
 
-                 tabPanel("Compare Experiments",
+                 tabPanel("Compare",
                           fluidPage(
                             h2("Compare Experiments"),
                             mod_goddess_ui("food2_compare_plot")
                           )),
-                 tabPanel("Compare Foods",
+                 tabPanel("Foods",
                           fluidPage(
                             mod_food_compare_ui("food_compare_plot")
                           )),
                  tabPanel("User View",
                           fluidPage(
-                                mod_filter_results_ui("filter_results_ui_1")
+                            mod_user_view_ui("user_view_ui1")
 
+                          )),
+                 tabPanel("Filter",
+                          fluidPage(
+                            mod_filter_results_ui("filter_results_ui_1")
                           )),
                  tabPanel("Analysis",
                           fluidPage(
