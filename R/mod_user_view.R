@@ -33,7 +33,7 @@ mod_user_view_ui <- function(id){
       mainPanel(
 
         plotOutput(ns("glucose_plot")),
-        plotOutput(ns("all_foods")),
+        plotOutput(ns("plot_all_foods")),
         h3("Stats Table"),
         dataTableOutput(ns("auc_table")),
         h3("Raw Data"),
@@ -112,10 +112,36 @@ mod_user_view_server <- function(id, con, csv_user_gdf,GLUCOSE_RECORDS, NOTES_RE
         filter(time <=  meal_datetime + lubridate::minutes(input$timewindow))
       cat(file=stderr(), sprintf("g_df is %d rows\n",nrow(g_df)))
 
-      return(g_df)
+      return(g_df)}
+    )
 
+    # food_df ----
+    food_df <- reactive({
+      validate(
+        need(input$food_name, "No food selected")
+      )
+
+      message(sprintf("Food selected = %s\n", isolate(input$food_name)))
+      one_food_df <-  cgmr::food_times_df_fast(
+        glucose_df = GLUCOSE_RECORDS,
+        notes_df = NOTES_RECORDS,
+        user_id = input$user_id,
+        timeLength = 150,
+        prefixLength = 30,
+        foodname = input$food_name
+      )
+
+      validate(
+        need(!is.null(one_food_df), sprintf("No glucose results for food %s", input$food_name1))
+      )
+
+      df <-  if(input$normalize) {
+        cat(file=stderr(), sprintf("normalizing...\n"))
+        one_food_df %>% cgmr::normalize_value()
+      } else one_food_df
+
+      return(cgmr::combined_food_times_df(df))
     }
-
     )
 
     # output$meal_selection ----
@@ -180,8 +206,23 @@ mod_user_view_server <- function(id, con, csv_user_gdf,GLUCOSE_RECORDS, NOTES_RE
     )
 
 
-    # output$all_foods ----
-    output$all_foods <- renderPlot({
+    # output$plot_all_foods ----
+    output$plot_all_foods <- renderPlot({
+      food_df <-  food_df()
+
+    foods_to_show <- food_df # %>%  filter(meal %in% input$meal_items)
+
+    validate(
+      need(nrow(foods_to_show)>0, "Please select a food")
+    )
+
+    g <- plot_compare_glucose(foods_to_show,
+                             # input$combine,
+                              #input$smooth,
+                              title = "Glucose Response",
+                              subtitle = sprintf("Food = %s", isolate(input$food_name)))
+
+    return(g)
 
     })
 
