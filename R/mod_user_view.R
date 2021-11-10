@@ -103,7 +103,7 @@ mod_user_view_server <- function(id, con, csv_user_gdf,GLUCOSE_RECORDS, NOTES_RE
         need(!is.null(input$food_name), "waiting for food menu"),
         need(!is.null(input$meal_name), "waiting for meal name")
       )
-      meal_datetime <- as_datetime(input$meal_name)
+      meal_datetime <- lubridate::as_datetime(input$meal_name)
 
       cat(file=stderr(),sprintf("meal_datetime = %s\n", meal_datetime))
 
