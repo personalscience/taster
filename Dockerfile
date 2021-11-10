@@ -27,7 +27,7 @@ RUN Rscript -e 'remotes::install_version("ggplot2",upgrade="never", version = "3
 RUN Rscript -e 'remotes::install_version("DT",upgrade="never", version = "0.19")'
 RUN Rscript -e 'remotes::install_version("DescTools",upgrade="never", version = "0.99.43")'
 RUN Rscript -e 'remotes::install_version("dbplyr",upgrade="never", version = "2.1.1")'
-RUN Rscript -e 'remotes::install_github("personalscience/cgmr@fb19e6130a444e69b145d497f0a215db0262a81c")'
+RUN Rscript -e 'remotes::install_github("personalscience/cgmr@fe8c7785b09418a9b8afe22be37d48f6261a7031")'
 RUN mkdir /build_zone
 ADD . /build_zone
 WORKDIR /build_zone

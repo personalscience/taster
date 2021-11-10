@@ -16,5 +16,7 @@ devtools::install_github("personalscience/cgmr",
                          ref = "HEAD",
                          upgrade = "never")
 
-rsconnect::deployApp()
+#rsconnect::deployApp()
+
+golem::add_dockerfile(repos = c(REPO_NAME = 'https://packagemanager.rstudio.com/cran/__linux__/focal/2021-11-09'))
 
