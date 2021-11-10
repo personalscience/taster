@@ -9,7 +9,8 @@ plot_compare_glucose(
   combine = FALSE,
   smooth = FALSE,
   title = "Name",
-  subtitle = "foodname"
+  subtitle = "foodname",
+  legend_var = "date_ch"
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ plot_compare_glucose(
 \item{title}{string to display on ggplot}
 
 \item{subtitle}{string to display for subtitle}
+
+\item{legend_var}{a food_times_df column name to be used for the plot legend}
 }
 \value{
 ggplot object
