@@ -18,11 +18,17 @@ psi_theme <- function() {
 #' @param subtitle string to display for subtitle
 #' @param smooth smooth lines (default = FALSE)
 #' @param combine combine lines into one average (default = FALSE)
+#' @param legend_var a food_times_df column name to be used for the plot legend
 #' @import dplyr
 #' @import ggplot2
 #' @export
 #' @return ggplot object
-plot_compare_glucose <- function(food_times_df, combine = FALSE, smooth = FALSE, title = "Name", subtitle = "foodname") {
+plot_compare_glucose <- function(food_times_df,
+                                 combine = FALSE,
+                                 smooth = FALSE,
+                                 title = "Name",
+                                 subtitle = "foodname",
+                                 legend_var = "date_ch") {
 
   foods_to_show <- food_times_df
 
@@ -38,7 +44,7 @@ plot_compare_glucose <- function(food_times_df, combine = FALSE, smooth = FALSE,
   } else {
 
     foods_to_show %>%
-      ggplot(aes(x=`t`,y=`value`,color=`date_ch`))  +
+      ggplot(aes(x=`t`,y=`value`,color=.data[[{{legend_var }}]]))  +
       geom_point( size = 3) +
       if(smooth) geom_smooth(method = "loess", aes(fill=`date_ch`)) else geom_line(size=2)
   }

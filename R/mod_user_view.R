@@ -210,7 +210,15 @@ mod_user_view_server <- function(id, con, csv_user_gdf,GLUCOSE_RECORDS, NOTES_RE
     output$plot_all_foods <- renderPlot({
       food_df <-  food_df()
 
-    foods_to_show <- food_df # %>%  filter(meal %in% input$meal_items)
+      foods_to_show <-
+        purrr::map_df(food_list_db(ID()), function(x) {
+          cgmr::food_times_df(
+            glucose_df = GLUCOSE_RECORDS,
+            notes_df = NOTES_RECORDS,
+            user_id = ID(),
+            foodname = x
+          )
+        })
 
     validate(
       need(nrow(foods_to_show)>0, "Please select a food")
@@ -220,7 +228,9 @@ mod_user_view_server <- function(id, con, csv_user_gdf,GLUCOSE_RECORDS, NOTES_RE
                              # input$combine,
                               #input$smooth,
                               title = "Glucose Response",
-                              subtitle = sprintf("Food = %s", isolate(input$food_name)))
+                              subtitle = sprintf("Food = %s", isolate(input$food_name)),
+                             legend_var = "meal"
+                             )
 
     return(g)
 
