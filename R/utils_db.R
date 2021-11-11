@@ -91,3 +91,29 @@ user_df_from_db <- function(conn_args = config::get("dataconnection")){
   return(users_df)
 
 }
+
+#' @title Character string for user_id
+#' @param con database connection
+#' @param firebase_obj firebase object
+#' @param user_id numerical `user_id`
+#' @return dataframe of all user records
+#' @importFrom dplyr tbl collect
+#' @export
+name_for_user_id <- function(con, firebase_obj, user_id) {
+  ID = user_id
+
+  if (ID == 0) return("Unknown Name")
+  else   if(!is.null(firebase_obj)){
+    user <- firebase_obj$get_signed_in()
+    message(sprintf("user = %s", user$response$email))
+    return(user_df_from_db() %>% dplyr::filter(user_id == ID)  %>%
+             select(first_name,last_name) %>%
+             as.character() %>%
+             stringr::str_flatten(collapse = " "))
+  } else {
+    return(user_id)
+}
+
+
+}
+

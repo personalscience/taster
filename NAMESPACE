@@ -2,6 +2,7 @@
 
 export(food_list_db)
 export(mod_plot_glucose_server)
+export(name_for_user_id)
 export(plot_compare_glucose)
 export(plot_glucose)
 export(psi_theme)

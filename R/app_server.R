@@ -13,7 +13,18 @@ app_server <- function( input, output, session ) {
   GLUCOSE_RECORDS<- tbl(con,"glucose_records") %>% collect()
   NOTES_RECORDS <- tbl(con, "notes_records") %>% collect()
 
-  mod_about_server("about_ui_1", con)
+  f <- firebase::FirebaseUI$
+    new()$ # instantiate
+    set_providers( # define providers
+      email = TRUE,
+      google = TRUE
+    )$
+    set_tos_url("https://ensembio.com/privacy")$
+    set_privacy_policy_url("https://ensembio.com/privacy")$
+    launch() # launch
+
+
+  mod_about_server("about_ui_1", con, f)
 
 
   glucose_df <- mod_csv_upload_server("fromCSV", con)
