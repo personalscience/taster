@@ -9,10 +9,14 @@ app_ui <- function(request) {
     # Leave this function for adding external resources
     golem_add_external_resources(),
     # Your application UI logic
+    useFirebase(), # import dependencies
+    firebaseUIContainer(),
+   # reqSignin(h4("Logged in!")),
 
       navbarPage("Tastermonial", collapsible = TRUE, inverse = TRUE,
 
                   theme = bslib::bs_theme(bootswatch = "cerulean"),
+
 
                  tabPanel("Compare",
                           fluidPage(
