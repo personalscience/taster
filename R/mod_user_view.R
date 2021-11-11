@@ -116,6 +116,7 @@ mod_user_view_server <- function(id, con, csv_user_gdf,GLUCOSE_RECORDS, NOTES_RE
     )
 
     # food_df ----
+    # return all food_times_df() for foodname
     food_df <- reactive({
       validate(
         need(input$food_name, "No food selected")
@@ -205,11 +206,9 @@ mod_user_view_server <- function(id, con, csv_user_gdf,GLUCOSE_RECORDS, NOTES_RE
       cat(file = stderr(), sprintf("user_id=%s \n",ID()))
     )
 
+    # foods_to_show ----
 
-    # output$plot_all_foods ----
-    output$plot_all_foods <- renderPlot({
-      food_df <-  food_df()
-
+    foods_to_show <- function()
       foods_to_show <-
         purrr::map_df(food_list_db(ID()), function(x) {
           cgmr::food_times_df(
@@ -218,13 +217,18 @@ mod_user_view_server <- function(id, con, csv_user_gdf,GLUCOSE_RECORDS, NOTES_RE
             user_id = ID(),
             foodname = x
           )
-        })
+    })
+
+
+    # output$plot_all_foods ----
+
+    output$plot_all_foods <- renderPlot({
 
     validate(
-      need(nrow(foods_to_show)>0, "Please select a food")
+      need(nrow(foods_to_show())>0, "Please select a food")
     )
 
-    g <- plot_compare_glucose(foods_to_show,
+    g <- plot_compare_glucose(foods_to_show(),
                              # input$combine,
                               #input$smooth,
                               title = "Glucose Response",
@@ -243,6 +247,7 @@ mod_user_view_server <- function(id, con, csv_user_gdf,GLUCOSE_RECORDS, NOTES_RE
       validate(
         need(input$show_raw, "Press Show Raw")
       )
+
       glucose_df() %>%
         mutate(`timestamp PST` = lubridate::with_tz(time, tzone = "America/Los_Angeles")) %>%
         arrange(time)
@@ -255,7 +260,7 @@ mod_user_view_server <- function(id, con, csv_user_gdf,GLUCOSE_RECORDS, NOTES_RE
           sprintf("Food_data-%s-%s.csv", ID(), Sys.Date())
         },
         content = function(file) {
-          readr::write_csv(glucose_df(), file)
+          readr::write_csv(foods_to_show(), file)
         }
       )
 
