@@ -14,7 +14,7 @@ name_for_user_id(con, firebase_obj, user_id)
 \item{user_id}{numerical `user_id`}
 }
 \value{
-dataframe of all user records
+character string name for user
 }
 \description{
 Character string for user_id

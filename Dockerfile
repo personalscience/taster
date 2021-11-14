@@ -10,9 +10,9 @@ RUN Rscript -e 'remotes::install_version("processx",upgrade="never", version = "
 RUN Rscript -e 'remotes::install_version("htmltools",upgrade="never", version = "0.5.2")'
 RUN Rscript -e 'remotes::install_version("purrr",upgrade="never", version = "0.3.4")'
 RUN Rscript -e 'remotes::install_version("pkgload",upgrade="never", version = "1.2.3")'
-RUN Rscript -e 'remotes::install_version("bslib",upgrade="never", version = "0.3.1")'
 RUN Rscript -e 'remotes::install_version("stringr",upgrade="never", version = "1.4.0")'
 RUN Rscript -e 'remotes::install_version("attempt",upgrade="never", version = "0.3.1")'
+RUN Rscript -e 'remotes::install_version("bslib",upgrade="never", version = "0.3.1")'
 RUN Rscript -e 'remotes::install_version("dplyr",upgrade="never", version = "1.0.7")'
 RUN Rscript -e 'remotes::install_version("lubridate",upgrade="never", version = "1.8.0")'
 RUN Rscript -e 'remotes::install_version("DBI",upgrade="never", version = "1.1.1")'
@@ -27,6 +27,7 @@ RUN Rscript -e 'remotes::install_version("ggplot2",upgrade="never", version = "3
 RUN Rscript -e 'remotes::install_version("DT",upgrade="never", version = "0.19")'
 RUN Rscript -e 'remotes::install_version("DescTools",upgrade="never", version = "0.99.43")'
 RUN Rscript -e 'remotes::install_version("dbplyr",upgrade="never", version = "2.1.1")'
+RUN Rscript -e 'remotes::install_github("JohnCoene/firebase@76fdd7dfc585bfcdb0e9d54d621ca4b2a87a1ff4")'
 RUN Rscript -e 'remotes::install_github("personalscience/cgmr@fe8c7785b09418a9b8afe22be37d48f6261a7031")'
 RUN mkdir /build_zone
 ADD . /build_zone

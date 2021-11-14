@@ -47,7 +47,7 @@ mod_about_server <- function(id, con, f){
       user <- f$get_signed_in()
       print(user)
 
-      h4("Welcome,", name_for_user_id(con, f, 1234))
+      h4("Welcome,", user$response$email)
       # experiments <- if(DBI::dbExistsTable(con, "experiments"))
       #   {tbl(con, "experiments") %>% collect()}
       # else NULL

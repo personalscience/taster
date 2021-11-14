@@ -1,6 +1,6 @@
 Package: tastermonial
 Title: Personal Science CGM Analysis Web App
-Version: 0.0.6.1
+Version: 0.0.6.3
 Authors@R: 
     person(given = "Richard",
            family = "Sprague",
@@ -12,13 +12,14 @@ License: MIT + file LICENSE
 Imports: 
     attempt,
     bslib,
-    cgmr (>= 0.0.2.2),
+    cgmr (>= 0.0.6.3),
     config (>= 0.3.1),
     DBI,
     dbplyr,
     DescTools,
     dplyr,
     DT,
+    firebase (>= 1.0.0.9000),
     ggplot2,
     glue,
     golem (>= 0.3.1),
@@ -43,6 +44,7 @@ Suggests:
 Config/testthat/edition: 3
 Language: en-US
 Remotes: 
-    personalscience/cgmr
+    personalscience/cgmr,
+    JohnCoene/firebase
 URL: https://github.com/personalscience/taster
 BugReports: https://github.com/personalscience/taster/issues
