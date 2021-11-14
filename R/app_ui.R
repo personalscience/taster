@@ -10,9 +10,11 @@ app_ui <- function(request) {
     golem_add_external_resources(),
     # Your application UI logic
 
+
       navbarPage("Tastermonial", collapsible = TRUE, inverse = TRUE,
 
                   theme = bslib::bs_theme(bootswatch = "cerulean"),
+
 
                  tabPanel("Compare",
                           fluidPage(

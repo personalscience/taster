@@ -14,17 +14,23 @@ mod_about_ui <- function(id){
     tags$a(href="https://personalscience.com", "More details"),
     textOutput(ns("about_page")),
     textOutput(ns("currentDB")),
+    firebase::useFirebase(),
+    firebase::firebaseUIContainer(),
+    firebase::reqSignin(actionButton(ns("signout"), "Sign out")),
     uiOutput(ns("image"))
   )
 }
 
 #' about Server Functions
 #' @param con database connection
+#' @param f firebase instance
 #' @importFrom stats na.omit
 #' @noRd
-mod_about_server <- function(id, con){
+mod_about_server <- function(id, con, f){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
+
+
     output$about_page <- renderText("Be Your Own Scientist")
     output$currentDB <- renderText(sprintf("DB=%s. version = %s, cgmr = %s, db  = %s",
                                            substr(get_golem_config("dataconnection")$host, 1,5),
@@ -37,14 +43,26 @@ mod_about_server <- function(id, con){
 
 
     output$image <- renderUI({
-      experiments <- if(DBI::dbExistsTable(con, "experiments"))
-        {tbl(con, "experiments") %>% collect()}
-      else NULL
+      f$req_sign_in() # require sign in
+      user <- f$get_signed_in()
+      print(user)
 
-      tags$img(src=stats::na.omit(experiments$experiment_image_url),
-           width = "240px")
+      h4("Welcome,", user$response$email)
+      # experiments <- if(DBI::dbExistsTable(con, "experiments"))
+      #   {tbl(con, "experiments") %>% collect()}
+      # else NULL
+      #
+      # tags$img(src=stats::na.omit(experiments$experiment_image_url),
+      #      width = "240px")
     }
     )
+
+    observeEvent(input$signout, {
+      message("signing out")
+      f$sign_out()
+      message("signed out")
+
+    })
   })
 }
 
@@ -59,7 +77,14 @@ demo_about <- function() {
 
   ui <- fluidPage(mod_about_ui("x"))
   server <- function(input, output, session) {
-    mod_about_server("x",con)
+    f <- firebase::FirebaseUI$
+      new("session")$
+      set_providers(
+        email = TRUE,
+        google = TRUE
+      )$
+      launch()
+    mod_about_server("x",con, f)
 
   }
   shinyApp(ui, server)

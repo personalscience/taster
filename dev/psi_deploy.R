@@ -20,3 +20,4 @@ devtools::install_github("personalscience/cgmr",
 
 golem::add_dockerfile(repos = c(REPO_NAME = 'https://packagemanager.rstudio.com/cran/__linux__/focal/2021-11-09'))
 
+remotes::install_github("JohnCoene/firebase")

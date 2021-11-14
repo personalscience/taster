@@ -91,3 +91,38 @@ user_df_from_db <- function(conn_args = config::get("dataconnection")){
   return(users_df)
 
 }
+
+#' @title Character string for user_id
+#' @param con database connection
+#' @param firebase_obj firebase object
+#' @param user_id numerical `user_id`
+#' @return character string name for user
+#' @importFrom dplyr tbl collect
+#' @export
+name_for_user_id <- function(con, firebase_obj, user_id) {
+  ID = user_id
+
+    return(user_df_from_db() %>% dplyr::filter(user_id == ID)  %>%
+             select(first_name,last_name) %>%
+             as.character() %>%
+             stringr::str_flatten(collapse = " "))
+}
+
+#' @title Set up Firebase support
+#' @description This is just a stub for now, in order to consolidate all program-wide calls to Firebase.
+#' @param con database connection
+#' @import firebase
+#' @return firebase object
+firebase_setup <- function(con) {
+  f <- firebase::FirebaseUI$
+  new("local")$ # instantiate
+  set_providers( # define providers
+    email = TRUE,
+    google = TRUE
+  )$
+  set_tos_url("https://ensembio.com/privacy")$
+  set_privacy_policy_url("https://ensembio.com/privacy")$
+  launch() # launch
+
+  return(f)
+}
