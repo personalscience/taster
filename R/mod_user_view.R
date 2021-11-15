@@ -21,8 +21,8 @@ mod_user_view_ui <- function(id){
         ),
         uiOutput(ns("food_selection")),
         uiOutput(ns("meal_selection")),
-        checkboxInput(ns("normalize"), label = "Normalize"),
         checkboxInput(ns("smooth"), label = "Smooth"),
+        checkboxInput(ns("show_average"), label = "Show Average"),
         checkboxInput(ns("baseline"), label = "Show Baseline"),
         numericInput(ns("prefixLength"), label = "Prefix Minutes", value = 0, width = "30%" ),
         numericInput(ns("timewindow"), label = "Time Window (Minutes)", value = 150, width = "30%"),
@@ -205,7 +205,29 @@ mod_user_view_server <- function(id, con, f, csv_user_gdf,GLUCOSE_RECORDS, NOTES
         )
 
         cat(file=stderr(), sprintf("rendering glucose_df...%d rows", nrow(glucose_df())))
-        plot_glucose(glucose_df(), title = sprintf("User %s",user_id=ID()[["name"]]))
+
+        g_df <- glucose_df()
+
+
+       # plot_glucose(glucose_df(), title = sprintf("User %s",user_id=ID()[["name"]]))
+
+        gr <- glucose_ranges_for_id(ID(), GLUCOSE_RECORDS)
+
+        g <- plot_glucose(g_df,
+                                  title =  sprintf("User %s",user_id=ID()[["name"]]),
+                                  subtitle = sprintf("Food = %s", isolate(input$food_name)))
+
+        g +
+
+          if(input$baseline & !input$show_average){
+            annotate("rect",
+                     xmin = min(g_df[["time"]]),
+                     xmax = max(g_df[["time"]]),
+                     ymin = gr$mean - gr$sd*2,
+                     ymax = gr$mean + gr$sd*2,
+                     fill = "green",
+                     alpha = 0.3)
+          }
       })
 
 
@@ -238,8 +260,8 @@ mod_user_view_server <- function(id, con, f, csv_user_gdf,GLUCOSE_RECORDS, NOTES
     )
 
     g <- plot_compare_glucose(foods_to_show(),
-                             # input$combine,
-                              #input$smooth,
+                             combine = input$show_average,
+                              smooth = input$smooth,
                               title = "Glucose Response",
                               subtitle = sprintf("Food = %s", isolate(input$food_name)),
                              legend_var = "meal"
@@ -287,15 +309,19 @@ mod_user_view_server <- function(id, con, f, csv_user_gdf,GLUCOSE_RECORDS, NOTES
 #' @noRd
 #'
 demo_user <- function() {
-  ui <- fluidPage(mod_user_view_ui("x"))
-  con <- db_connection()
-  GLUCOSE_RECORDS<- tbl(con,"glucose_records") %>% collect()
-  NOTES_RECORDS <- tbl(con, "notes_records") %>% collect()
-  f = NULL # not logged in
+  ui <- fluidPage(    firebase::useFirebase(),
+                      firebase::firebaseUIContainer(),
+                      mod_user_view_ui("x"))
+
 
   sample_glucose <- cgmr::glucose_df_from_libreview_csv()
   server <- function(input, output, session) {
+    con <- db_connection()
+    GLUCOSE_RECORDS<- tbl(con,"glucose_records") %>% collect()
+    NOTES_RECORDS <- tbl(con, "notes_records") %>% collect()
+    f <- firebase_setup(con)
     mod_user_view_server("x", con, f, csv_user_gdf = sample_glucose, GLUCOSE_RECORDS, NOTES_RECORDS)
+
 
   }
   shinyApp(ui, server)
