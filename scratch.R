@@ -19,18 +19,19 @@ con <- DBI::dbConnect(
   dbname = conn_args$dbname,
   password = conn_args$password
 )
+con <- db_connection()
 
-glucose_records <- tbl(con,"glucose_records")
-notes_records <- tbl(con,"notes_records")
-notes_records %>% filter(user_id == 1017 & Comment == "Real Food Bar") %>% collect() %>% print(n=100)
-glucose_records %>% filter(user_id == 1017) %>% filter(time > "2021-11-02")
+GLUCOSE_RECORDS<- tbl(con,"glucose_records") %>% collect()
+NOTES_RECORDS <- tbl(con, "notes_records") %>% collect()
 
-cgmr::food_times_df_fast(glucose_records,notes_records, prefixLength = 10)
+df <- cgmr::df_for_all_auc(food_list_db(), GLUCOSE_RECORDS,
+                           NOTES_RECORDS)
 
-# ldb <- tasterdb::load_db("local")
-# user_df_from_db() %>% print(n=Inf) %>% select(first_name, last_name, user_id) %>% knitr::kable() %>% clipr::write_clip()
-#
-# tdb <- tasterdb::load_db("shinyapps")
+df %>% pull(meal)
 
-
+df %>% mutate(user_id = meal %>% stringr::str_extract("^([:digit:])+(?=-)") %>% as.numeric())
+x = build_all_AUC(s_list = food_list_db(),
+              glucose_records = GLUCOSE_RECORDS,
+              notes_records = NOTES_RECORDS)
+x
 
