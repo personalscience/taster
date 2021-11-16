@@ -36,7 +36,7 @@ mod_about_server <- function(id, con, f){
                                            substr(get_golem_config("dataconnection")$host, 1,5),
                                            utils::packageVersion("tastermonial"),
                                            utils::packageVersion("cgmr"),
-                                           first(tbl(con,"glucose_records") %>%
+                                           first(db_get_table(con, "glucose_records") %>%
                                                    filter(time == max(time, na.rm=TRUE)) %>%
                                                    pull(time) %>%
                                                    lubridate::with_tz(tzone="America/Los_Angeles"))))

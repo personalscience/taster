@@ -317,8 +317,10 @@ demo_user <- function() {
   sample_glucose <- cgmr::glucose_df_from_libreview_csv()
   server <- function(input, output, session) {
     con <- db_connection()
-    GLUCOSE_RECORDS<- tbl(con,"glucose_records") %>% collect()
-    NOTES_RECORDS <- tbl(con, "notes_records") %>% collect()
+
+    GLUCOSE_RECORDS<- db_get_table(con, "glucose_records")
+    NOTES_RECORDS <- db_get_table(con, "notes_records")
+
     f <- firebase_setup(con)
     mod_user_view_server("x", con, f, csv_user_gdf = sample_glucose, GLUCOSE_RECORDS, NOTES_RECORDS)
 

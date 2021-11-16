@@ -77,7 +77,7 @@ mod_filter_results_server <- function(id, glucose_df, con){
         glucose_df}
       else {
 
-        tbl(con, "glucose_records") %>% filter(user_id == !!glucose_user()) %>% collect()
+        db_get_table(con, "glucose_records")%>% filter(user_id == !!glucose_user()) %>% collect()
       }
 
 })
@@ -99,7 +99,7 @@ mod_filter_results_server <- function(id, glucose_df, con){
         need(input$food_name, "No food selected")
       )
 
-      food_start_times_df <- tbl(con, "notes_records") %>% filter(user_id == !!ID() &
+      food_start_times_df <- db_get_table(con, "notes_records") %>% filter(user_id == !!ID() &
                                                                Start >= !!input$start_date &
                                                                  Comment == !!input$food_name) %>%
         collect()

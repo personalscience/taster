@@ -22,6 +22,18 @@ local:
     port: !expr Sys.getenv("LOCAL_PORT")
     dbname: !expr Sys.getenv("LOCAL_DBNAME")
     glucose_table: 'glucose_records'
+sqlite:
+  golem_name: tastermonial
+  golem_version: 0.0.1.0001
+  app_prod: no
+  dataconnection:
+    driver: !expr RSQLite::SQLite()
+    host: "sqlite"
+    user: ""
+    password: ""
+    port: NULL
+    dbname: "mydb.sqlite"
+    glucose_table: 'glucose_records'
 production:
   app_prod: yes
 dev:

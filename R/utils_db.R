@@ -16,6 +16,31 @@ db_connection <- function() {
   return(con)
 }
 
+#' @title Get a table from the database and return it as a well-formed dataframe.
+#' @description As much as possible, route calls to the database table to here. This function will
+#' abstract away problems with differences between databases.
+#' @param con valid database connection
+#' @param table_name string name for a table in the database (usual `glucose_records` or `notes_records`)
+#' @description hardcoded to look for Tastermonial db
+db_get_table <- function(con, table_name = "glucose_records") {
+
+  if (table_name == "notes_records") {
+    df <- tbl(con, "notes_records")  %>%
+      collect() %>%
+      filter(!is.na(Start)) %>%
+      mutate(Start = lubridate::as_datetime(Start),
+             End = lubridate::as_datetime(End))
+  } else if (table_name == "glucose_records") {
+  df <- tbl(con,"glucose_records") %>%
+    collect() %>%
+    filter(!is.na(time)) %>%
+    mutate(time = lubridate::as_datetime(time))
+  } else df <- tbl(con, table_name) %>% collect()
+
+  return(df)
+}
+
+
 #' @title Write a table to the database
 #' @param con valid database connection
 #' @param table_name char string for table name
@@ -56,16 +81,17 @@ food_list_db <- function(user_id = 1234  ) {
   ID <- user_id
 
   if (is.null(ID)) {
-    prods <- tbl(con, "notes_records") %>% filter(.data[["Activity"]] == "Food") %>%
+    prods <- db_get_table(con, "notes_records") %>% filter(.data[["Activity"]] == "Food") %>%
       filter(.data[["Start"]] > "2021-06-01") %>%
       group_by(.data[["Comment"]]) %>% add_count() %>% filter(n > 2) %>% distinct(.data[["Comment"]]) %>%
       transmute(productName = .data[["Comment"]], `user_id` = ID) %>%
-      collect() %>% arrange(.data[['productName']])
+      arrange(.data[['productName']])
   } else
     prods <-
-    tbl(con, "notes_records") %>% filter(.data[["Activity"]] == "Food") %>%
-    filter(.data[["Start"]] > "2021-06-01") %>% filter(`user_id` %in% ID) %>% distinct(.data[["Comment"]]) %>%
-    collect() %>% pull(.data[["Comment"]])
+    db_get_table(con, "notes_records") %>% filter(.data[["Activity"]] == "Food") %>%
+    filter(.data[["Start"]] > "2021-06-01") %>%
+    filter(`user_id` %in% ID) %>% distinct(.data[["Comment"]]) %>%
+    pull(.data[["Comment"]])
 
   if(length(prods) > 0)
     return(sort(prods))
@@ -85,7 +111,7 @@ food_list_db <- function(user_id = 1234  ) {
 user_df_from_db <- function(conn_args = config::get("dataconnection")){
   con <- db_connection()
 
-  users_df <- tbl(con, "user_list" ) %>% collect()
+  users_df <- db_get_table(con, "user_list")
 
   DBI::dbDisconnect(con)
   return(users_df)
@@ -107,6 +133,8 @@ name_for_user_id <- function(con, firebase_obj, user_id) {
              as.character() %>%
              stringr::str_flatten(collapse = " "))
 }
+
+
 
 #' @title Set up Firebase support
 #' @description This is just a stub for now, in order to consolidate all program-wide calls to Firebase.

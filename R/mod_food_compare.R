@@ -199,8 +199,9 @@ demo_food <- function() {
   sample_glucose <- cgmr::glucose_df_from_libreview_csv()
 
   con <- db_connection()
-  GLUCOSE_RECORDS<- tbl(con,"glucose_records") %>% collect()
-  NOTES_RECORDS <- tbl(con, "notes_records") %>% collect()
+
+  GLUCOSE_RECORDS<- db_get_table(con, "glucose_records")
+  NOTES_RECORDS <- db_get_table(con, "notes_records")
 
   server <- function(input, output, session) {
     mod_food_compare_server("x", con, GLUCOSE_RECORDS, NOTES_RECORDS)

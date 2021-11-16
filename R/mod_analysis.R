@@ -110,9 +110,12 @@ mod_analysis_server <- function(id, glucose_df, con, GLUCOSE_RECORDS, NOTES_RECO
 demo_analysis <- function() {
   ui <- fluidPage(mod_analysis_ui("analysis_ui_1"))
   sample_glucose <- cgmr::glucose_df_from_libreview_csv()
-  con <- db_connection()
   server <- function(input, output, session) {
-    mod_analysis_server("analysis_ui_1", glucose_df = sample_glucose, con = con)
+    con <- db_connection()
+
+    GLUCOSE_RECORDS<- db_get_table(con, "glucose_records")
+    NOTES_RECORDS <- db_get_table(con, "notes_records")
+    mod_analysis_server("analysis_ui_1", glucose_df = sample_glucose, con = con, GLUCOSE_RECORDS, NOTES_RECORDS)
 
   }
   shinyApp(ui, server)

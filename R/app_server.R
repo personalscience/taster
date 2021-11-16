@@ -10,15 +10,12 @@ app_server <- function( input, output, session ) {
 
   con <- db_connection()
 
-  GLUCOSE_RECORDS<- tbl(con,"glucose_records") %>% collect()
-  NOTES_RECORDS <- tbl(con, "notes_records") %>% collect()
+  GLUCOSE_RECORDS<- db_get_table(con, "glucose_records")
+  NOTES_RECORDS <- db_get_table(con, "notes_records")
 
   f <- firebase_setup(con)
 
-
   mod_about_server("about_ui_1", con, f)
-
-
   glucose_df <- mod_csv_upload_server("fromCSV", con)
   mod_food_compare_server("food_compare_plot", con, GLUCOSE_RECORDS, NOTES_RECORDS)
   mod_user_view_server("user_view_ui1", con, f, csv_user_gdf = glucose_df(), GLUCOSE_RECORDS, NOTES_RECORDS)

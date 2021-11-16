@@ -78,15 +78,17 @@ docker run -p 8085:80 --env-file .env --name taster -d tastermonial
 
 ## Database
 
-The app requires a database. The database loading is handled by the separate package `tasterdb`, which expects all Libreview files and other raw data to be in the directory specified by:
+The app requires a database. For testing purposes, a pre-prepared Sqlite database will work fine, though it is currently not included in this repo.
+
+Database related features are handled by the separate package `tasterdb`, which expects all Libreview files and other raw data to be in the directory specified by:
 
 ``` r
 config::get("tastermonial")$datadir
 ```
 
-This data directory should contain:
+Using `tasterdb`, you can fill the database using a data directory that contains:
 
--   All Libreview CSV files, exactly as downloaded from <https://libreview.com>. Any CSV file that includes "glucose" in the name will automatically read by the script `psi_db_load.R`.
+-   All Libreview CSV files, exactly as downloaded from <https://libreview.com>. Any CSV file that includes "glucose" in the name will automatically be read into the database.
 -   Latest Tastermonial firebase output, stored in the file `table-data.csv`.
 -   Miscellaneous other raw files including Nutrisense-formatted files.
 

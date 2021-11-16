@@ -21,17 +21,19 @@ con <- DBI::dbConnect(
 )
 con <- db_connection()
 
-GLUCOSE_RECORDS<- tbl(con,"glucose_records") %>% collect()
+GLUCOSE_RECORDS<- tbl(con,"glucose_records")  %>%
+  collect() #%>%
+  mutate(time = lubridate::as_datetime(time))
+
+GLUCOSE_RECORDS %>% head() %>%
+  mutate(timestamp = lubridate::with_tz(time, tzone = "America/Los_Angeles"))
+
 NOTES_RECORDS <- tbl(con, "notes_records") %>% collect()
 
-df <- cgmr::df_for_all_auc(food_list_db(), GLUCOSE_RECORDS,
-                           NOTES_RECORDS)
+cgmr::food_times_df_fast(
+  glucose_df = GLUCOSE_RECORDS,
+  notes_df = NOTES_RECORDS,
+  user_id = 1003,
+  foodname = "Clif Bar Chocolate")
 
-df %>% pull(meal)
-
-df %>% mutate(user_id = meal %>% stringr::str_extract("^([:digit:])+(?=-)") %>% as.numeric())
-x = build_all_AUC(s_list = food_list_db(),
-              glucose_records = GLUCOSE_RECORDS,
-              notes_records = NOTES_RECORDS)
-x
 
