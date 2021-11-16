@@ -13,6 +13,9 @@ db_write_table(con = db_connection(), table_name = "raw_glucose", table_df)
 
 \item{table_df}{valid dataframe to write to the database}
 }
+\value{
+character string with a message that can be displayed to the user
+}
 \description{
 Write a table to the database
 }

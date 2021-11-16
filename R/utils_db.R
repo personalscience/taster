@@ -45,15 +45,20 @@ db_get_table <- function(con, table_name = "glucose_records") {
 #' @param con valid database connection
 #' @param table_name char string for table name
 #' @param table_df valid dataframe to write to the database
+#' @return character string with a message that can be displayed to the user
 db_write_table <- function(con = db_connection(), table_name = "raw_glucose", table_df) {
+
+  msg <- "Nothing to write"
   if (DBI::dbExistsTable(con, table_name)) {
     # check that you're not adding another copy of the same table
     sn <- first(unique(table_df$serial_number))
-    if(nrow(tbl(con, "raw_glucose") %>% filter(.data[["serial_number"]] == sn) %>% collect()) > 0){
+    if(nrow(tbl(con, table_name) %>% filter(.data[["serial_number"]] == sn) %>% collect()) > 0){
       message(sprintf("Already have that serial number %s", sn))
-      return(NULL)
+      msg <- sprintf("Already have that serial number %s", sn)
+      return(msg)
     } else {
       message(sprintf("writing %d rows to table %s",nrow(table_df), table_name))
+      msg <- sprintf("wrote %d records to %s",nrow(table_df), table_name)
       DBI::dbAppendTable(con, table_name, table_df)
     }
 
@@ -61,7 +66,10 @@ db_write_table <- function(con = db_connection(), table_name = "raw_glucose", ta
 
 
   DBI::dbWriteTable(con, table_name, table_df)
+      msg <- "Wrote to table for the first time"
     }
+
+  return(msg)
 
 }
 
