@@ -14,11 +14,14 @@ test_that("glucose range for ID", {
   expect_equal(as.numeric(gr),c(78.09, 4.99), tolerance = .1 )
 })
 
-test_that("food_list_db", {
-  expect_equal(food_list_db(1002)[3], "Hu Simple Chocolate")
+test_that("food_list contains correct values", {
+  expect_equal(db_food_list(1002)[3], "Hu Simple Chocolate")
 })
 
 test_that("user_list",{
-  expect_equal(user_df_from_db() %>% filter(user_id == 1234) %>% pull(last_name), "Sprague")
-}
-)
+  expect_equal(db_user_df() %>% filter(user_id == 1234) %>% pull(last_name), "Sprague")
+})
+
+test_that("name for user ID", {
+  expect_equal(db_name_for_user_id(con, user_id = 1234), "Richard Sprague")
+})

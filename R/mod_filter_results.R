@@ -16,7 +16,7 @@ mod_filter_results_ui <- function(id){
       sidebarPanel(        selectInput(
         ns("user_id"),
         label = "Select User",
-        choices = c(0,user_df_from_db()[["user_id"]]),
+        choices = c(0,db_user_df()[["user_id"]]),
         selected = 0
       ),        hr(),
       checkboxGroupInput(ns("meal_items"),label = "Meal", choices = NULL),
@@ -62,7 +62,7 @@ mod_filter_results_server <- function(id, glucose_df, con){
     )
     taster_prod_list <- reactive({
       cat(file=stderr(), sprintf("seeking prod list for user %d", ID()))
-      food_list_db(user_id = ID())}
+      db_food_list(user_id = ID())}
     )
 
 

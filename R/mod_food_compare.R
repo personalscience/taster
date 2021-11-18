@@ -15,7 +15,7 @@ mod_food_compare_ui <- function(id){
         selectInput(
           ns("food_name"),
           label = "Select Food",
-          choices = food_list_db(user_id = c(1001:1004,1007:1021)),
+          choices = db_food_list(user_id = c(1001:1004,1007:1021)),
           selected = "Clif Bar Chocolate"
         ),
         checkboxInput(ns("normalize"), label = "Normalize"),

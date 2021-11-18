@@ -1,3 +1,6 @@
+# All functions that require database access
+# Eventually this should be turned into its own package
+
 
 #' @title make a database connection
 #' @description hardcoded to look for Tastermonial db
@@ -82,7 +85,7 @@ db_write_table <- function(con = db_connection(), table_name = "raw_glucose", ta
 #' @importFrom magrittr %>%
 #' @importFrom rlang .data
 #' @export
-food_list_db <- function(user_id = 1234  ) {
+db_food_list<- function(user_id = 1234  ) {
 
   con <- db_connection()
 
@@ -116,7 +119,7 @@ food_list_db <- function(user_id = 1234  ) {
 #' @return dataframe of all user records
 #' @importFrom dplyr tbl collect
 #' @export
-user_df_from_db <- function(conn_args = config::get("dataconnection")){
+db_user_df <- function(conn_args = config::get("dataconnection")){
   con <- db_connection()
 
   users_df <- db_get_table(con, "user_list")
@@ -133,10 +136,10 @@ user_df_from_db <- function(conn_args = config::get("dataconnection")){
 #' @return character string name for user
 #' @importFrom dplyr tbl collect
 #' @export
-name_for_user_id <- function(con, firebase_obj, user_id) {
+db_name_for_user_id <- function(con, firebase_obj, user_id) {
   ID = user_id
 
-    return(user_df_from_db() %>% dplyr::filter(user_id == ID)  %>%
+    return(db_user_df() %>% dplyr::filter(user_id == ID)  %>%
              select(first_name,last_name) %>%
              as.character() %>%
              stringr::str_flatten(collapse = " "))

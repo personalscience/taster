@@ -17,7 +17,7 @@ mod_goddess_ui <- function(id){
         selectInput(
           ns("user_id"),
           label = "User Name",
-          choices = user_df_from_db() %>% pull(user_id),
+          choices = db_user_df() %>% pull(user_id),
           selected = 1234
         ),
         uiOutput(ns("food_selection")),
@@ -66,7 +66,7 @@ mod_goddess_server <- function(id, con, GLUCOSE_RECORDS, NOTES_RECORDS){
     )
     taster_prod_list <- reactive({
       cat(file=stderr(), sprintf("seeking prod list for user %d", ID()))
-      foods <- food_list_db(user_id = ID())
+      foods <- db_food_list(user_id = ID())
       validate(
         need(!is.null(foods),"missing records for user")
       )

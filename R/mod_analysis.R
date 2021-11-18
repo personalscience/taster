@@ -16,7 +16,7 @@ mod_analysis_ui <- function(id){
         selectInput(
           ns("user_id"),
           label = "User Name",
-          choices = user_df_from_db() %>% pull(user_id),
+          choices = db_user_df() %>% pull(user_id),
           selected = 1234
         ),
         markdown("White boxes represent 50% of the iAUC results from all users of that product.
@@ -55,7 +55,7 @@ mod_analysis_server <- function(id, glucose_df, con, GLUCOSE_RECORDS, NOTES_RECO
       )
 
 
-      build_all_AUC(s_list = food_list_db(),
+      build_all_AUC(s_list = db_food_list(),
                             glucose_records = GLUCOSE_RECORDS,
                             notes_records = NOTES_RECORDS)
     }
@@ -71,9 +71,9 @@ mod_analysis_server <- function(id, glucose_df, con, GLUCOSE_RECORDS, NOTES_RECO
       validate(
         need(input$calc,"Press Calculate to see Analytics")
       )
-      tibble(foodname = food_list_db() ,
-                        iAUC = purrr::map_dbl(food_list_db(), function(x) {AUC_for_food(x) %>% pull(iAUC) %>% mean()}),
-                        n = purrr::map_dbl(food_list_db(), function(x) {AUC_for_food(x) %>% nrow()}))
+      tibble(foodname = db_food_list() ,
+                        iAUC = purrr::map_dbl(db_food_list(), function(x) {AUC_for_food(x) %>% pull(iAUC) %>% mean()}),
+                        n = purrr::map_dbl(db_food_list(), function(x) {AUC_for_food(x) %>% nrow()}))
     })
 
     output$boxplot <- renderPlot({

@@ -16,7 +16,7 @@ mod_user_view_ui <- function(id){
         selectInput(
           ns("user_id"),
           label = "User Name",
-          choices = user_df_from_db() %>% pull(user_id),
+          choices = db_user_df() %>% pull(user_id),
           selected = 1234
         ),
         uiOutput(ns("food_selection")),
@@ -62,7 +62,7 @@ mod_user_view_server <- function(id, con, f, csv_user_gdf,GLUCOSE_RECORDS, NOTES
     # taster_prod_list ----
     taster_prod_list <- reactive({
       cat(file=stderr(), sprintf("seeking prod list for user %d", ID()[["id"]]))
-      foods <- food_list_db(user_id = ID()[["id"]])
+      foods <- db_food_list(user_id = ID()[["id"]])
       validate(
         need(!is.null(foods),"missing records for user")
       )
@@ -74,7 +74,7 @@ mod_user_view_server <- function(id, con, f, csv_user_gdf,GLUCOSE_RECORDS, NOTES
       user <- f$get_signed_in()
       if(!is.null(user))
       {cat(file=stderr(),sprintf("\nUser %s is signed in\n",isolate(input$user_id)))
-        username <- name_for_user_id(con, f, input$user_id)}
+        username <- db_name_for_user_id(con, f, input$user_id)}
       else {message("\nsigned out")
         username <- "<must sign in to see name>"
       }
@@ -241,7 +241,7 @@ mod_user_view_server <- function(id, con, f, csv_user_gdf,GLUCOSE_RECORDS, NOTES
 
     foods_to_show <- function()
       foods_to_show <-
-        purrr::map_df(food_list_db(ID()[["id"]]), function(x) {
+        purrr::map_df(db_food_list(ID()[["id"]]), function(x) {
           cgmr::food_times_df(
             glucose_df = GLUCOSE_RECORDS,
             notes_df = NOTES_RECORDS,
