@@ -3,6 +3,7 @@
 export(db_food_list)
 export(db_name_for_user_id)
 export(db_user_df)
+export(db_user_privileges)
 export(mod_plot_glucose_server)
 export(plot_compare_glucose)
 export(plot_glucose)

@@ -114,6 +114,31 @@ db_food_list<- function(user_id = 1234  ) {
 
 # psi User Management Functions
 
+#' @title Returns privileges assigned to this user
+#' @param user_id user ID
+#' @return privilege level, NULL if no privileges available
+#' @export
+db_user_privileges <- function(user_id = -1){
+  con <- db_connection()
+
+  ID = user_id
+  result <- NULL
+  if(DBI::dbExistsTable(con, "accounts_user")){
+    priv <- tbl(con, "accounts_user") %>%
+      filter(user_id == ID) %>%
+      pull(.data[["privilege"]]) %>%
+      first()
+    result <- if(!is.na(priv)) priv else NULL
+
+  } else {
+    message(sprintf("Database %s doesn't have an accounts_user table"))
+
+  }
+
+  DBI::dbDisconnect(con)
+  return(result)
+}
+
 #' @title All user records in the database
 #' @param conn_args database connection
 #' @return dataframe of all user records

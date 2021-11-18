@@ -12,4 +12,11 @@ test_that("First Write works", {
   expect_equal(db_write_table(con, table_name = "sample_table", head(glucose_data2)$glucose_raw), "wrote 31737 records to sample_table")
 })
 
+
+test_that("user privileges",{
+  expect_equal(db_user_privileges(1234), "admin")
+  expect_equal(db_user_privileges(), NULL)
+
+})
+
 DBI::dbDisconnect(con)
