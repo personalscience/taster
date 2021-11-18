@@ -24,9 +24,12 @@ db_connection <- function() {
 #' abstract away problems with differences between databases.
 #' @param con valid database connection
 #' @param table_name string name for a table in the database (usual `glucose_records` or `notes_records`)
-#' @description hardcoded to look for Tastermonial db
+#' @export
 db_get_table <- function(con, table_name = "glucose_records") {
 
+  if (!DBI::dbExistsTable(con, table_name)) {
+    return(NULL)
+  }
   if (table_name == "notes_records") {
     df <- tbl(con, "notes_records")  %>%
       collect() %>%
@@ -78,7 +81,8 @@ db_write_table <- function(con = db_connection(), table_name = "raw_glucose", ta
 
 
 #' @title List all products consumed by `user_id`
-#' @description Return all products consumed by this user.
+#' @description Return all products consumed by this user. If `user_id==NULL` then show
+#'  from all users, all products consumed more than once.
 #' @param user_id vector of user IDs or NULL to show all users
 #' @return character vector of product names sorted alphabetically
 #' @importFrom dplyr tbl collect filter distinct group_by transmute pull add_count arrange
@@ -95,8 +99,7 @@ db_food_list<- function(user_id = 1234  ) {
     prods <- db_get_table(con, "notes_records") %>% filter(.data[["Activity"]] == "Food") %>%
       filter(.data[["Start"]] > "2021-06-01") %>%
       group_by(.data[["Comment"]]) %>% add_count() %>% filter(n > 2) %>% distinct(.data[["Comment"]]) %>%
-      transmute(productName = .data[["Comment"]], `user_id` = ID) %>%
-      arrange(.data[['productName']])
+      pull(.data[["Comment"]])
   } else
     prods <-
     db_get_table(con, "notes_records") %>% filter(.data[["Activity"]] == "Food") %>%
@@ -131,7 +134,7 @@ db_user_privileges <- function(user_id = -1){
     result <- if(!is.na(priv)) priv else NULL
 
   } else {
-    message(sprintf("Database %s doesn't have an accounts_user table"))
+    message(sprintf("Database %s doesn't have an accounts_user table", class(con)))
 
   }
 
@@ -154,6 +157,58 @@ db_user_df <- function(conn_args = config::get("dataconnection")){
 
 }
 
+#' @title Find User From Firebase ID
+#' @description A signed-in user, by definition, has a Firebase ID.  Because the ID was
+#' registered as a unique `user_id` when the account was created, we can look it up in
+#' the user table and return its user (and username)
+#' @param firebase_id valid firebase ID for a signed in user
+#' @return numeric user_id; NA if no user exists or if the table is not in the database
+#' @export
+db_user_id_from_firebase <- function(firebase_id) {
+  f_id <- firebase_id
+  con <- db_connection()
+  if (!DBI::dbExistsTable(con, "accounts_firebase")) {
+    cat(file=stderr(), sprintf("table `accounts_firebase` does not exist in database %s", class(con)))
+    DBI::dbDisconnect(con)
+    return(NA)
+  }
+    f_match <- tbl(con, "accounts_firebase") %>% filter(f_id == firebase_id) %>% collect()
+    if(nrow(f_match)>0)
+      user_id <- first(f_match[["user_id"]])
+    else user_id <- NA
+
+    DBI::dbDisconnect(con)
+    return(user_id)
+}
+
+#' @title Users Visible at Privilege
+#' @param user_id user ID
+#' @return vector of user lists in the form (`user_id`, `username`)
+#' @export
+db_users_visible <- function(user_id = -1 ) {
+
+  ID = if(is.numeric(user_id)) user_id else 0
+  privilege <- "user"
+
+  visible_user_ids <- c(1234,ID)  # you can always see your own ID
+
+  con <- db_connection()
+
+  db_get_table(con, "accounts_user")
+
+  privilege <- if (DBI::dbExistsTable(con, "accounts_user")){
+    priv_rows <- tbl(con, "accounts_user") %>% filter(user_id == ID)  %>% collect()
+    if(nrow(priv_rows) > 0) first(priv_rows[["privilege"]]) else "nobody"
+  } else "user"
+
+  if (privilege == "admin")
+    visible_user_ids <- db_user_df() %>% pull(user_id)
+
+
+  DBI::dbDisconnect(con)
+  return(visible_user_ids)
+}
+
 #' @title Character string for user_id
 #' @param con database connection
 #' @param firebase_obj firebase object
@@ -169,6 +224,7 @@ db_name_for_user_id <- function(con, firebase_obj, user_id) {
              as.character() %>%
              stringr::str_flatten(collapse = " "))
 }
+
 
 
 

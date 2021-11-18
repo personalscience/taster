@@ -14,6 +14,4 @@ db_get_table(con, table_name = "glucose_records")
 \description{
 As much as possible, route calls to the database table to here. This function will
 abstract away problems with differences between databases.
-
-hardcoded to look for Tastermonial db
 }

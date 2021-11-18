@@ -13,12 +13,7 @@ mod_user_view_ui <- function(id){
 
     sidebarLayout(
       sidebarPanel(
-        selectInput(
-          ns("user_id"),
-          label = "User Name",
-          choices = db_user_df() %>% pull(user_id),
-          selected = 1234
-        ),
+        uiOutput(ns("user_selection")),
         uiOutput(ns("food_selection")),
         uiOutput(ns("meal_selection")),
         checkboxInput(ns("smooth"), label = "Smooth"),
@@ -56,13 +51,14 @@ mod_user_view_ui <- function(id){
 mod_user_view_server <- function(id, con, f, csv_user_gdf,GLUCOSE_RECORDS, NOTES_RECORDS  ){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
-    con <- db_connection()
+
 
 
     # taster_prod_list ----
     taster_prod_list <- reactive({
-      cat(file=stderr(), sprintf("seeking prod list for user %d", ID()[["id"]]))
-      foods <- db_food_list(user_id = ID()[["id"]])
+      message("taster_prod_list()")
+      cat(file=stderr(), sprintf("seeking prod list for user %s\n", isolate(input$user_id)))
+      foods <- db_food_list(user_id = input$user_id)
       validate(
         need(!is.null(foods),"missing records for user")
       )
@@ -71,14 +67,26 @@ mod_user_view_server <- function(id, con, f, csv_user_gdf,GLUCOSE_RECORDS, NOTES
 
     # ID() ----
     ID<- reactive( {
+
       user <- f$get_signed_in()
-      if(!is.null(user))
-      {cat(file=stderr(),sprintf("\nUser %s is signed in\n",isolate(input$user_id)))
-        username <- db_name_for_user_id(con, f, input$user_id)}
-      else {message("\nsigned out")
+      if(is.null(user)) {
+        message("user_id is null")
+        user_id <-0
         username <- "<must sign in to see name>"
+        }
+      else {
+        f_id <- db_user_id_from_firebase(user$response$uid)
+        user_id <- if(is.na(f_id)) 0 else f_id  # if user isn't registered return user_id = 0
+
+        cat(file=stderr(),sprintf("\nUser %s is signed in\n",user_id))
+
+        username <- db_name_for_user_id(con, f, user_id)
       }
-      list(id=as.numeric(input$user_id), name = username)}
+
+
+       current_id <- list(id=as.numeric(user_id), name = username)
+       message("current ID=",current_id)
+       return(current_id)}
     )
 
 
@@ -93,12 +101,12 @@ mod_user_view_server <- function(id, con, f, csv_user_gdf,GLUCOSE_RECORDS, NOTES
 
     # food_start_times ----
     food_start_times <- reactive({
-      cat(file=stderr(), sprintf("generating food start times for user %s\n", ID()[["id"]]))
+      cat(file=stderr(), sprintf("generating food start times for user %s\n", input$user_id))
       validate(
         need(!is.null(input$food_name), "waiting for food menu")
       )
       cat(file=stderr(), sprintf("generating notes based on %s\n", input$food_name))
-      n_df <- NOTES_RECORDS %>% filter(user_id == ID()[["id"]]) %>% filter(Comment == input$food_name)
+      n_df <- NOTES_RECORDS %>% filter(user_id == input$user_id) %>% filter(Comment == input$food_name)
 
       return(n_df)
     })
@@ -106,7 +114,7 @@ mod_user_view_server <- function(id, con, f, csv_user_gdf,GLUCOSE_RECORDS, NOTES
     # glucose_df ----
     # return a glucose dataframe
     glucose_df <- reactive({
-      cat(file=stderr(), sprintf("generating new glucose_df for user %s\n", ID()[["id"]]))
+      cat(file=stderr(), sprintf("generating new glucose_df for user %s\n",input$user_id))
       validate(
         need(!is.null(input$food_name), "waiting for food menu"),
         need(!is.null(input$meal_name), "waiting for meal name")
@@ -115,7 +123,7 @@ mod_user_view_server <- function(id, con, f, csv_user_gdf,GLUCOSE_RECORDS, NOTES
 
       cat(file=stderr(),sprintf("meal_datetime = %s\n", meal_datetime))
 
-      g_df <- GLUCOSE_RECORDS %>% filter(user_id == ID()[["id"]]) %>%
+      g_df <- GLUCOSE_RECORDS %>% filter(user_id == input$user_id) %>%
         filter(time >= meal_datetime - lubridate::minutes(input$prefixLength)) %>%
         filter(time <=  meal_datetime + lubridate::minutes(input$timewindow))
       cat(file=stderr(), sprintf("g_df is %d rows\n",nrow(g_df)))
@@ -153,12 +161,27 @@ mod_user_view_server <- function(id, con, f, csv_user_gdf,GLUCOSE_RECORDS, NOTES
     }
     )
 
+    # output$user_selection ----
+    output$user_selection <- renderUI({
+
+      current_user <- ID()[["id"]]
+      if(is.null(current_user)) message("user_selection user is null")
+
+      message("Current User=",isolate(ID()[["id"]]))
+      visible_users <- db_users_visible(current_user)
+      #visible_names <- map_chr(visible_users, function(x) {db_name_for_user_id(con,user_id = x)})
+
+      selectInput(
+        ns("user_id"),
+        label = "User Name",
+        choices = visible_users,
+        selected = current_user
+      )
+    })
+
     # output$meal_selection ----
     output$meal_selection <- renderUI({
-      cat(file=stderr(), paste("trying to render meal selection for ", isolate(input$user_id)))
-      # validate(
-      #   need(!is.null(food_start_times(), sprintf("No Foods available")))
-      # )
+
       meal_names <- food_start_times()[["Start"]]
 
       selectizeInput(NS(id,"meal_name"),
@@ -170,22 +193,20 @@ mod_user_view_server <- function(id, con, f, csv_user_gdf,GLUCOSE_RECORDS, NOTES
 
     # output$food_selection ----
     output$food_selection <- renderUI({
+
+      food_choices <- taster_prod_list()
       validate(
-        need(!is.null(taster_prod_list()),sprintf("No foods available for user_id %s",ID()[["id"]]))
+        need(!is.null(food_choices),sprintf("No foods available for user_id %s",ID()[["id"]]))
       )
 
-      cat(file=stderr(), paste("finding foods for User", isolate(input$user_id)))
-      cat(file=stderr(), sprintf("User %s first food is %s",isolate(input$user_id),first(taster_prod_list()) ))
+      cat(file=stderr(), sprintf("finding foods for User %s\n", ID()[["id"]]))
+      cat(file=stderr(), sprintf("User %s first food is %s\n",isolate(ID()[["id"]]),first(food_choices) ))
       selectizeInput(NS(id,"food_name"),
                      label = "Food Item",
-                     choices = taster_prod_list(),
-                     selected = first(taster_prod_list())
+                     choices = food_choices,
+                     selected = first(food_choices)
       )
     })
-
-    observe(
-      cat(file = stderr(), sprintf("user_id=%s \n",ID()[["id"]]))
-    )
 
     # output$glucose_plot----
 
@@ -196,7 +217,7 @@ mod_user_view_server <- function(id, con, f, csv_user_gdf,GLUCOSE_RECORDS, NOTES
           need(input$food_name, "Waiting on database...1"),
           need(!is.null(glucose_df()), "Problem with glucose df"),
           need(!is.null(ID()),"No user selected"),
-          need(nrow(glucose_df())>0, sprintf("No glucose records found for %s",ID()[["name"]]))
+          need(nrow(glucose_df())>0, sprintf("No glucose records found for %s",input$user_id))
         )
         observe(
           cat(file = stderr(), sprintf("render plot for user_id=%d and food=%s \n",
@@ -211,10 +232,10 @@ mod_user_view_server <- function(id, con, f, csv_user_gdf,GLUCOSE_RECORDS, NOTES
 
        # plot_glucose(glucose_df(), title = sprintf("User %s",user_id=ID()[["name"]]))
 
-        gr <- glucose_ranges_for_id(ID(), GLUCOSE_RECORDS)
+        gr <- glucose_ranges_for_id(input$user_id, GLUCOSE_RECORDS)
 
         g <- plot_glucose(g_df,
-                                  title =  sprintf("User %s",user_id=ID()[["name"]]),
+                                  title =  sprintf("User %s",user_id=input$user_id),
                                   subtitle = sprintf("Food = %s", isolate(input$food_name)))
 
         g +
@@ -233,21 +254,26 @@ mod_user_view_server <- function(id, con, f, csv_user_gdf,GLUCOSE_RECORDS, NOTES
 
 
 
-    observe(
-      cat(file = stderr(), sprintf("user_id=%s \n",ID()[["id"]]))
-    )
 
     # foods_to_show ----
 
-    foods_to_show <- function()
-      foods_to_show <-
-        purrr::map_df(db_food_list(ID()[["id"]]), function(x) {
+    foods_to_show <- reactive({
+      message("foods_to_show for user=",
+              if(is.null(isolate(input$user_id)))
+                "-null-"
+              else isolate(input$user_id))
+      validate(
+        need(!is.null(input$user_id), "Waiting for user selection")
+      )
+      food_list <- db_food_list(input$user_id)
+
+        purrr::map_df(food_list, function(x) {
           cgmr::food_times_df(
             glucose_df = GLUCOSE_RECORDS,
             notes_df = NOTES_RECORDS,
-            user_id = ID()[["id"]],
+            user_id = input$user_id,
             foodname = x
-          )
+          )})
     })
 
 
@@ -296,6 +322,13 @@ mod_user_view_server <- function(id, con, f, csv_user_gdf,GLUCOSE_RECORDS, NOTES
       )
 
 
+    observe(
+      if(is.null(isolate(input$user_id)))
+         message("observer user_id = NULL") else
+      cat(file = stderr(), sprintf("Observe user_id=%s \n",ID()[["id"]]))
+    )
+
+
   })
 }
 
@@ -314,11 +347,11 @@ demo_user <- function() {
                       mod_user_view_ui("x"))
 
 
-  sample_glucose <- cgmr::glucose_df_from_libreview_csv()
+  sample_glucose <- cgmr::glucose_df_from_libreview_csv(user_id = 0) %>% filter(time>"2021-06-01")
   server <- function(input, output, session) {
     con <- db_connection()
 
-    GLUCOSE_RECORDS<- db_get_table(con, "glucose_records")
+    GLUCOSE_RECORDS<- db_get_table(con, "glucose_records") #%>% bind_rows(sample_glucose)
     NOTES_RECORDS <- db_get_table(con, "notes_records")
 
     f <- firebase_setup(con)

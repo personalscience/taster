@@ -45,7 +45,7 @@ mod_about_server <- function(id, con, f){
     output$image <- renderUI({
       f$req_sign_in() # require sign in
       user <- f$get_signed_in()
-      print(user)
+      print(sprintf("signing in: %s\n", user$user))
 
       h4("Welcome,", user$response$email)
       # experiments <- if(DBI::dbExistsTable(con, "experiments"))
@@ -77,13 +77,7 @@ demo_about <- function() {
 
   ui <- fluidPage(mod_about_ui("x"))
   server <- function(input, output, session) {
-    f <- firebase::FirebaseUI$
-      new("session")$
-      set_providers(
-        email = TRUE,
-        google = TRUE
-      )$
-      launch()
+    f <- firebase_setup()
     mod_about_server("x",con, f)
 
   }

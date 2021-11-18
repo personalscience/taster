@@ -13,5 +13,6 @@ db_food_list(user_id = 1234)
 character vector of product names sorted alphabetically
 }
 \description{
-Return all products consumed by this user.
+Return all products consumed by this user. If `user_id==NULL` then show
+ from all users, all products consumed more than once.
 }
