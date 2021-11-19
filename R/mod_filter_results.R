@@ -67,20 +67,25 @@ mod_filter_results_server <- function(id, glucose_df, con){
 
 
     # glucose_df_from_user ----
-    glucose_user <- reactive({input$user_id})
+    glucose_user <- reactive({
+      input$user_id
+    })
     glucose_df_from_user <- reactive({
       if (glucose_user() == 0)
-      {       validate(
-        need(nrow(glucose_df)>0,"Please go to the CSV tab and upload a Libreview file.")
-      )
+      {
+        validate(need(
+          nrow(glucose_df) > 0,
+          "Please go to the CSV tab and upload a Libreview file."
+        ))
         message("user is 0")
-        glucose_df}
-      else {
-
-        db_get_table(con, "glucose_records")%>% filter(user_id == !!glucose_user()) %>% collect()
+        glucose_df
       }
+      else {
+        db_get_table(con, "glucose_records") %>% filter(user_id == !!glucose_user()) %>% collect()
+      }
+    })
 
-})
+    # glucose_new ----
     glucose_new <- reactive({
 
       if(input$zoom_to_date) {

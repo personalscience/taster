@@ -39,13 +39,21 @@ mod_csv_upload_server <- function(id, con){
 
     # glucose_df (raw)----
     glucose_df_raw <- reactive(cgmr::libreview_csv_df(file=filepath()$datapath))
-    glucose_df <- reactive(glucose_df_raw()[["glucose_raw"]] %>%     transmute(`time` = `timestamp`,
-                                                                               scan = glucose_scan,
-                                                                               hist = glucose_historic,
-                                                                               strip = strip_glucose,
-                                                                               value = hist,
-                                                                               food = notes,
-                                                                               user_id = 0))
+    glucose_df <- reactive({
+      g_df <- glucose_df_raw()[["glucose_raw"]] %>%
+        transmute(
+          `time` = `timestamp`,
+          scan = glucose_scan,
+          hist = glucose_historic,
+          strip = strip_glucose,
+          value = hist,
+          food = notes,
+          user_id = 0
+        )
+      return(g_df)
+      }
+    )
+
     libreview_name <- reactive(glucose_df_raw()[["name"]])
 
     # output$modChart ----
