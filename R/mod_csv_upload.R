@@ -29,6 +29,7 @@ mod_csv_upload_server <- function(id, con){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
 
+    # filepath ----
     filepath<- reactive({
       validate(
         need(input$ask_filename,"Please select a Libreview CSV file")
@@ -36,20 +37,24 @@ mod_csv_upload_server <- function(id, con){
       input$ask_filename})
 
 
+    # glucose_df (raw)----
     glucose_df_raw <- reactive(cgmr::libreview_csv_df(file=filepath()$datapath))
     glucose_df <- reactive(glucose_df_raw()[["glucose_raw"]] %>%     transmute(`time` = `timestamp`,
                                                                                scan = glucose_scan,
                                                                                hist = glucose_historic,
                                                                                strip = strip_glucose,
                                                                                value = hist,
-                                                                               food = notes))
+                                                                               food = notes,
+                                                                               user_id = 0))
     libreview_name <- reactive(glucose_df_raw()[["name"]])
 
+    # output$modChart ----
     output$modChart <- renderPlot({
       plot_glucose(glucose_df(),sprintf("Glucose Results for %s",libreview_name()))
     }
     )
 
+    # output$ask_to_write_db ----
     output$ask_to_write_db <- renderUI({
       validate(
         need(!is.null(glucose_df()),sprintf("Please upload a CSV file"))

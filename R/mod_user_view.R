@@ -45,13 +45,26 @@ mod_user_view_ui <- function(id){
 #' @param id Shiny module id
 #' @param csv_user_gdf a glucose dataframe (not a reactive)
 #' @param con database connection
-#' @param GLUCOSE_RECORDS valid glucose df
-#' @param NOTES_RECORDS valid notes df
+#' @param GLUCOSE_RECORDS_Partial valid glucose df
+#' @param NOTES_RECORDS_Partial valid notes df
 #' @noRd
-mod_user_view_server <- function(id, con, f, csv_user_gdf,GLUCOSE_RECORDS, NOTES_RECORDS  ){
+mod_user_view_server <- function(id, con, f, csv_user_gdf,GLUCOSE_RECORDS_Partial, NOTES_RECORDS_Partial  ){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
 
+
+    # GLUCOSE_RECORDS ----
+    GLUCOSE_RECORDS <- reactive({
+      message("csv records are nrows", nrow(csv_user_gdf))
+      GLUCOSE_RECORDS_Partial  %>% rbind(csv_user_gdf)
+    })
+
+    # NOTES_RECORDS ----
+    NOTES_RECORDS <- reactive({
+      message("csv records are nrows", nrow(csv_user_gdf))
+      extra_notes <- cgmr::notes_df_from_glucose_table(csv_user_gdf, user_id = 0)
+      return(NOTES_RECORDS_Partial  %>% rbind(extra_notes))
+    })
 
 
     # taster_prod_list ----
@@ -95,7 +108,7 @@ mod_user_view_server <- function(id, con, f, csv_user_gdf,GLUCOSE_RECORDS, NOTES
       sprintf("\nuser_id = %d, product = %s, range=%s\n", ID()[["id"]],
 
               input$food_name,
-              paste0(glucose_ranges_for_id(ID()[["id"]], GLUCOSE_RECORDS), collapse=" : ")
+              paste0(glucose_ranges_for_id(ID()[["id"]], GLUCOSE_RECORDS()), collapse=" : ")
       )
     )
 
@@ -106,7 +119,7 @@ mod_user_view_server <- function(id, con, f, csv_user_gdf,GLUCOSE_RECORDS, NOTES
         need(!is.null(input$food_name), "waiting for food menu")
       )
       cat(file=stderr(), sprintf("generating notes based on %s\n", input$food_name))
-      n_df <- NOTES_RECORDS %>% filter(user_id == input$user_id) %>% filter(Comment == input$food_name)
+      n_df <- NOTES_RECORDS() %>% filter(user_id == input$user_id) %>% filter(Comment == input$food_name)
 
       return(n_df)
     })
@@ -123,7 +136,7 @@ mod_user_view_server <- function(id, con, f, csv_user_gdf,GLUCOSE_RECORDS, NOTES
 
       cat(file=stderr(),sprintf("meal_datetime = %s\n", meal_datetime))
 
-      g_df <- GLUCOSE_RECORDS %>% filter(user_id == input$user_id) %>%
+      g_df <- GLUCOSE_RECORDS() %>% filter(user_id == input$user_id) %>%
         filter(time >= meal_datetime - lubridate::minutes(input$prefixLength)) %>%
         filter(time <=  meal_datetime + lubridate::minutes(input$timewindow))
       cat(file=stderr(), sprintf("g_df is %d rows\n",nrow(g_df)))
@@ -140,8 +153,8 @@ mod_user_view_server <- function(id, con, f, csv_user_gdf,GLUCOSE_RECORDS, NOTES
 
       message(sprintf("Food selected = %s\n", isolate(input$food_name)))
       one_food_df <-  cgmr::food_times_df_fast(
-        glucose_df = GLUCOSE_RECORDS,
-        notes_df = NOTES_RECORDS,
+        glucose_df = GLUCOSE_RECORDS(),
+        notes_df = NOTES_RECORDS(),
         user_id = input$user_id,
         timeLength = 150,
         prefixLength = 30,
@@ -232,7 +245,7 @@ mod_user_view_server <- function(id, con, f, csv_user_gdf,GLUCOSE_RECORDS, NOTES
 
        # plot_glucose(glucose_df(), title = sprintf("User %s",user_id=ID()[["name"]]))
 
-        gr <- glucose_ranges_for_id(input$user_id, GLUCOSE_RECORDS)
+        gr <- glucose_ranges_for_id(input$user_id, GLUCOSE_RECORDS())
 
         g <- plot_glucose(g_df,
                                   title =  sprintf("User %s",user_id=input$user_id),
@@ -269,8 +282,8 @@ mod_user_view_server <- function(id, con, f, csv_user_gdf,GLUCOSE_RECORDS, NOTES
 
         purrr::map_df(food_list, function(x) {
           cgmr::food_times_df(
-            glucose_df = GLUCOSE_RECORDS,
-            notes_df = NOTES_RECORDS,
+            glucose_df = GLUCOSE_RECORDS(),
+            notes_df = NOTES_RECORDS(),
             user_id = input$user_id,
             foodname = x
           )})
@@ -347,7 +360,15 @@ demo_user <- function() {
                       mod_user_view_ui("x"))
 
 
-  sample_glucose <- cgmr::glucose_df_from_libreview_csv(user_id = 0) %>% filter(time>"2021-06-01")
+  sample_glucose <- cgmr::libreview_csv_df()[["glucose_raw"]] %>%
+    filter(timestamp>"2021-06-01") %>%     transmute(`time` = `timestamp`,
+                                                     scan = glucose_scan,
+                                                     hist = glucose_historic,
+                                                     strip = strip_glucose,
+                                                     value = hist,
+                                                     food = notes,
+                                                     user_id = 0)
+
   server <- function(input, output, session) {
     con <- db_connection()
 
