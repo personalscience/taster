@@ -13,12 +13,9 @@ mod_filter_results_ui <- function(id){
 
     sidebarLayout(
 
-      sidebarPanel(        selectInput(
-        ns("user_id"),
-        label = "Select User",
-        choices = c(0,db_user_df()[["user_id"]]),
-        selected = 0
-      ),        hr(),
+      sidebarPanel(
+        uiOutput(ns("user_selection")),
+      hr(),
       checkboxGroupInput(ns("meal_items"),label = "Meal", choices = NULL),
       hr(),
       uiOutput(ns("food_selection")),
@@ -45,7 +42,7 @@ mod_filter_results_ui <- function(id){
 #' @param con database connection'
 #' @param glucose_df a glucose dataframe (not a reactive)
 #' @noRd
-mod_filter_results_server <- function(id, glucose_df, con){
+mod_filter_results_server <- function(id, glucose_df, con, firebase_obj){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
 
@@ -57,12 +54,34 @@ mod_filter_results_server <- function(id, glucose_df, con){
 
       input$ask_filename})
 
-    ID<- reactive( {cat(file=stderr(), paste("Selected User", isolate(input$user_id)))
-      as.numeric(input$user_id)}
+    # ID() ----
+    ID<- reactive( {
+
+      user <- firebase_obj$get_signed_in()
+      if(is.null(user)) {
+        message("user_id is null")
+        user_id <-0
+        username <- "<must sign in to see name>"
+      }
+      else {
+        f_id <- db_user_id_from_firebase(user$response$uid)
+        user_id <- if(is.na(f_id)) 0 else f_id  # if user isn't registered return user_id = 0
+
+        cat(file=stderr(),sprintf("\nUser %s is signed in\n",user_id))
+
+        username <- db_name_for_user_id(con, f, user_id)
+      }
+
+
+      current_id <- list(id=as.numeric(user_id), name = username)
+      message("current ID=",current_id)
+      return(current_id)}
     )
+
+
     taster_prod_list <- reactive({
-      cat(file=stderr(), sprintf("seeking prod list for user %d", ID()))
-      db_food_list(user_id = ID())}
+      cat(file=stderr(), sprintf("seeking prod list for user %d", ID()[["id"]]))
+      db_food_list(user_id = ID()[["id"]])}
     )
 
 
@@ -104,7 +123,7 @@ mod_filter_results_server <- function(id, glucose_df, con){
         need(input$food_name, "No food selected")
       )
 
-      food_start_times_df <- db_get_table(con, "notes_records") %>% filter(user_id == !!ID() &
+      food_start_times_df <- db_get_table(con, "notes_records") %>% filter(user_id == !!ID()[["id"]] &
                                                                Start >= !!input$start_date &
                                                                  Comment == !!input$food_name) %>%
         collect()
@@ -120,6 +139,24 @@ mod_filter_results_server <- function(id, glucose_df, con){
       return(food_start_times)
     }
     )
+
+    # output$user_selection ----
+    output$user_selection <- renderUI({
+
+      current_user <- ID()[["id"]]
+      if(is.null(current_user)) message("user_selection user is null")
+
+      message("Current User=",isolate(ID()[["id"]]))
+      visible_users <- db_users_visible(current_user)
+      #visible_names <- map_chr(visible_users, function(x) {db_name_for_user_id(con,user_id = x)})
+
+      selectInput(
+        ns("user_id"),
+        label = "User Name",
+        choices = visible_users,
+        selected = current_user
+      )
+    })
 
     # updateCheckBoxGroupInput input$foodname ----
     observeEvent(input$food_name,{
@@ -144,7 +181,7 @@ mod_filter_results_server <- function(id, glucose_df, con){
     # output$food_selection ----
     output$food_selection <- renderUI({
       validate(
-        need(!is.null(taster_prod_list()),sprintf("No foods available for user_id %s",ID()))
+        need(!is.null(taster_prod_list()),sprintf("No foods available for user_id %s",ID()[["id"]]))
       )
 
       cat(file=stderr(), paste("finding foods for User", isolate(input$user_id)))
@@ -182,10 +219,12 @@ mod_filter_results_server <- function(id, glucose_df, con){
 #'
 demo_filter <- function() {
   ui <- fluidPage(mod_filter_results_ui("x"))
-  sample_glucose <- cgmr::glucose_df_from_libreview_csv()
-  con <- db_connection()
+
   server <- function(input, output, session) {
-    mod_filter_results_server("x", sample_glucose, con = con )
+    sample_glucose <- cgmr::glucose_df_from_libreview_csv()
+    con <- db_connection()
+    f <- firebase_setup(con)
+    mod_filter_results_server("x", sample_glucose, con = con, firebase_obj = f )
 
   }
   shinyApp(ui, server)
