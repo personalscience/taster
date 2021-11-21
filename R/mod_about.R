@@ -26,7 +26,7 @@ mod_about_ui <- function(id){
 #' @param f firebase instance
 #' @importFrom stats na.omit
 #' @noRd
-mod_about_server <- function(id, con, f){
+mod_about_server <- function(id, con, user){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
 
@@ -43,11 +43,11 @@ mod_about_server <- function(id, con, f){
 
 
     output$image <- renderUI({
-      f$req_sign_in() # require sign in
-      user <- f$get_signed_in()
-      print(sprintf("signing in: %s\n", user$user))
+      user$f$req_sign_in() # require sign in
+      current_user <- user$f$get_signed_in()
+      message(sprintf("signing in: %s\n", user$full_name))
 
-      h4("Welcome,", user$response$email)
+      h4("Welcome,", current_user$response$email)
       # experiments <- if(DBI::dbExistsTable(con, "experiments"))
       #   {tbl(con, "experiments") %>% collect()}
       # else NULL
@@ -59,7 +59,7 @@ mod_about_server <- function(id, con, f){
 
     observeEvent(input$signout, {
       message("signing out")
-      f$sign_out()
+      user$f$sign_out()
       message("signed out")
 
     })
@@ -78,7 +78,8 @@ demo_about <- function() {
   ui <- fluidPage(mod_about_ui("x"))
   server <- function(input, output, session) {
     f <- firebase_setup()
-    mod_about_server("x",con, f)
+    user <- UserObject(con, firebase_obj = f)
+    mod_about_server("x",con, user)
 
   }
   shinyApp(ui, server)

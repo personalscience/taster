@@ -8,6 +8,7 @@ devtools::load_all(path="/Users/sprague/dev/psi/tasterdb")
 
 
 #Sys.setenv(R_CONFIG_ACTIVE = "tastercloud")
+Sys.getenv("R_CONFIG_ACTIVE" = "sqldb")
 Sys.setenv(R_CONFIG_ACTIVE = "local")
 conn_args <- config::get("dataconnection")
 con <- DBI::dbConnect(

@@ -227,22 +227,3 @@ db_name_for_user_id <- function(con, firebase_obj, user_id) {
 
 
 
-
-#' @title Set up Firebase support
-#' @description This is just a stub for now, in order to consolidate all program-wide calls to Firebase.
-#' @param con database connection
-#' @import firebase
-#' @return firebase object
-firebase_setup <- function(con) {
-  f <- firebase::FirebaseUI$
-  new("local")$ # instantiate
-  set_providers( # define providers
-    email = TRUE,
-    google = TRUE
-  )$
-  set_tos_url("https://ensembio.com/privacy")$
-  set_privacy_policy_url("https://ensembio.com/privacy")$
-  launch() # launch
-
-  return(f)
-}
