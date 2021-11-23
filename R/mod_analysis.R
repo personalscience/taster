@@ -30,7 +30,7 @@ mod_analysis_ui <- function(id){
 
         plotOutput(ns("boxplot"), height="800px"),
         h3("All Meals"),
-        tableOutput(ns("food_summary"))
+        dataTableOutput(ns("food_summary"))
       )
     )
 
@@ -48,14 +48,14 @@ mod_analysis_server <- function(id, glucose_df, con, GLUCOSE_RECORDS, NOTES_RECO
   moduleServer( id, function(input, output, session){
     ns <- session$ns
 
+      foods_to_analyze <- db_food_list(c(1000:1009,1013:1502))
 
     auc_df <- reactive({
       validate(
-        need(input$calc,"Press Calculate to see Analytics")
+        need(input$calc,"Press Calculate to see Analytics \n May take up to 30 seconds \n Please be patient!")
       )
 
-
-      build_all_AUC(s_list = db_food_list(),
+      cgmr::df_for_all_auc(food_list = foods_to_analyze,
                             glucose_records = GLUCOSE_RECORDS,
                             notes_records = NOTES_RECORDS)
     }
@@ -64,22 +64,22 @@ mod_analysis_server <- function(id, glucose_df, con, GLUCOSE_RECORDS, NOTES_RECO
 
     AUC_for_food <- function(foodname) {
       cgmr::auc_for_food(foodname, glucose_records = GLUCOSE_RECORDS,
-                         notes_records = NOTES_RECORDS)
+                         notes_records = NOTES_RECORDS, start_limit = 200)
     }
 
     all_foods <- reactive({
       validate(
         need(input$calc,"Press Calculate to see Analytics")
       )
-      tibble(foodname = db_food_list() ,
-                        iAUC = purrr::map_dbl(db_food_list(), function(x) {AUC_for_food(x) %>% pull(iAUC) %>% mean()}),
-                        n = purrr::map_dbl(db_food_list(), function(x) {AUC_for_food(x) %>% nrow()}))
+      tibble(foodname = foods_to_analyze,
+                        iAUC = purrr::map_dbl(foods_to_analyze, function(x) {AUC_for_food(x) %>% pull(iAUC) %>% mean()}),
+                        n = purrr::map_dbl(foods_to_analyze, function(x) {AUC_for_food(x) %>% nrow()}))
     })
 
     output$boxplot <- renderPlot({
 
       validate(
-        need(input$calc,"Press Calculate to see Analytics")
+        need(input$calc,"Press Calculate to see Analytics \n May take up to 30 seconds \n Please be patient!")
       )
 
 
@@ -94,7 +94,7 @@ mod_analysis_server <- function(id, glucose_df, con, GLUCOSE_RECORDS, NOTES_RECO
         labs(title = "Tastermonial Product Test Results", x = "", y = "iAUC Among All Testers") +
         psi_theme()})
 
-    output$food_summary <- renderTable({all_foods() %>% arrange(iAUC)}, digits = 0)
+    output$food_summary <- renderDataTable({all_foods() %>% arrange(iAUC)})
   })
 }
 

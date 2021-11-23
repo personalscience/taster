@@ -14,9 +14,9 @@ app_server <- function( input, output, session ) {
   NOTES_RECORDS <- db_get_table(con, "notes_records")
 
   f <- firebase_setup(con)
-  user_profile <- UserObject(con, firebase_obj = f)
+  user <- UserObject(con, firebase_obj = f)
 
-  mod_about_server("about_ui_1", con, f)
+  mod_about_server("about_ui_1", con, user)
   glucose_df <- mod_csv_upload_server("fromCSV", con)
   mod_food_compare_server("food_compare_plot", con, GLUCOSE_RECORDS, NOTES_RECORDS)
   mod_user_view_server("user_view_ui1", con, f, csv_user_gdf = glucose_df(), GLUCOSE_RECORDS, NOTES_RECORDS)
