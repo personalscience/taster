@@ -4,9 +4,11 @@
 \alias{db_user_id_from_firebase}
 \title{Find User From Firebase ID}
 \usage{
-db_user_id_from_firebase(firebase_id)
+db_user_id_from_firebase(con, firebase_id)
 }
 \arguments{
+\item{con}{valid database connection}
+
 \item{firebase_id}{valid firebase ID for a signed in user}
 }
 \value{

@@ -116,11 +116,11 @@ db_food_list<- function(con, user_id = 1234  ) {
 # psi User Management Functions
 
 #' @title Returns privileges assigned to this user
+#' @param con valid database connection
 #' @param user_id user ID
 #' @return privilege level, NULL if no privileges available
 #' @export
-db_user_privileges <- function(user_id = -1){
-  con <- db_connection()
+db_user_privileges <- function(con, user_id = -1){
 
   ID = user_id
   result <- NULL
@@ -136,7 +136,6 @@ db_user_privileges <- function(user_id = -1){
 
   }
 
-  DBI::dbDisconnect(con)
   return(result)
 }
 
@@ -159,12 +158,13 @@ db_user_df <- function(conn_args = config::get("dataconnection")){
 #' @description A signed-in user, by definition, has a Firebase ID.  Because the ID was
 #' registered as a unique `user_id` when the account was created, we can look it up in
 #' the user table and return its user (and username)
+#' @param con valid database connection
 #' @param firebase_id valid firebase ID for a signed in user
 #' @return numeric user_id; NA if no user exists or if the table is not in the database
 #' @export
-db_user_id_from_firebase <- function(firebase_id) {
+db_user_id_from_firebase <- function(con, firebase_id) {
   f_id <- firebase_id
-  con <- db_connection()
+
   if (!DBI::dbExistsTable(con, "accounts_firebase")) {
     cat(file=stderr(), sprintf("table `accounts_firebase` does not exist in database %s", class(con)))
     DBI::dbDisconnect(con)
@@ -175,22 +175,21 @@ db_user_id_from_firebase <- function(firebase_id) {
       user_id <- first(f_match[["user_id"]])
     else user_id <- NA
 
-    DBI::dbDisconnect(con)
     return(user_id)
 }
 
 #' @title Users Visible at Privilege
+#' @param con valid database connection
 #' @param user_id user ID
 #' @return vector of user lists in the form (`user_id`, `username`)
 #' @export
-db_users_visible <- function(user_id = -1 ) {
+db_users_visible <- function(con, user_id = -1 ) {
 
   ID = if(is.numeric(user_id)) user_id else 0
   privilege <- "user"
 
   visible_user_ids <- c(1234,ID)  # you can always see your own ID
 
-  con <- db_connection()
 
   db_get_table(con, "accounts_user")
 
@@ -203,7 +202,7 @@ db_users_visible <- function(user_id = -1 ) {
     visible_user_ids <- db_user_df() %>% pull(user_id)
 
 
-  DBI::dbDisconnect(con)
+
   return(visible_user_ids)
 }
 

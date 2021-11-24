@@ -15,31 +15,12 @@ test_that("First Write works", {
 })
 
 
-test_that("user_list",{
-  expect_equal(db_user_df() %>% filter(user_id == 1234) %>% pull(last_name), "Sprague")
-})
-
-test_that("name for user ID", {
-  expect_equal(db_name_for_user_id(con, user_id = 1234), "Richard Sprague")
-})
-
 
 test_that("get_table",{
   expect_equal(db_get_table(con, table_name = "non-existent_table"),NULL)
   expect_equal(nrow(db_get_table(con, table_name = "sample_table")),35721)
 })
 
-### The following tests depend on a local Postgres database preloaded with correct tables
 
-test_that("user privileges",{
-  expect_equal(db_user_privileges(1234), "admin")
-  expect_equal(db_user_privileges(), NULL)
-
-})
-
-test_that("firebase works",{
-  expect_equal(db_user_id_from_firebase("q0cqXsbigXg0ZaWy5IsC0AhvPCK2"), 1009)
-  expect_equal(db_user_id_from_firebase("somethingwrong"),NA)
-})
 
 DBI::dbDisconnect(con)

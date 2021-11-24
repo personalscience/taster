@@ -4,9 +4,11 @@
 \alias{db_users_visible}
 \title{Users Visible at Privilege}
 \usage{
-db_users_visible(user_id = -1)
+db_users_visible(con, user_id = -1)
 }
 \arguments{
+\item{con}{valid database connection}
+
 \item{user_id}{user ID}
 }
 \value{

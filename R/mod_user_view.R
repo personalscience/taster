@@ -88,7 +88,7 @@ mod_user_view_server <- function(id, con, f, csv_user_gdf,GLUCOSE_RECORDS_Partia
         username <- "<must sign in to see name>"
         }
       else {
-        f_id <- db_user_id_from_firebase(user$response$uid)
+        f_id <- db_user_id_from_firebase(con, user$response$uid)
         user_id <- if(is.na(f_id)) 0 else f_id  # if user isn't registered return user_id = 0
 
         cat(file=stderr(),sprintf("\nUser %s is signed in\n",user_id))
@@ -181,7 +181,7 @@ mod_user_view_server <- function(id, con, f, csv_user_gdf,GLUCOSE_RECORDS_Partia
       if(is.null(current_user)) message("user_selection user is null")
 
       message("Current User=",isolate(ID()[["id"]]))
-      visible_users <- db_users_visible(current_user)
+      visible_users <- db_users_visible(con, current_user)
       #visible_names <- map_chr(visible_users, function(x) {db_name_for_user_id(con,user_id = x)})
 
       selectInput(

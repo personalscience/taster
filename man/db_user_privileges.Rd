@@ -4,9 +4,11 @@
 \alias{db_user_privileges}
 \title{Returns privileges assigned to this user}
 \usage{
-db_user_privileges(user_id = -1)
+db_user_privileges(con, user_id = -1)
 }
 \arguments{
+\item{con}{valid database connection}
+
 \item{user_id}{user ID}
 }
 \value{
