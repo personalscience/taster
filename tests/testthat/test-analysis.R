@@ -12,3 +12,9 @@ test_that("build AUC", {
                 notes_records = NOTES_RECORDS)$ave[10], 91.3)
 })
 
+test_that("food_list contains correct values", {
+  expect_equal(db_food_list(con, 1002)[3], "Hu Simple Chocolate")
+})
+
+
+DBI::dbDisconnect(con)

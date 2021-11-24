@@ -48,7 +48,7 @@ mod_analysis_server <- function(id, glucose_df, con, GLUCOSE_RECORDS, NOTES_RECO
   moduleServer( id, function(input, output, session){
     ns <- session$ns
 
-      foods_to_analyze <- db_food_list(c(1000:1009,1013:1502))
+      foods_to_analyze <- db_food_list(con, c(1000:1009,1013:1502))
 
     auc_df <- reactive({
       validate(

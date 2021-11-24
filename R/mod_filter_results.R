@@ -81,7 +81,7 @@ mod_filter_results_server <- function(id, glucose_df, con, firebase_obj){
 
     taster_prod_list <- reactive({
       cat(file=stderr(), sprintf("seeking prod list for user %d", ID()[["id"]]))
-      db_food_list(user_id = ID()[["id"]])}
+      db_food_list(con, user_id = ID()[["id"]])}
     )
 
 

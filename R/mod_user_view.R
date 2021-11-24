@@ -71,7 +71,7 @@ mod_user_view_server <- function(id, con, f, csv_user_gdf,GLUCOSE_RECORDS_Partia
     taster_prod_list <- reactive({
       message("taster_prod_list()")
       cat(file=stderr(), sprintf("seeking prod list for user %s\n", isolate(input$user_id)))
-      foods <- db_food_list(user_id = input$user_id)
+      foods <- db_food_list(con, user_id = input$user_id)
       validate(
         need(!is.null(foods),"missing records for user")
       )
@@ -278,7 +278,7 @@ mod_user_view_server <- function(id, con, f, csv_user_gdf,GLUCOSE_RECORDS_Partia
       validate(
         need(!is.null(input$user_id), "Waiting for user selection")
       )
-      food_list <- db_food_list(input$user_id)
+      food_list <- db_food_list(con, input$user_id)
 
         purrr::map_df(food_list, function(x) {
           cgmr::food_times_df(

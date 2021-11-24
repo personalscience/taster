@@ -4,9 +4,11 @@
 \alias{db_food_list}
 \title{List all products consumed by `user_id`}
 \usage{
-db_food_list(user_id = 1234)
+db_food_list(con, user_id = 1234)
 }
 \arguments{
+\item{con}{valid database connection}
+
 \item{user_id}{vector of user IDs or NULL to show all users}
 }
 \value{

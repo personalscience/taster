@@ -66,7 +66,7 @@ mod_goddess_server <- function(id, con, GLUCOSE_RECORDS, NOTES_RECORDS){
     )
     taster_prod_list <- reactive({
       cat(file=stderr(), sprintf("seeking prod list for user %d", ID()))
-      foods <- db_food_list(user_id = ID())
+      foods <- db_food_list(con, user_id = ID())
       validate(
         need(!is.null(foods),"missing records for user")
       )

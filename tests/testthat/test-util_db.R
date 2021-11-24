@@ -14,9 +14,6 @@ test_that("First Write works", {
   expect_equal(db_write_table(con, table_name = "sample_table", head(glucose_data2)$glucose_raw), "wrote 31737 records to sample_table")
 })
 
-test_that("food_list contains correct values", {
-  expect_equal(db_food_list(1002)[3], "Hu Simple Chocolate")
-})
 
 test_that("user_list",{
   expect_equal(db_user_df() %>% filter(user_id == 1234) %>% pull(last_name), "Sprague")

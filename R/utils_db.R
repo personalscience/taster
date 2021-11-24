@@ -83,15 +83,14 @@ db_write_table <- function(con = db_connection(), table_name = "raw_glucose", ta
 #' @title List all products consumed by `user_id`
 #' @description Return all products consumed by this user. If `user_id==NULL` then show
 #'  from all users, all products consumed more than once.
+#' @param con valid database connection
 #' @param user_id vector of user IDs or NULL to show all users
 #' @return character vector of product names sorted alphabetically
 #' @importFrom dplyr tbl collect filter distinct group_by transmute pull add_count arrange
 #' @importFrom magrittr %>%
 #' @importFrom rlang .data
 #' @export
-db_food_list<- function(user_id = 1234  ) {
-
-  con <- db_connection()
+db_food_list<- function(con, user_id = 1234  ) {
 
   ID <- user_id
 
@@ -111,7 +110,6 @@ db_food_list<- function(user_id = 1234  ) {
     return(sort(prods))
   else return(NULL)
 
-  DBI::dbDisconnect(con)
   return(prods)
 }
 
