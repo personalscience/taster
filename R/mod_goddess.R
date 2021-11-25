@@ -56,10 +56,10 @@ mod_goddess_ui <- function(id){
 #' @import ggplot2
 #' @importFrom magrittr %>%
 #' @noRd
-mod_goddess_server <- function(id, con, GLUCOSE_RECORDS, NOTES_RECORDS){
+mod_goddess_server <- function(id, cgm_data){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
-    con <- db_connection()
+    con <- cgm_data$con
 
     ID<- reactive( {cat(file=stderr(), paste("Selected User", isolate(input$user_id)))
       as.numeric(input$user_id)}
@@ -80,7 +80,7 @@ mod_goddess_server <- function(id, con, GLUCOSE_RECORDS, NOTES_RECORDS){
       sprintf("user_id = %d, product = %s, range=%s", ID(),
 
               input$food_name1,
-              paste0(glucose_ranges_for_id(ID(), GLUCOSE_RECORDS), collapse=" : ")
+              paste0(glucose_ranges_for_id(ID(), cgm_data$glucose_records), collapse=" : ")
       )
     )
 
@@ -93,8 +93,8 @@ mod_goddess_server <- function(id, con, GLUCOSE_RECORDS, NOTES_RECORDS){
       )
 
       one_food_df <-  cgmr::food_times_df_fast(
-        glucose_df = GLUCOSE_RECORDS,
-        notes_df = NOTES_RECORDS,
+        glucose_df = cgm_data$glucose_records,
+        notes_df = cgm_data$notes_records,
         user_id = ID(),
         timeLength = input$timewindow,
         prefixLength = input$prefixLength,
@@ -133,8 +133,8 @@ mod_goddess_server <- function(id, con, GLUCOSE_RECORDS, NOTES_RECORDS){
       )
 
       one_food_df <-  cgmr::food_times_df_fast(
-        glucose_df = GLUCOSE_RECORDS,
-        notes_df = NOTES_RECORDS,
+        glucose_df = cgm_data$glucose_records,
+        notes_df = cgm_data$notes_records,
         user_id = ID(),
         timeLength = input$timewindow,
         prefixLength = input$prefixLength,
@@ -192,7 +192,7 @@ mod_goddess_server <- function(id, con, GLUCOSE_RECORDS, NOTES_RECORDS){
       else food_df()
 
 
-      gr <- glucose_ranges_for_id(ID(), GLUCOSE_RECORDS)
+      gr <- glucose_ranges_for_id(ID(), cgm_data$glucose_records)
 
       g <- plot_compare_glucose(food_df,
                                 combine = FALSE, #input$combine,
@@ -251,7 +251,7 @@ mod_goddess_server <- function(id, con, GLUCOSE_RECORDS, NOTES_RECORDS){
       food_df <-  if(input$normalize) {food_df2() %>% cgmr::normalize_value()}
       else food_df2()
 
-      gr <- glucose_ranges_for_id(ID(), GLUCOSE_RECORDS)
+      gr <- glucose_ranges_for_id(ID(), cgm_data$glucose_records)
 
       g <- plot_compare_glucose(food_df,
                                 combine = FALSE, #input$combine,
@@ -338,13 +338,11 @@ demo_goddess <- function() {
   ui <- fluidPage(mod_goddess_ui("x"))
   sample_glucose <- cgmr::glucose_df_from_libreview_csv()
 
-  con <- db_connection()
+  cgm_data <- CgmObject(db_connection())
 
-  GLUCOSE_RECORDS<- db_get_table(con, "glucose_records")
-  NOTES_RECORDS <- db_get_table(con, "notes_records")
 
   server <- function(input, output, session) {
-    mod_goddess_server("x", con, GLUCOSE_RECORDS, NOTES_RECORDS)
+    mod_goddess_server("x", cgm_data)
 
   }
   shinyApp(ui, server)

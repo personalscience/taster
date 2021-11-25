@@ -1,5 +1,29 @@
-#' glucose
+#' CGM-related data structures and functions
 #'
+
+#' @title Make New CGM Object
+#' @description The new object contains all data relevant to CGM operations:  `glucose_records`, `notes_records` and more.
+#' @param con valid database connection
+#' @export
+CgmObject <- function(con) {
+
+
+  thisEnv <- environment()
+
+
+  db <- list(
+    thisEnv = thisEnv,
+    con = con,
+    glucose_records = tbl(con, "glucose_records") %>% collect(),
+    notes_records = tbl(con, "notes_records") %>% collect()
+    )
+
+  ## Define the value of the list within the current environment.
+  assign('this',db,envir=thisEnv)
+
+  structure(db, class = "list",
+            con  = con)
+}
 
 
 

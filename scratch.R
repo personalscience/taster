@@ -20,20 +20,13 @@ con <- DBI::dbConnect(
   dbname = conn_args$dbname,
   password = conn_args$password
 )
-con <- db_connection()
+#con <- db_connection()
 
-GLUCOSE_RECORDS<- tbl(con,"glucose_records")  %>%
-  collect() #%>%
-  mutate(time = lubridate::as_datetime(time))
-
-GLUCOSE_RECORDS %>% head() %>%
-  mutate(timestamp = lubridate::with_tz(time, tzone = "America/Los_Angeles"))
-
-NOTES_RECORDS <- tbl(con, "notes_records") %>% collect()
+cgm_data <- cgmObject(con)
 
 cgmr::food_times_df_fast(
-  glucose_df = GLUCOSE_RECORDS,
-  notes_df = NOTES_RECORDS,
+  glucose_df = cgm_data$glucose_records,
+  notes_df = cgm_data$notes_records,
   user_id = 1003,
   foodname = "Clif Bar Chocolate")
 

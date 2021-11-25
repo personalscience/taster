@@ -3,13 +3,10 @@
 # See README for instructions on how to get one.
 con <- db_connection()
 
-GLUCOSE_RECORDS<- db_get_table(con, "glucose_records")
-NOTES_RECORDS <- db_get_table(con, "notes_records")
+cgm_data <- CgmObject(con)
 
 test_that("build AUC", {
-  expect_equal(build_all_AUC(s_list = "Snapeas",
-                glucose_records = GLUCOSE_RECORDS,
-                notes_records = NOTES_RECORDS)$ave[10], 91.3)
+  expect_equal(build_all_AUC(s_list = "Snapeas",cgm_data)$ave[10], 91.3)
 })
 
 test_that("food_list contains correct values", {
