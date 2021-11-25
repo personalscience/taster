@@ -4,13 +4,12 @@
 #'
 #' @return The return value, if any, from executing the function.
 #' @param s_list vector of strings with the names of the foods
-#' @param glucose_records well-formed glucose dataframe
-#' @param notes_records well-formed notes dataframe
+#' @param cgm_data CgmObject
 #' @return dataframe
 #' @importFrom magrittr %>%
-build_all_AUC <- function(s_list, glucose_records, notes_records) {
-  df <- cgmr::df_for_all_auc(s_list, glucose_records,
-                             notes_records)
+build_all_AUC <- function(s_list, cgm_data) {
+  df <- cgmr::df_for_all_auc(s_list, cgm_data$glucose_records,
+                             cgm_data$notes_records)
   return(df %>% mutate(user_id = meal %>% stringr::str_extract("^([:digit:])+(?=-)") %>% as.numeric()))
 }
 

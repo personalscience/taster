@@ -188,7 +188,7 @@ db_users_visible <- function(con, user_id = -1 ) {
   ID = if(is.numeric(user_id)) user_id else 0
   privilege <- "user"
 
-  visible_user_ids <- c(1234,ID)  # you can always see your own ID
+  visible_user_ids <- union(0,c(1234,ID))  # you can always see your own ID
 
 
   db_get_table(con, "accounts_user")
@@ -199,7 +199,7 @@ db_users_visible <- function(con, user_id = -1 ) {
   } else "user"
 
   if (privilege == "admin")
-    visible_user_ids <- db_user_df() %>% pull(user_id)
+    visible_user_ids <- db_user_df() %>% pull(user_id) %>% union(0)
 
 
 

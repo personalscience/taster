@@ -14,12 +14,7 @@ mod_goddess_ui <- function(id){
 
     sidebarLayout(
       sidebarPanel(
-        selectInput(
-          ns("user_id"),
-          label = "User Name",
-          choices = db_user_df() %>% pull(user_id),
-          selected = 1234
-        ),
+        uiOutput(ns("user_selection")),
         uiOutput(ns("food_selection")),
         uiOutput(ns("food_selection2")),
         checkboxInput(ns("normalize"), label = "Normalize"),
@@ -49,24 +44,46 @@ mod_goddess_ui <- function(id){
 
 #' goddess Server Functions
 #' @param id id
-#' @param con database connection
-#' @param GLUCOSE_RECORDS valid glucose df
-#' @param NOTES_RECORDS valid notes df
+#' @param f firebase object
+#' @param cgm_data CgmObject
 #' @import dplyr
 #' @import ggplot2
 #' @importFrom magrittr %>%
 #' @noRd
-mod_goddess_server <- function(id, con, GLUCOSE_RECORDS, NOTES_RECORDS){
+mod_goddess_server <- function(id, f = firebase_obj, cgm_data){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
-    con <- db_connection()
+    con <- cgm_data$con
 
-    ID<- reactive( {cat(file=stderr(), paste("Selected User", isolate(input$user_id)))
-      as.numeric(input$user_id)}
+
+    # current_user() ----
+    current_user<- reactive( {
+
+      user <- f$get_signed_in()
+      if(is.null(user)) {
+        message("user_id is null")
+        user_id <- input$user_id
+        username <- "<must sign in to see name>"
+      }
+      else {
+        f_id <- db_user_id_from_firebase(con, user$response$uid)
+        user_id <- if(is.na(f_id)) 0 else f_id  # if user isn't registered return user_id = 0
+
+        cat(file=stderr(),sprintf("\nUser %s is signed in\n",user_id))
+
+        username <- db_name_for_user_id(con, f, user_id)
+      }
+
+
+      current_id <- list(id=if(is.null(user_id)) 0 else as.numeric(user_id), name = username)
+      message("current ID=",current_id)
+      return(current_id)}
     )
+
+    # taster_prod_list() ----
     taster_prod_list <- reactive({
-      cat(file=stderr(), sprintf("seeking prod list for user %d", ID()))
-      foods <- db_food_list(con, user_id = ID())
+      cat(file=stderr(), sprintf("seeking prod list for user %s", input$user_id))
+      foods <- db_food_list(con, user_id = input$user_id)
       validate(
         need(!is.null(foods),"missing records for user")
       )
@@ -77,10 +94,10 @@ mod_goddess_server <- function(id, con, GLUCOSE_RECORDS, NOTES_RECORDS){
     # show_user (ID, range, etc.)----
     output$show_user <- renderText(
 
-      sprintf("user_id = %d, product = %s, range=%s", ID(),
+      sprintf("user_id = %s, product = %s, range=%s", input$user_id,
 
               input$food_name1,
-              paste0(glucose_ranges_for_id(ID(), GLUCOSE_RECORDS), collapse=" : ")
+              paste0(glucose_ranges_for_id(input$user_id, cgm_data$glucose_records), collapse=" : ")
       )
     )
 
@@ -88,14 +105,14 @@ mod_goddess_server <- function(id, con, GLUCOSE_RECORDS, NOTES_RECORDS){
     food_df2 <- reactive({
       validate(
         need(!is.null(taster_prod_list()),"No food times available for this person"),
-        need(!is.null(ID()), "No user selected"),
+        need(!is.null(input$user_id), "No user selected"),
         need(input$food_name1, "No food selected")
       )
 
       one_food_df <-  cgmr::food_times_df_fast(
-        glucose_df = GLUCOSE_RECORDS,
-        notes_df = NOTES_RECORDS,
-        user_id = ID(),
+        glucose_df = cgm_data$glucose_records,
+        notes_df = cgm_data$notes_records,
+        user_id = input$user_id,
         timeLength = input$timewindow,
         prefixLength = input$prefixLength,
         foodname = input$food_name2
@@ -128,14 +145,14 @@ mod_goddess_server <- function(id, con, GLUCOSE_RECORDS, NOTES_RECORDS){
     food_df <- reactive({
       validate(
         need(!is.null(taster_prod_list()), "No food times available for this person"),
-        need(!is.null(ID()), "No user selected"),
+        need(!is.null(input$user_id), "No user selected"),
         need(input$food_name1, "No food selected")
       )
 
       one_food_df <-  cgmr::food_times_df_fast(
-        glucose_df = GLUCOSE_RECORDS,
-        notes_df = NOTES_RECORDS,
-        user_id = ID(),
+        glucose_df = cgm_data$glucose_records,
+        notes_df = cgm_data$notes_records,
+        user_id = input$user_id,
         timeLength = input$timewindow,
         prefixLength = input$prefixLength,
         foodname = input$food_name1
@@ -153,10 +170,33 @@ mod_goddess_server <- function(id, con, GLUCOSE_RECORDS, NOTES_RECORDS){
       return(cgmr::combined_food_times_df(df))
     }
     )
+
+    # output$user_selection ----
+    output$user_selection <- renderUI({
+
+
+      current_user <- current_user()
+      if(is.null(current_user))
+        { message("user_selection user is null but I'll change that")
+        current_user <- list(id = 0, name = "<sign in please")
+      }
+
+      message("Current User=",isolate(current_user))
+      visible_users <- db_users_visible(con, current_user)
+      #visible_names <- map_chr(visible_users, function(x) {db_name_for_user_id(con,user_id = x)})
+
+      selectInput(
+        ns("user_id"),
+        label = "User Name",
+        choices = visible_users,
+        selected = current_user
+      )
+    })
+
     # output$food_selection ----
     output$food_selection <- renderUI({
       validate(
-        need(!is.null(taster_prod_list()),sprintf("No foods available for user_id %s",ID()))
+        need(!is.null(taster_prod_list()),sprintf("No foods available for user_id %s",input$user_id))
       )
 
       cat(file=stderr(), paste("finding foods for User", isolate(input$user_id)))
@@ -169,7 +209,7 @@ mod_goddess_server <- function(id, con, GLUCOSE_RECORDS, NOTES_RECORDS){
     })
 
     observe(
-      cat(file = stderr(), sprintf("user_id=%s \n",ID()))
+      cat(file = stderr(), sprintf("user_id=%s \n",input$user_id))
     )
 
     # output$food1 Render Plot----
@@ -178,11 +218,11 @@ mod_goddess_server <- function(id, con, GLUCOSE_RECORDS, NOTES_RECORDS){
       validate(
         need(input$food_name1, "Waiting on database...1"),
         need(!is.null(food_df()), "Problem with food times"),
-        need(!is.null(ID()),"No user selected")
+        need(!is.null(input$user_id),"No user selected")
       )
       observe(
-        cat(file = stderr(), sprintf("render plot for user_id=%d and food=%s \n",
-                                     isolate(ID()),
+        cat(file = stderr(), sprintf("render plot for user_id=%s and food=%s \n",
+                                     isolate(input$user_id),
                                      isolate(input$food_name1)))
       )
 
@@ -192,7 +232,7 @@ mod_goddess_server <- function(id, con, GLUCOSE_RECORDS, NOTES_RECORDS){
       else food_df()
 
 
-      gr <- glucose_ranges_for_id(ID(), GLUCOSE_RECORDS)
+      gr <- glucose_ranges_for_id(input$user_id, cgm_data$glucose_records)
 
       g <- plot_compare_glucose(food_df,
                                 combine = FALSE, #input$combine,
@@ -216,7 +256,7 @@ mod_goddess_server <- function(id, con, GLUCOSE_RECORDS, NOTES_RECORDS){
     # output$food_selection2 ----
     output$food_selection2 <- renderUI({
       validate(
-        need(!is.null(taster_prod_list()),sprintf("No foods available for user_id %s",ID()))
+        need(!is.null(taster_prod_list()),sprintf("No foods available for user_id %s",input$user_id))
       )
 
       cat(file=stderr(), paste("finding foods for User", isolate(input$user_id)))
@@ -229,7 +269,7 @@ mod_goddess_server <- function(id, con, GLUCOSE_RECORDS, NOTES_RECORDS){
     })
 
     observe(
-      cat(file = stderr(), sprintf("user_id=%s \n",ID()))
+      cat(file = stderr(), sprintf("user_id=%s \n",input$user_id))
     )
 
     # output$food2 Render Plot ----
@@ -238,11 +278,11 @@ mod_goddess_server <- function(id, con, GLUCOSE_RECORDS, NOTES_RECORDS){
       validate(
         need(input$food_name1, "Waiting on database...1"),
         need(!is.null(food_df2()), "Problem with food times"),
-        need(!is.null(ID()),"No user selected")
+        need(!is.null(input$user_id),"No user selected")
       )
       observe(
-        cat(file = stderr(), sprintf("render plot for user_id=%d and food=%s \n",
-                                     isolate(ID()),
+        cat(file = stderr(), sprintf("render plot for user_id=%s and food=%s \n",
+                                     isolate(input$user_id),
                                      isolate(input$food_name2)))
       )
 
@@ -251,7 +291,7 @@ mod_goddess_server <- function(id, con, GLUCOSE_RECORDS, NOTES_RECORDS){
       food_df <-  if(input$normalize) {food_df2() %>% cgmr::normalize_value()}
       else food_df2()
 
-      gr <- glucose_ranges_for_id(ID(), GLUCOSE_RECORDS)
+      gr <- glucose_ranges_for_id(input$user_id, cgm_data$glucose_records)
 
       g <- plot_compare_glucose(food_df,
                                 combine = FALSE, #input$combine,
@@ -314,7 +354,7 @@ mod_goddess_server <- function(id, con, GLUCOSE_RECORDS, NOTES_RECORDS){
     output$downloadFood_df <-
       downloadHandler(
         filename = function() {
-          sprintf("Food_data-%s-%s.csv", ID(), Sys.Date())
+          sprintf("Food_data-%s-%s.csv", input$user_id, Sys.Date())
         },
         content = function(file) {
           readr::write_csv(bind_rows(food_df(),food_df2()) %>% distinct() %>% arrange(meal), file)
@@ -335,16 +375,19 @@ mod_goddess_server <- function(id, con, GLUCOSE_RECORDS, NOTES_RECORDS){
 #' @noRd
 #'
 demo_goddess <- function() {
-  ui <- fluidPage(mod_goddess_ui("x"))
+  ui <- fluidPage(firebase::useFirebase(),
+                  firebase::firebaseUIContainer(),
+                  mod_goddess_ui("x"))
+
   sample_glucose <- cgmr::glucose_df_from_libreview_csv()
 
-  con <- db_connection()
 
-  GLUCOSE_RECORDS<- db_get_table(con, "glucose_records")
-  NOTES_RECORDS <- db_get_table(con, "notes_records")
 
   server <- function(input, output, session) {
-    mod_goddess_server("x", con, GLUCOSE_RECORDS, NOTES_RECORDS)
+    cgm_data <- CgmObject(db_connection())
+
+    f <- firebase_setup(cgm_data$con)
+    mod_goddess_server("x", f, cgm_data)
 
   }
   shinyApp(ui, server)

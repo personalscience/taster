@@ -48,22 +48,22 @@ mod_user_view_ui <- function(id){
 #' @param GLUCOSE_RECORDS_Partial valid glucose df
 #' @param NOTES_RECORDS_Partial valid notes df
 #' @noRd
-mod_user_view_server <- function(id, con, f, csv_user_gdf,GLUCOSE_RECORDS_Partial, NOTES_RECORDS_Partial  ){
+mod_user_view_server <- function(id, f, csv_user_gdf, cgm_data ){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
-
+    con <- cgm_data$con
 
     # GLUCOSE_RECORDS ----
     GLUCOSE_RECORDS <- reactive({
       message("csv records are nrows", nrow(csv_user_gdf))
-      GLUCOSE_RECORDS_Partial  ## %>% rbind(csv_user_gdf)
+      cgm_data$glucose_records  ## %>% rbind(csv_user_gdf)
     })
 
     # NOTES_RECORDS ----
     NOTES_RECORDS <- reactive({
       message("csv records are nrows", nrow(csv_user_gdf))
       extra_notes <- NULL #cgmr::notes_df_from_glucose_table(csv_user_gdf, user_id = 0)
-      return(NOTES_RECORDS_Partial  %>% rbind(extra_notes))
+      return(cgm_data$notes_records  %>% rbind(extra_notes))
     })
 
 
@@ -370,13 +370,11 @@ demo_user <- function() {
                                                      user_id = 0)
 
   server <- function(input, output, session) {
-    con <- db_connection()
 
-    GLUCOSE_RECORDS<- db_get_table(con, "glucose_records") #%>% bind_rows(sample_glucose)
-    NOTES_RECORDS <- db_get_table(con, "notes_records")
+    cgm_data <- CgmObject(db_connection())
 
     f <- firebase_setup(con)
-    mod_user_view_server("x", con, f, csv_user_gdf = sample_glucose, GLUCOSE_RECORDS, NOTES_RECORDS)
+    mod_user_view_server("x", f, csv_user_gdf = sample_glucose, cgm_data)
 
 
   }

@@ -44,9 +44,10 @@ mod_analysis_ui <- function(id){
 #' @importFrom tidyr pivot_longer
 #' @importFrom purrr map_dbl
 #' @noRd
-mod_analysis_server <- function(id, glucose_df, con, GLUCOSE_RECORDS, NOTES_RECORDS){
+mod_analysis_server <- function(id, glucose_df, cgm_data){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
+    con <- cgm_data$con
 
       foods_to_analyze <- db_food_list(con, c(1000:1009,1013:1502))
 
@@ -56,15 +57,15 @@ mod_analysis_server <- function(id, glucose_df, con, GLUCOSE_RECORDS, NOTES_RECO
       )
 
       cgmr::df_for_all_auc(food_list = foods_to_analyze,
-                            glucose_records = GLUCOSE_RECORDS,
-                            notes_records = NOTES_RECORDS)
+                            glucose_records = cgm_data$glucose_records,
+                            notes_records = cgm_data$notes_records)
     }
     )
 
 
     AUC_for_food <- function(foodname) {
-      cgmr::auc_for_food(foodname, glucose_records = GLUCOSE_RECORDS,
-                         notes_records = NOTES_RECORDS, start_limit = 200)
+      cgmr::auc_for_food(foodname, glucose_records = cgm_data$glucose_records,
+                         notes_records = cgm_data$notes_records, start_limit = 200)
     }
 
     all_foods <- reactive({
@@ -111,11 +112,8 @@ demo_analysis <- function() {
   ui <- fluidPage(mod_analysis_ui("analysis_ui_1"))
   sample_glucose <- cgmr::glucose_df_from_libreview_csv()
   server <- function(input, output, session) {
-    con <- db_connection()
-
-    GLUCOSE_RECORDS<- db_get_table(con, "glucose_records")
-    NOTES_RECORDS <- db_get_table(con, "notes_records")
-    mod_analysis_server("analysis_ui_1", glucose_df = sample_glucose, con = con, GLUCOSE_RECORDS, NOTES_RECORDS)
+    cgm_data <- CgmObject(db_connection())
+    mod_analysis_server("analysis_ui_1", glucose_df = sample_glucose, cgm_data)
 
   }
   shinyApp(ui, server)

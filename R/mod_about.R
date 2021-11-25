@@ -14,6 +14,17 @@ mod_about_ui <- function(id){
     tags$a(href="https://personalscience.com", "More details"),
     textOutput(ns("about_page")),
     textOutput(ns("currentDB")),
+    hr(),
+    markdown("Here's what we know about you:
+
+             1. You are one of our users
+             2. You are important.
+
+             We want to make your experience as easy as possible. You can view the site anonymously, but more features
+             are available if create an account.
+
+             Choose one of the following log-in methods to log in (or out). If this is your first time, a new
+             account will be created for you."),
     firebase::useFirebase(),
     firebase::firebaseUIContainer(),
     firebase::reqSignin(actionButton(ns("signout"), "Sign out")),
@@ -47,13 +58,20 @@ mod_about_server <- function(id, con, user){
       current_user <- user$f$get_signed_in()
       message(sprintf("signing in: %s\n", user$full_name))
 
-      h4("Welcome,", current_user$response$email)
+      tagList(
+      h4("Welcome,", current_user$response$email),
+      hr(),
+      p(sprintf("Your Firebase ID = %s and Taster ID = %s",
+                 current_user$response$uid,
+                 db_user_id_from_firebase(con,current_user$response$uid)))
       # experiments <- if(DBI::dbExistsTable(con, "experiments"))
       #   {tbl(con, "experiments") %>% collect()}
       # else NULL
       #
       # tags$img(src=stats::na.omit(experiments$experiment_image_url),
       #      width = "240px")
+
+      )
     }
     )
 

@@ -3,7 +3,11 @@
 
 
 #' @title Create New User Object
-#' @description A User object makes for an easy way to
+#' @description A User object represents all the useful information to know about a user:
+#' `user_id` the unique ID used throughout the app. If 0, then the user is unregistered.
+#' `firebase_id` if user is logged in, this is their valid Firebase ID.
+#' You cannot have a `firebase_id` without a non-zero `user_id`
+#' `privilege` char string representation of the privilege level ("admin", "user")
 #' @param con valid database connection
 #' @param user_id User ID
 #' @param firebase_obj Firebase object
@@ -14,7 +18,15 @@ UserObject <- function(con, user_id = NULL,  firebase_obj = NULL) {
 
   thisEnv <- environment()
 
+
+
+
   ID = if(is.null(user_id)) 0 else user_id
+
+  f_id <- if(!is.null(firebase_obj)){ # we know the user has login information
+    current_user <- NULL # firebase_obj$get_signed_in()
+    current_user$response$uid
+    } else NULL
 
 
   db <- list(
@@ -22,11 +34,22 @@ UserObject <- function(con, user_id = NULL,  firebase_obj = NULL) {
     con = con,
     f = firebase_obj,
     user_id = ID,
+    f_id = f_id,
 
     #user_list = dplyr::tbl(con, "user_list"),
-    firebase_id = dplyr::tbl(con, "accounts_firebase") %>% filter(user_id == ID) %>% pull(`firebase_id`) %>% first(),
-    privilege = dplyr::tbl(con, "accounts_user") %>% filter(user_id == ID) %>% pull(`privilege`) %>% first(),
-    full_name = if (ID == 0) "<log in for name>" else dplyr::tbl(con, "accounts_user") %>% filter(user_id ==ID) %>% collect() %>%
+    firebase_id = dplyr::tbl(con, "accounts_firebase") %>%
+      filter(user_id == ID) %>%
+      pull(`firebase_id`) %>% first(),
+
+    privilege = dplyr::tbl(con, "accounts_user") %>%
+      filter(user_id == ID) %>%
+      pull(`privilege`) %>%
+      first(),
+
+    full_name = if (ID == 0) "<log in for name>"
+    else dplyr::tbl(con, "accounts_user") %>%
+      filter(user_id ==ID) %>%
+      collect() %>%
       transmute(full_name = sprintf("%s %s", first_name, last_name)) %>%
       pull(full_name) %>%
       first(),

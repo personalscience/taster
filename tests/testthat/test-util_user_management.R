@@ -28,7 +28,7 @@ test_that("user privileges",{
 })
 
 test_that("users are visible depending on privileges", {
-  expect_equal(db_users_visible(con, -1), c(1234,-1))
+  expect_equal(db_users_visible(con, -1), c(0, 1234,-1))
 })
 
 test_that("firebase works",{

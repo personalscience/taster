@@ -4,14 +4,12 @@
 \alias{build_all_AUC}
 \title{analysis}
 \usage{
-build_all_AUC(s_list, glucose_records, notes_records)
+build_all_AUC(s_list, cgm_data)
 }
 \arguments{
 \item{s_list}{vector of strings with the names of the foods}
 
-\item{glucose_records}{well-formed glucose dataframe}
-
-\item{notes_records}{well-formed notes dataframe}
+\item{cgm_data}{CgmObject}
 }
 \value{
 The return value, if any, from executing the function.
