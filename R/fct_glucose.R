@@ -1,10 +1,12 @@
 #' glucose
 #'
-#' @description A fct function
+
+
+
 #'
-#' @return The return value, if any, from executing the function.
-#'
-#' @noRd
+#' @title Max and Min Glucose Ranges for `user_id`
+#' @param user_id user ID
+#' @param glucose_records valid glucose records
 glucose_ranges_for_id <- function(user_id, glucose_records){
 
   GLUCOSE_RECORDS <- glucose_records

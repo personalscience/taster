@@ -14,3 +14,4 @@ test_that("glucose range for ID", {
   expect_equal(as.numeric(gr),c(78.09, 4.99), tolerance = .1 )
 })
 
+DBI::dbDisconnect(con)
