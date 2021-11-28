@@ -17,7 +17,11 @@ UserObject(con, user_id = NULL, firebase_obj = NULL)
 The return value, if any, from executing the utility.
 }
 \description{
-A User object makes for an easy way to
+A User object represents all the useful information to know about a user:
+`user_id` the unique ID used throughout the app. If 0, then the user is unregistered.
+`firebase_id` if user is logged in, this is their valid Firebase ID.
+You cannot have a `firebase_id` without a non-zero `user_id`
+`privilege` char string representation of the privilege level ("admin", "user")
 }
 \details{
 user_management
