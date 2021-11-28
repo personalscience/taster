@@ -101,33 +101,7 @@ mod_goddess_server <- function(id, f = firebase_obj, cgm_data){
       )
     )
 
-    # food_df2() ----
-    food_df2 <- reactive({
-      validate(
-        need(!is.null(taster_prod_list()),"No food times available for this person"),
-        need(!is.null(input$user_id), "No user selected"),
-        need(input$food_name1, "No food selected")
-      )
 
-      one_food_df <-  cgmr::food_times_df_fast(
-        glucose_df = cgm_data$glucose_records,
-        notes_df = cgm_data$notes_records,
-        user_id = input$user_id,
-        timeLength = input$timewindow,
-        prefixLength = input$prefixLength,
-        foodname = input$food_name2
-      )
-
-      validate(
-        need(!is.null(one_food_df), sprintf("No glucose results for food %s", input$food_name1))
-      )
-
-
-      df <- one_food_df
-
-      df
-    }
-    )
 
     # y_scale ----
 
@@ -137,34 +111,27 @@ mod_goddess_server <- function(id, f = firebase_obj, cgm_data){
 
 
     # food_df ----
-    food_df <- reactive({
-      validate(
-        need(!is.null(taster_prod_list()), "No food times available for this person"),
-        need(!is.null(input$user_id), "No user selected"),
-        need(input$food_name1, "No food selected")
+
+    food_df <- reactive(
+      food_df_(cgm_data = cgm_data,
+               user_id = input$user_id,
+               timewindow = input$timewindow,
+               prefixLength = input$prefixLength,
+               food_name = input$food_name1,
+               normalize = input$normalize
       )
-
-      one_food_df <-  cgmr::food_times_df_fast(
-        glucose_df = cgm_data$glucose_records,
-        notes_df = cgm_data$notes_records,
-        user_id = input$user_id,
-        timeLength = input$timewindow,
-        prefixLength = input$prefixLength,
-        foodname = input$food_name1
-      )
-
-      validate(
-        need(!is.null(one_food_df), sprintf("No glucose results for food %s", input$food_name1))
-      )
-
-      df <-  if(input$normalize) {
-        cat(file=stderr(), sprintf("normalizing...\n"))
-        one_food_df %>% cgmr::normalize_value()
-      } else one_food_df
-
-      return(cgmr::combined_food_times_df(df))
-    }
     )
+
+    food_df2 <- reactive(
+      food_df_(cgm_data = cgm_data,
+               user_id = input$user_id,
+               timewindow = input$timewindow,
+               prefixLength = input$prefixLength,
+               food_name = input$food_name2,
+               normalize = input$normalize
+      )
+    )
+
 
     # output$user_selection ----
     output$user_selection <- renderUI({
@@ -200,10 +167,6 @@ mod_goddess_server <- function(id, f = firebase_obj, cgm_data){
                      prod_list = taster_prod_list(),
                      user_id = input$user_id )
     })
-
-    observe(
-      cat(file = stderr(), sprintf("user_id=%s \n",input$user_id))
-    )
 
     # output$food Render Plot----
 
@@ -287,47 +250,88 @@ mod_goddess_server <- function(id, f = firebase_obj, cgm_data){
   })
 }
 
-## To be copied in the UI
-# mod_goddess_ui("goddess_ui_1")
 
-## To be copied in the server
-# mod_goddess_server("goddess_ui_1")
-
-#' @description Demo for mod_food_compare
-#' @noRd
-#'
-demo_goddess <- function() {
-  ui <- fluidPage(firebase::useFirebase(),
-                  firebase::firebaseUIContainer(),
-                  mod_goddess_ui("x"))
-
-  sample_glucose <- cgmr::glucose_df_from_libreview_csv()
-
-
-
-  server <- function(input, output, session) {
-    cgm_data <- CgmObject(db_connection())
-
-    f <- firebase_setup(cgm_data$con)
-    mod_goddess_server("x", f, cgm_data)
-
-  }
-  shinyApp(ui, server)
-}
 
 
 #' @title Make Y-Scale Based on All Food Times Values
 #' @param foods_all dataframe of `food_times_df`
-#' @param normalize logical
+#' @param normalize logical should return list be normalized
 #' @return list
 y_scale_ <- function(foods_all, normalize) {
 
   foods <- if(normalize) {foods_all %>% cgmr::normalize_value()}
   else foods_all
-  #   cat(file=stderr(), sprintf("Y Scale Max = %d, Min = %d",  min(foods$value), max(foods$value)))
-  list(max = max(foods$value),
-       min = min(foods$value))
 
+  return(
+    list(max = max(foods$value),
+         min = min(foods$value))
+  )
+
+
+}
+
+#' @title Food Times Dataframe
+#' @param cgm_data cgmObject
+#' @param user_id user ID
+#' @param timewindow integer minutes to show after start
+#' @param prefixLength integer minutes before start
+#' @param food_name character string for food name
+#' @param normalize logical if output should be normalized
+#' @return dataframe of food times
+food_df_ <- function(cgm_data,
+                     user_id,
+                     timewindow,
+                     prefixLength,
+                     food_name,
+                     normalize = FALSE){
+
+    validate(
+    #  need(!is.null(taster_prod_list()), "No food times available for this person"),
+      need(!is.null(user_id), "No user selected"),
+      need(food_name, "No food selected")
+    )
+
+    one_food_df <-  cgmr::food_times_df_fast(
+      glucose_df = cgm_data$glucose_records,
+      notes_df = cgm_data$notes_records,
+      user_id = user_id,
+      timeLength = timewindow,
+      prefixLength = prefixLength,
+      foodname = food_name
+    )
+
+    validate(
+      need(!is.null(one_food_df), sprintf("No glucose results for food %s", food_name))
+    )
+
+    df <-  if(normalize) {
+      cat(file=stderr(), sprintf("normalizing...\n"))
+      one_food_df %>% cgmr::normalize_value()
+    } else one_food_df
+
+    return(cgmr::combined_food_times_df(df))
+
+}
+
+#' @title Make a Food Selection Object
+#' @param item_id character string NS id for UI
+#' @param prod_list list of products to choose from
+#' @param user_id user ID
+#' @return food selection object
+food_selection <- function(item_id,
+                           prod_list,
+                           user_id){
+  validate(
+    need(!is.null(prod_list),sprintf("No foods available for user_id %s",user_id))
+  )
+
+  cat(file=stderr(), sprintf("Food Selection: finding food_name1 for User %s\n", user_id))
+  cat(file=stderr(), sprintf("User %s first food is %s\n",user_id,first(prod_list)))
+  selectizeInput(item_id,
+                 label = "Food Item",
+                 choices = prod_list,
+                 selected = first(prod_list)
+  )
 
 }
 
@@ -346,7 +350,6 @@ goddessPlot <- function(user_id ,
                               baseline = FALSE) {
 
 
-    message(sprintf("thinking of renderGoddessPlot for food %s", if(is.null(food_name)) "NULL" else food_name))
     validate(
       need(!is.null(food_name), "Waiting on database...1"),
       need(!is.null(food_times_df()), "Problem with food times"),
@@ -386,24 +389,33 @@ goddessPlot <- function(user_id ,
 
 }
 
-#' @title Make a Food Selection Object
-#' @param item_id character string NS id for UI
-#' @param prod_list list of products to choose from
-#' @param user_id user ID
-#' @return food selection object
-food_selection <- function(item_id,
-                           prod_list,
-                           user_id){
-  validate(
-    need(!is.null(prod_list),sprintf("No foods available for user_id %s",user_id))
-  )
 
-  cat(file=stderr(), sprintf("Food Selection: finding food_name1 for User %s\n", user_id))
-  cat(file=stderr(), sprintf("User %s first food is %s\n",user_id,first(prod_list)))
-  selectizeInput(item_id,
-                 label = "Food Item",
-                 choices = prod_list,
-                 selected = first(prod_list)
-  )
 
+## To be copied in the UI
+# mod_goddess_ui("goddess_ui_1")
+
+## To be copied in the server
+# mod_goddess_server("goddess_ui_1")
+
+#' @description Demo for mod_food_compare
+#' @noRd
+#'
+demo_goddess <- function() {
+  ui <- fluidPage(firebase::useFirebase(),
+                  firebase::firebaseUIContainer(),
+                  mod_goddess_ui("x"))
+
+  sample_glucose <- cgmr::glucose_df_from_libreview_csv()
+
+
+
+  server <- function(input, output, session) {
+    cgm_data <- CgmObject(db_connection())
+
+    f <- firebase_setup(cgm_data$con)
+    mod_goddess_server("x", f, cgm_data)
+
+  }
+  shinyApp(ui, server)
 }
+
