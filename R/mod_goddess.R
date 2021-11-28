@@ -82,7 +82,7 @@ mod_goddess_server <- function(id, f = firebase_obj, cgm_data){
 
     # taster_prod_list() ----
     taster_prod_list <- reactive({
-      cat(file=stderr(), sprintf("seeking prod list for user %s", input$user_id))
+      cat(file=stderr(), sprintf("seeking prod list for user %s\n", input$user_id))
       foods <- db_food_list(con, user_id = input$user_id)
       validate(
         need(!is.null(foods),"missing records for user")
@@ -101,75 +101,37 @@ mod_goddess_server <- function(id, f = firebase_obj, cgm_data){
       )
     )
 
-    # food_df2() ----
-    food_df2 <- reactive({
-      validate(
-        need(!is.null(taster_prod_list()),"No food times available for this person"),
-        need(!is.null(input$user_id), "No user selected"),
-        need(input$food_name1, "No food selected")
-      )
 
-      one_food_df <-  cgmr::food_times_df_fast(
-        glucose_df = cgm_data$glucose_records,
-        notes_df = cgm_data$notes_records,
-        user_id = input$user_id,
-        timeLength = input$timewindow,
-        prefixLength = input$prefixLength,
-        foodname = input$food_name2
-      )
-
-      validate(
-        need(!is.null(one_food_df), sprintf("No glucose results for food %s", input$food_name1))
-      )
-
-
-      df <- one_food_df
-
-      df
-    }
-    )
 
     # y_scale ----
 
-    y_scale <- reactive({
-      foods_all <-bind_rows(food_df2(),food_df())
-      foods <- if(input$normalize) {foods_all %>% cgmr::normalize_value()}
-      else foods_all
-   #   cat(file=stderr(), sprintf("Y Scale Max = %d, Min = %d",  min(foods$value), max(foods$value)))
-      list(max = max(foods$value),
-           min = min(foods$value))
+    y_scale <- reactive(
+      y_scale_(bind_rows(food_df2(), food_df()), input$normalize)
+    )
 
-    })
 
     # food_df ----
-    food_df <- reactive({
-      validate(
-        need(!is.null(taster_prod_list()), "No food times available for this person"),
-        need(!is.null(input$user_id), "No user selected"),
-        need(input$food_name1, "No food selected")
+
+    food_df <- reactive(
+      food_df_(cgm_data = cgm_data,
+               user_id = input$user_id,
+               timewindow = input$timewindow,
+               prefixLength = input$prefixLength,
+               food_name = input$food_name1,
+               normalize = input$normalize
       )
-
-      one_food_df <-  cgmr::food_times_df_fast(
-        glucose_df = cgm_data$glucose_records,
-        notes_df = cgm_data$notes_records,
-        user_id = input$user_id,
-        timeLength = input$timewindow,
-        prefixLength = input$prefixLength,
-        foodname = input$food_name1
-      )
-
-      validate(
-        need(!is.null(one_food_df), sprintf("No glucose results for food %s", input$food_name1))
-      )
-
-      df <-  if(input$normalize) {
-        cat(file=stderr(), sprintf("normalizing...\n"))
-        one_food_df %>% cgmr::normalize_value()
-      } else one_food_df
-
-      return(cgmr::combined_food_times_df(df))
-    }
     )
+
+    food_df2 <- reactive(
+      food_df_(cgm_data = cgm_data,
+               user_id = input$user_id,
+               timewindow = input$timewindow,
+               prefixLength = input$prefixLength,
+               food_name = input$food_name2,
+               normalize = input$normalize
+      )
+    )
+
 
     # output$user_selection ----
     output$user_selection <- renderUI({
@@ -195,93 +157,40 @@ mod_goddess_server <- function(id, f = firebase_obj, cgm_data){
 
     # output$food_selection ----
     output$food_selection <- renderUI({
-      validate(
-        need(!is.null(taster_prod_list()),sprintf("No foods available for user_id %s",input$user_id))
-      )
-
-      cat(file=stderr(), paste("finding foods for User", isolate(input$user_id)))
-      cat(file=stderr(), sprintf("User %s first food is %s",isolate(input$user_id),first(taster_prod_list()) ))
-      selectizeInput(NS(id,"food_name1"),
-                     label = "Food Item",
-                     choices = taster_prod_list(),
-                     selected = first(taster_prod_list())
-      )
+      food_selection(item_id = ns("food_name1"),
+                     prod_list = taster_prod_list(),
+                     user_id = input$user_id )
     })
 
-    observe(
-      cat(file = stderr(), sprintf("user_id=%s \n",input$user_id))
-    )
 
-    # output$food1 Render Plot----
-
-    output$food1 <-
-      renderGoddessPlot(user_id = input$user_id,
-                                     food_times_df = food_df(),
-                                     food_name = input$food_name1,
-                                     cgm_data = cgm_data,
-                                     smooth = input$smooth,
-                                     normalize = input$normalize)
-
-
-    # output$food_selection2 ----
     output$food_selection2 <- renderUI({
-      validate(
-        need(!is.null(taster_prod_list()),sprintf("No foods available for user_id %s",input$user_id))
-      )
-
-      cat(file=stderr(), paste("finding foods for User", isolate(input$user_id)))
-      cat(file=stderr(), sprintf("User %s first food is %s",isolate(input$user_id),first(taster_prod_list()) ))
-      selectizeInput(NS(id,"food_name2"),
-                     label = "Food Item",
-                     choices = taster_prod_list(),
-                     selected = first(taster_prod_list())
-      )
+      food_selection(item_id = ns("food_name2"),
+                     prod_list = taster_prod_list(),
+                     user_id = input$user_id )
     })
 
-    observe(
-      cat(file = stderr(), sprintf("user_id=%s \n",input$user_id))
+    # output$food Render Plot----
+
+    output$food1 <- renderPlot(
+      goddessPlot(user_id = input$user_id,
+                        food_times_df = food_df,
+                        food_name = input$food_name1,
+                        cgm_data = cgm_data,
+                        smooth = input$smooth,
+                        normalize = input$normalize,
+                        baseline = input$baseline)
     )
 
-    # output$food2 Render Plot ----
-    output$food2 <- renderPlot({
+    output$food2 <- renderPlot(
+      goddessPlot(user_id = input$user_id,
+                        food_times_df = food_df2,
+                        food_name = input$food_name2,
+                        cgm_data = cgm_data,
+                        smooth = input$smooth,
+                        normalize = input$normalize,
+                        baseline = input$baseline)
+    )
 
-      validate(
-        need(input$food_name1, "Waiting on database...1"),
-        need(!is.null(food_df2()), "Problem with food times"),
-        need(!is.null(input$user_id),"No user selected")
-      )
-      observe(
-        cat(file = stderr(), sprintf("render plot for user_id=%s and food=%s \n",
-                                     isolate(input$user_id),
-                                     isolate(input$food_name2)))
-      )
-
-
-
-      food_df <-  if(input$normalize) {food_df2() %>% cgmr::normalize_value()}
-      else food_df2()
-
-      gr <- glucose_ranges_for_id(input$user_id, cgm_data$glucose_records)
-
-      g <- plot_compare_glucose(food_df,
-                                combine = FALSE, #input$combine,
-                                smooth = input$smooth,
-                                title = "Glucose Response",
-                                subtitle = sprintf("Food = %s", isolate(input$food_name2)))
-
-
-      g +
-        coord_cartesian(ylim = c(y_scale()[["min"]], y_scale()[["max"]])) +
-        if(input$baseline & !input$normalize){
-          annotate("rect",
-                   xmin = -Inf,
-                   xmax = Inf,
-                   ymin = gr$mean - gr$sd*2,
-                   ymax = gr$mean + gr$sd*2,
-                   fill = "green",
-                   alpha = 0.3)
-        }
-    })
 
     # output$auc_table ----
     output$auc_table <- renderDataTable({
@@ -335,6 +244,147 @@ mod_goddess_server <- function(id, f = firebase_obj, cgm_data){
   })
 }
 
+
+
+
+#' @title Make Y-Scale Based on All Food Times Values
+#' @param foods_all dataframe of `food_times_df`
+#' @param normalize logical should return list be normalized
+#' @return list
+y_scale_ <- function(foods_all, normalize) {
+
+  foods <- if(normalize) {foods_all %>% cgmr::normalize_value()}
+  else foods_all
+
+  return(
+    list(max = max(foods$value),
+         min = min(foods$value))
+  )
+
+
+}
+
+#' @title Food Times Dataframe
+#' @param cgm_data cgmObject
+#' @param user_id user ID
+#' @param timewindow integer minutes to show after start
+#' @param prefixLength integer minutes before start
+#' @param food_name character string for food name
+#' @param normalize logical if output should be normalized
+#' @return dataframe of food times
+food_df_ <- function(cgm_data,
+                     user_id,
+                     timewindow,
+                     prefixLength,
+                     food_name,
+                     normalize = FALSE){
+
+    validate(
+    #  need(!is.null(taster_prod_list()), "No food times available for this person"),
+      need(!is.null(user_id), "No user selected"),
+      need(food_name, "No food selected")
+    )
+
+    one_food_df <-  cgmr::food_times_df_fast(
+      glucose_df = cgm_data$glucose_records,
+      notes_df = cgm_data$notes_records,
+      user_id = user_id,
+      timeLength = timewindow,
+      prefixLength = prefixLength,
+      foodname = food_name
+    )
+
+    validate(
+      need(!is.null(one_food_df), sprintf("No glucose results for food %s", food_name))
+    )
+
+    df <-  if(normalize) {
+      cat(file=stderr(), sprintf("normalizing...\n"))
+      one_food_df %>% cgmr::normalize_value()
+    } else one_food_df
+
+    return(cgmr::combined_food_times_df(df))
+
+}
+
+#' @title Make a Food Selection Object
+#' @param item_id character string NS id for UI
+#' @param prod_list list of products to choose from
+#' @param user_id user ID
+#' @return food selection object
+food_selection <- function(item_id,
+                           prod_list,
+                           user_id){
+  validate(
+    need(!is.null(prod_list),sprintf("No foods available for user_id %s",user_id))
+  )
+
+  cat(file=stderr(), sprintf("Food Selection: finding food_name1 for User %s\n", user_id))
+  cat(file=stderr(), sprintf("User %s first food is %s\n",user_id,first(prod_list)))
+  selectizeInput(item_id,
+                 label = "Food Item",
+                 choices = prod_list,
+                 selected = first(prod_list)
+  )
+
+}
+
+#' @title Return a CGM Goddess Plot
+#' @param user_id ID
+#' @param food_df dataframe of food times
+#' @param food_name character string for food name
+#' @param cgm_data CgmObject
+#' @return ggplot2 object
+goddessPlot <- function(user_id ,
+                              food_times_df ,
+                              food_name,
+                              cgm_data,
+                              normalize = FALSE,
+                              smooth = FALSE,
+                              baseline = FALSE) {
+
+
+    validate(
+      need(!is.null(food_name), "Waiting on database...1"),
+      need(!is.null(food_times_df()), "Problem with food times"),
+      need(!is.null(user_id),"No user selected")
+      )
+      observe(
+        cat(file = stderr(), sprintf("render plot for user_id=%s and food=%s \n",
+                                     isolate(user_id),
+                                     isolate(food_name)))
+      )
+
+
+
+      food_df <-  if(normalize) {food_times_df() %>% cgmr::normalize_value()}
+      else food_times_df()
+
+      y_scale <- y_scale_(food_times_df(), normalize)
+      gr <- glucose_ranges_for_id(user_id, cgm_data$glucose_records)
+
+      g <- plot_compare_glucose(food_df,
+                                combine = FALSE, #input$combine,
+                                smooth = smooth,
+                                title = "Glucose Response",
+                                subtitle = sprintf("Food = %s", isolate(food_name)))
+
+      g +
+        coord_cartesian(ylim = c(y_scale[["min"]], y_scale[["max"]])) +
+        if(baseline & !normalize){
+          annotate("rect",
+                   xmin = -Inf,
+                   xmax = Inf,
+                   ymin = gr$mean - gr$sd*2,
+                   ymax = gr$mean + gr$sd*2,
+                   fill = "green",
+                   alpha = 0.3)
+        }
+
+}
+
+
+
 ## To be copied in the UI
 # mod_goddess_ui("goddess_ui_1")
 
@@ -361,60 +411,6 @@ demo_goddess <- function() {
 
   }
   shinyApp(ui, server)
-}
-
-#' @title Reactive render a CGM Goddess Plot
-#' @param user_id ID
-#' @param food_df dataframe of food times
-#' @param food_name character string for food name
-#' @param cgm_data CgmObject
-#' @return ggplot2 object wrapped in a reactive
-renderGoddessPlot <- function(user_id ,
-                              food_times_df ,
-                              food_name,
-                              cgm_data,
-                              normalize = FALSE,
-                              smooth = FALSE) {
-
-  renderPlot({
-    message("thinking of renderGoddessPlot")
-    validate(
-      need(!is.null(food_name), "Waiting on database...1"),
-      need(!is.null(food_times_df), "Problem with food times"),
-      need(!is.null(user_id),"No user selected")
-      )
-      observe(
-        cat(file = stderr(), sprintf("render plot for user_id=%s and food=%s \n",
-                                     isolate(user_id),
-                                     isolate(food_name)))
-      )
-
-
-
-      food_df <-  if(normalize) {food_times_df %>% cgmr::normalize_value()}
-      else food_times_df
-
-
-      gr <- glucose_ranges_for_id(user_id, cgm_data$glucose_records)
-
-      g <- plot_compare_glucose(food_df,
-                                combine = FALSE, #input$combine,
-                                smooth = smooth,
-                                title = "Glucose Response",
-                                subtitle = sprintf("Food = %s", isolate(food_name)))
-
-      g +
-        coord_cartesian(ylim = c(y_scale()[["min"]], y_scale()[["max"]])) +
-        if(input$baseline & !normalize){
-          annotate("rect",
-                   xmin = -Inf,
-                   xmax = Inf,
-                   ymin = gr$mean - gr$sd*2,
-                   ymax = gr$mean + gr$sd*2,
-                   fill = "green",
-                   alpha = 0.3)
-        }
-  })
 }
 
 
