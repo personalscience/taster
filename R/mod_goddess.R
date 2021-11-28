@@ -213,45 +213,15 @@ mod_goddess_server <- function(id, f = firebase_obj, cgm_data){
     )
 
     # output$food1 Render Plot----
-    output$food1 <- renderPlot({
 
-      validate(
-        need(input$food_name1, "Waiting on database...1"),
-        need(!is.null(food_df()), "Problem with food times"),
-        need(!is.null(input$user_id),"No user selected")
-      )
-      observe(
-        cat(file = stderr(), sprintf("render plot for user_id=%s and food=%s \n",
-                                     isolate(input$user_id),
-                                     isolate(input$food_name1)))
-      )
+    output$food1 <-
+      renderGoddessPlot(user_id = input$user_id,
+                                     food_times_df = food_df(),
+                                     food_name = input$food_name1,
+                                     cgm_data = cgm_data,
+                                     smooth = input$smooth,
+                                     normalize = input$normalize)
 
-
-
-      food_df <-  if(input$normalize) {food_df() %>% cgmr::normalize_value()}
-      else food_df()
-
-
-      gr <- glucose_ranges_for_id(input$user_id, cgm_data$glucose_records)
-
-      g <- plot_compare_glucose(food_df,
-                                combine = FALSE, #input$combine,
-                                smooth = input$smooth,
-                                title = "Glucose Response",
-                                subtitle = sprintf("Food = %s", isolate(input$food_name1)))
-
-      g +
-      coord_cartesian(ylim = c(y_scale()[["min"]], y_scale()[["max"]])) +
-        if(input$baseline & !input$normalize){
-          annotate("rect",
-                   xmin = -Inf,
-                   xmax = Inf,
-                   ymin = gr$mean - gr$sd*2,
-                   ymax = gr$mean + gr$sd*2,
-                    fill = "green",
-                    alpha = 0.3)
-        }
-    })
 
     # output$food_selection2 ----
     output$food_selection2 <- renderUI({
@@ -393,5 +363,58 @@ demo_goddess <- function() {
   shinyApp(ui, server)
 }
 
+#' @title Reactive render a CGM Goddess Plot
+#' @param user_id ID
+#' @param food_df dataframe of food times
+#' @param food_name character string for food name
+#' @param cgm_data CgmObject
+#' @return ggplot2 object wrapped in a reactive
+renderGoddessPlot <- function(user_id ,
+                              food_times_df ,
+                              food_name,
+                              cgm_data,
+                              normalize = FALSE,
+                              smooth = FALSE) {
+
+  renderPlot({
+    message("thinking of renderGoddessPlot")
+    validate(
+      need(!is.null(food_name), "Waiting on database...1"),
+      need(!is.null(food_times_df), "Problem with food times"),
+      need(!is.null(user_id),"No user selected")
+      )
+      observe(
+        cat(file = stderr(), sprintf("render plot for user_id=%s and food=%s \n",
+                                     isolate(user_id),
+                                     isolate(food_name)))
+      )
+
+
+
+      food_df <-  if(normalize) {food_times_df %>% cgmr::normalize_value()}
+      else food_times_df
+
+
+      gr <- glucose_ranges_for_id(user_id, cgm_data$glucose_records)
+
+      g <- plot_compare_glucose(food_df,
+                                combine = FALSE, #input$combine,
+                                smooth = smooth,
+                                title = "Glucose Response",
+                                subtitle = sprintf("Food = %s", isolate(food_name)))
+
+      g +
+        coord_cartesian(ylim = c(y_scale()[["min"]], y_scale()[["max"]])) +
+        if(input$baseline & !normalize){
+          annotate("rect",
+                   xmin = -Inf,
+                   xmax = Inf,
+                   ymin = gr$mean - gr$sd*2,
+                   ymax = gr$mean + gr$sd*2,
+                   fill = "green",
+                   alpha = 0.3)
+        }
+  })
+}
 
 
