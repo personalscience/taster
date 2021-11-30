@@ -54,6 +54,8 @@ mod_about_server <- function(id, con, user){
                                                    lubridate::with_tz(tzone="America/Los_Angeles"))))
 
 
+    mod_registration_server("reg_page", user)
+
     output$image <- renderUI({
       user$f$req_sign_in() # require sign in
       current_user <- user$f$get_signed_in()
