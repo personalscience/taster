@@ -178,9 +178,23 @@ user_id_max <- function(con) {
 }
 
 
-#' @title Make a new user
+#' @title Find Unique `user_id`, Creating One If Necessary
 #' @param con valid database connection
+#' @param user list containing information needed to set up a new user
+user_find_id <- function(con, user) {
 
-user_make_new <- function(con) {
+first_name = user$first_name
+last_name = user$last_name
+new_id = user$user_id
 
+if (is.null(new_id)) {
+  uf <- user$firebase_id
+  f_id <- tbl(con, "accounts_firebase") %>% filter(firebase_id == uf) %>% count() %>% pull(1)
+  new_id <- if(f_id == 0) user_id_max(con) + 1 else {
+    tbl(con, "accounts_firebase") %>%
+      filter(firebase_id == uf) %>%
+      pull(user_id)
+}}  # do nothing if a user_id already exists
+
+return(list(first_name = first_name, last_name = last_name, user_id = new_id, firebase_id = user$firebase_id))
 }

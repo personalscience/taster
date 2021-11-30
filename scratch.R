@@ -22,9 +22,10 @@ con <- DBI::dbConnect(
 )
 #con <- db_connection()
 
-s <- 'SELECT max("user_id") FROM user_list;'
-r <- DBI::dbGetQuery(con, s) %>% pull(max)
-r
-class(r)
+me <- list(user_id = 1234, first_name = "Richard", last_name = "Sprague", firebase_id = "769d1YgcNfTy4rQlxTuMqWR0b3t2")
+u = list(first_name = "a",
+            last_name = "z",
+            user_id = NULL,
+            firebase_id = "a1")
 
-tbl(con, "user_list") %>% filter(user_id == max(user_id, na.rm = TRUE)) %>% pull(user_id)
+user_find_id(scon, u)
