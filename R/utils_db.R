@@ -87,8 +87,8 @@ db_write_table <- function(con = db_connection(), table_name = "raw_glucose", ta
 #' @return logical does it succeed or fail?
 db_replace_user <- function(con, user) {
 
-  first_name = user$first_name
-  last_name = user$last_name
+  first_name = if(is.null(user$first_name)) "" else user$first_name
+  last_name = if(is.null(user$last_name)) "" else user$last_name
   age = user$age
   user_id = user$user_id
 

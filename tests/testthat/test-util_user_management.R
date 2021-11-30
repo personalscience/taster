@@ -24,6 +24,7 @@ test_that("db_replace_user",{
                              last_name = "new_last"))
   expect_equal(tbl(scon, "user_list") %>% filter(user_id == 1) %>% pull(first_name),
                "new_first")
+  db_replace_user(scon, list(user_id = 2))
 })
 
 test_that("user_find_id works", {

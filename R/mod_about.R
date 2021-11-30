@@ -54,6 +54,7 @@ mod_about_server <- function(id, con, user){
                                                    lubridate::with_tz(tzone="America/Los_Angeles"))))
 
 
+
     mod_registration_server("reg_page", user)
 
     output$image <- renderUI({

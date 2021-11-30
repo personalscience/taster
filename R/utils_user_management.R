@@ -183,8 +183,8 @@ user_id_max <- function(con) {
 #' @param user list containing information needed to set up a new user
 user_find_id <- function(con, user) {
 
-first_name = user$first_name
-last_name = user$last_name
+first_name = if(is.null(user$first_name)) "" else user$first_name
+last_name = if(is.null(user$last_name)) "" else user$last_name
 new_id = user$user_id
 
 if (is.null(new_id)) {

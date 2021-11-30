@@ -25,6 +25,8 @@ mod_registration_server <- function(id, user){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
 
+    con <- user$con
+
     output$questions <- renderUI({
       tagList(
         textInput(ns("first_name"), label = "First Name"),
@@ -35,7 +37,8 @@ mod_registration_server <- function(id, user){
 
     observeEvent(input$reg_save, {
       message("Thanks for saving!")
-      message(sprintf("first_name=%s, last_name=%s, age=%d\n", input$first_name, input$last_name, input$age_roughly))
+      message(sprintf("save to %s database: user_id = %d, first_name=%s, last_name=%s, age=%d\n", attributes(con)$class, user$user_id, input$first_name, input$last_name, input$age_roughly))
+
     })
 
   })
