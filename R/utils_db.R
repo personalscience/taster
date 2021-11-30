@@ -79,6 +79,29 @@ db_write_table <- function(con = db_connection(), table_name = "raw_glucose", ta
 
 }
 
+#' @title Replace User Information in Database
+#' @description Find the user matching this `user_id` and replace
+#' with the other values in `user`
+#' @param con valid database connection
+#' @param user list representing user object
+#' @return logical does it succeed or fail?
+db_replace_user <- function(con, user) {
+
+  first_name = user$first_name
+  last_name = user$last_name
+  age = user$age
+  user_id = user$user_id
+
+  s <- sprintf("UPDATE user_list SET first_name = '%s', last_name = '%s' WHERE user_id = %d",
+               first_name, last_name, user_id)
+
+  result <- DBI::dbExecute(con, s)
+
+  if (result > 0) return(TRUE) else return(FALSE)
+
+
+}
+
 
 #' @title List all products consumed by `user_id`
 #' @description Return all products consumed by this user. If `user_id==NULL` then show

@@ -18,6 +18,14 @@ test_that("max user works",{
           expect_equal(user_id_max(scon), 3)
 })
 
+test_that("db_replace_user",{
+  db_replace_user(scon, list(user_id = 1,
+                             first_name = "new_first",
+                             last_name = "new_last"))
+  expect_equal(tbl(scon, "user_list") %>% filter(user_id == 1) %>% pull(first_name),
+               "new_first")
+})
+
 test_that("user_find_id works", {
   expect_equal(user_find_id(scon, user = list(first_name = "a",
                                               last_name = "z",
