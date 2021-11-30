@@ -27,17 +27,54 @@ mod_registration_server <- function(id, user){
 
     con <- user$con
 
+    current_user <- reactive({
+      f_user <- user$f$get_signed_in()
+      validate(need(!is.null(f_user), "Not signed in"))
+      this_user <- user
+      this_user$user_id <- db_user_id_from_firebase(con,f_user$response$uid)
+
+      uid <- this_user$user_id
+
+      uname <- tbl(con, "user_list") %>% filter(user_id == uid) %>% select(first_name, last_name) %>% collect()
+      message(sprintf("uname = %s\n", uname$first_name))
+      if(nrow(uname) > 0) {
+        this_user$first_name <- first(uname$first_name)
+        this_user$last_name <- first(uname$last_name)
+      } else {
+        this_user$first_name <- "<Unknown First Name"
+        this_user$last_name <- "<Unknown Last Name"
+      }
+
+
+      this_user$user_id <- user$user_id
+      message(sprintf("Current_user():  user_id = %s, first=%s\n", this_user$user_id, this_user$first_name))
+      return(this_user)
+
+    })
+
     output$questions <- renderUI({
+      this_user <-
+      if (is.null(current_user())) {
+        list(first_name="<Unknown First Name",
+             last_name = "<Unknown Last Name",
+             user_id = 0)
+      } else current_user()
+      message(sprintf("questions: this_user = %s\n", this_user))
       tagList(
-        textInput(ns("first_name"), label = "First Name"),
-        textInput(ns("last_name"), label = "Last Name"),
+        textInput(ns("first_name"), value = this_user$first_name, label = "First Name"),
+        textInput(ns("last_name"), value = this_user$last_name, label = "Last Name"),
         numericInput(ns("age_roughly"), value = 25, label = "Your Age (roughly)")
       )
     })
 
     observeEvent(input$reg_save, {
       message("Thanks for saving!")
-      message(sprintf("save to %s database: user_id = %d, first_name=%s, last_name=%s, age=%d\n", attributes(con)$class, user$user_id, input$first_name, input$last_name, input$age_roughly))
+      message(sprintf("save to %s database: user_id = %d, first_name=%s, last_name=%s, age=%d\n",
+                      attributes(con)$class,
+                      if(is.null(current_user()$user_id)) "NULL" else current_user()$user_id,
+                      input$first_name,
+                      input$last_name,
+                      input$age_roughly))
 
     })
 
@@ -63,7 +100,7 @@ demo_reg <- function() {
 
 
     f <- firebase_setup(con)
-    user <- UserObject(con, firebase_obj = f)
+    user <- UserObject(con, user_id = 1234, firebase_obj = f)
 
     mod_registration_server("reg_ui1", user)
 

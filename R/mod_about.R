@@ -53,13 +53,21 @@ mod_about_server <- function(id, con, user){
                                                    pull(time) %>%
                                                    lubridate::with_tz(tzone="America/Los_Angeles"))))
 
+    current_user <- reactive({
+      this_user <- user$f$get_signed_in()
+      validate(need(!is.null(this_user), "Not signed in"))
+      user$user_id <- db_user_id_from_firebase(con,this_user$response$uid)
+      message(sprintf("Current_user()  user_id = %s", user$user_id))
+      return(this_user)
+
+    })
 
 
     mod_registration_server("reg_page", user)
 
     output$image <- renderUI({
       user$f$req_sign_in() # require sign in
-      current_user <- user$f$get_signed_in()
+      current_user <- current_user()
       message(sprintf("signing in: %s\n", user$full_name))
 
       tagList(
@@ -67,7 +75,7 @@ mod_about_server <- function(id, con, user){
       hr(),
       p(sprintf("Your Firebase ID = %s and Taster ID = %s",
                  current_user$response$uid,
-                 db_user_id_from_firebase(con,current_user$response$uid))),
+                 current_user()$user_id)),
       # experiments <- if(DBI::dbExistsTable(con, "experiments"))
       #   {tbl(con, "experiments") %>% collect()}
       # else NULL
