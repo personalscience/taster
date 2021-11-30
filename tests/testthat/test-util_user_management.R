@@ -1,5 +1,15 @@
 
 con <- db_connection()
+scon  <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
+
+users <- tibble(user_id = c(0,1,2,3),
+                first_name = c("a","b","c","d"))
+
+db_write_table(scon, "user_list", users)
+test_that("max user works",{
+          expect_equal(user_id_max(scon), 3)
+})
+
 
 user <- UserObject(con)
 user2 <- UserObject(con, user_id = 1234)
@@ -38,3 +48,4 @@ test_that("firebase works",{
 
 
 DBI::dbDisconnect(con)
+DBI::dbDisconnect(scon)

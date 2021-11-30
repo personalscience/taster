@@ -160,3 +160,27 @@ firebase_setup <- function(con) {
 
   return(f)
 }
+
+#' @title Max User ID
+#' @description Useful for generating a new `user_id`, this returns the current maximum.
+#' @param con valid database connection
+user_id_max <- function(con) {
+
+   # Native R code for generalizability.  I use the SQL call for speed reasons.
+   # max_id <- tbl(con, "user_list") %>%
+   #  filter(user_id == max(user_id, na.rm = TRUE)) %>%
+   #  pull(user_id)
+
+  s <- 'SELECT max("user_id") FROM user_list;'
+
+  max_id <- DBI::dbGetQuery(con, s) %>% pull(1)
+  return(max_id)
+}
+
+
+#' @title Make a new user
+#' @param con valid database connection
+
+user_make_new <- function(con) {
+
+}

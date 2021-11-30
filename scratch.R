@@ -22,12 +22,9 @@ con <- DBI::dbConnect(
 )
 #con <- db_connection()
 
-cgm_data <- cgmObject(con)
+s <- 'SELECT max("user_id") FROM user_list;'
+r <- DBI::dbGetQuery(con, s) %>% pull(max)
+r
+class(r)
 
-cgmr::food_times_df_fast(
-  glucose_df = cgm_data$glucose_records,
-  notes_df = cgm_data$notes_records,
-  user_id = 1003,
-  foodname = "Clif Bar Chocolate")
-
-
+tbl(con, "user_list") %>% filter(user_id == max(user_id, na.rm = TRUE)) %>% pull(user_id)
