@@ -25,7 +25,10 @@ mod_food_compare_ui <- function(id){
         downloadButton(ns("downloadFood_df"), label = "Download Results"),
         hr(),
         checkboxGroupInput(ns("meal_items"),label = "Meal", choices = NULL),
-        hr()
+        hr(),
+        h3("Variations"),
+        checkboxInput(ns("goodidea"), label = "Good Idea"),
+        checkboxInput(ns("exercise"), label = "Exercise")
       ),
       mainPanel(plotOutput(ns("main_plot")),
                 h3("Statistics"),
@@ -121,6 +124,14 @@ mod_food_compare_server <- function(id, cgm_data){
                                 title = "Glucose Response",
                                 subtitle = sprintf("Food = %s", isolate(input$food_name)))
 
+      if(input$goodidea) {
+        message("This is a Good Idea Plot")
+        if ("9/2-15" %in% foods_to_show$date_ch) {
+          message("and it's a meal consumed with Good Idea")
+          c <- cgmr::food_times_df(cgm_data$glucose_records,cgm_data$notes_records, foodname = "Good Idea")
+          g <- g + labs(subtitle = "with Good Idea") + geom_line(data = c, aes(x=t-20,y=value), size = 5)
+        }
+        }
       return(g)
 
     })
@@ -133,6 +144,7 @@ mod_food_compare_server <- function(id, cgm_data){
       )
       updateCheckboxGroupInput(inputId = "meal_items",
                                label = "Select Meals",
+                               selected = meals_all(),
                                choices = meals_all())
     })
 

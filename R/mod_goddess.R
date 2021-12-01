@@ -144,7 +144,7 @@ mod_goddess_server <- function(id, f = firebase_obj, cgm_data){
       }
 
       message("Current User=",isolate(current_user))
-      visible_users <- db_users_visible(con, current_user)
+      visible_users <- db_users_visible(con, 1234)  # hard-coded for Good Idea Demo
       #visible_names <- map_chr(visible_users, function(x) {db_name_for_user_id(con,user_id = x)})
 
       selectInput(
