@@ -116,7 +116,12 @@ mod_csv_upload_server <- function(id, con){
       options = list(pageLenth = 5))
 
 
-    return(glucose_df)  # This whole module returns a glucose_df
+    cgm_data <- reactiveValues(con = isolate(con),
+                               glucose_records = glucose_df,
+                               notes_records = notes_df)
+
+    return(cgm_data
+           ) # This whole module returns a reactive glucose_df
 
   })
 }
@@ -134,7 +139,7 @@ demo_csv <- function() {
   ui <- fluidPage(mod_csv_upload_ui("csv_upload_ui_1"))
   #sample_glucose <- cgmr::glucose_df_from_libreview_csv()
   server <- function(input, output, session) {
-    mod_csv_upload_server("csv_upload_ui_1", con = db_connection())
+    g <- mod_csv_upload_server("csv_upload_ui_1", con = db_connection())
 
   }
   shinyApp(ui, server)
