@@ -1,13 +1,14 @@
 Package: tastermonial
 Title: Personal Science CGM Analysis Web App
-Version: 0.0.11.1
+Version: 0.0.12.0
 Authors@R: 
     person(given = "Richard",
            family = "Sprague",
            role = c("aut", "cre"),
            email = "sprague@personalscience.com",
            comment = c(ORCID = "0000-0002-3789-5747"))
-Description: What the package does (one paragraph).
+Description: a Golem-based implementation of an R Shiny app to view,
+  explore, and analyze CGM glucose results obtained from CGM users.
 License: MIT + file LICENSE
 Imports: 
     attempt,

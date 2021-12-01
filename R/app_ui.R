@@ -11,7 +11,7 @@ app_ui <- function(request) {
     # Your application UI logic
 
 
-      navbarPage("Tastermonial", collapsible = TRUE, inverse = TRUE,
+      navbarPage("Personal Science", collapsible = TRUE, inverse = TRUE,
 
                   theme = bslib::bs_theme(bootswatch = "cerulean"),
 
@@ -41,12 +41,12 @@ app_ui <- function(request) {
                           )),
 
 
-                 tabPanel("CSV Load",
+                 tabPanel("Upload",
                           fluidPage(
-                            titlePanel("Upload your own Libreview CSV results"),
+                            titlePanel("Upload your own CGM results"),
                             mod_csv_upload_ui("fromCSV")
                           )),
-                 tabPanel("About",
+                 tabPanel("Login",
                           fluidPage(
                             #Application title
                             mod_about_ui("about_ui_1")

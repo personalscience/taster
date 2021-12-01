@@ -10,12 +10,23 @@
 mod_csv_upload_ui <- function(id){
   ns <- NS(id)
   tagList(
-    fluidRow(
-      fileInput(ns("ask_filename"), label = "Choose CSV File", accept = ".csv"),
+    fluidPage(
+      markdown("To view your own data you will need:
+
+             1. A Personal Science login account (Sign up for an account on the Login Tab)
+             2. A valid Libreview CSV file (Get from the [Libreview Site](https://www.libreview.com/auth/register))
+             3. A valid Notes file that contains information about what foods you ate and what time.
+
+             "),
+      hr(),
+      fileInput(ns("ask_filename_libreview"), label = "Choose Libreview File", accept = ".csv"),
       uiOutput(ns("ask_to_write_db")),
+      hr(),
+      fileInput(ns("ask_filename_notes"), label = "Choose Notes File", accept = ".csv"),
       plotOutput(ns("modChart")),
       hr(),
-      wellPanel(dataTableOutput(ns("glucoseTable")))
+      wellPanel(dataTableOutput(ns("glucoseTable"))),
+      wellPanel(dataTableOutput(ns("notesTable")))
     )
 
   )
@@ -29,16 +40,23 @@ mod_csv_upload_server <- function(id, con){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
 
-    # filepath ----
-    filepath<- reactive({
+    # filepath_libreview ----
+    filepath_libreview<- reactive({
       validate(
-        need(input$ask_filename,"Please select a Libreview CSV file")
+        need(input$ask_filename_libreview,"Please select a Libreview CSV file")
       )
-      input$ask_filename})
+      input$ask_filename_libreview})
+
+    # filepath_notes ----
+    filepath_notes<- reactive({
+      validate(
+        need(input$ask_filename_notes,"Please select a Notes CSV file")
+      )
+      input$ask_filename_notes})
 
 
     # glucose_df (raw)----
-    glucose_df_raw <- reactive(cgmr::libreview_csv_df(file=filepath()$datapath))
+    glucose_df_raw <- reactive(cgmr::libreview_csv_df(file=filepath_libreview()$datapath))
     glucose_df <- reactive({
       g_df <- glucose_df_raw()[["glucose_raw"]] %>%
         transmute(
@@ -53,6 +71,9 @@ mod_csv_upload_server <- function(id, con){
       return(g_df)
       }
     )
+
+    # notes_df ----
+    notes_df<- reactive(cgmr::notes_df_from_csv(file = filepath_notes()$datapath))
 
     libreview_name <- reactive(glucose_df_raw()[["name"]])
 
@@ -74,20 +95,29 @@ mod_csv_upload_server <- function(id, con){
     })
 
 
+    # input$write_db ----
     observeEvent(input$write_db, {
       if(input$write_db) {
       message(sprintf('writing to %s database now', class(con)))
-        db_write_table(con=con,
-                       table_name = "raw_glucose",
-                       table_df = glucose_df_raw()[["glucose_raw"]])
+        # db_write_table(con=con,
+        #                table_name = "raw_glucose",
+        #                table_df = glucose_df_raw()[["glucose_raw"]])
       }
     })
 
+    # output$glucoseTable ----
     output$glucoseTable <- renderDataTable(
       glucose_df(),
       options = list(pageLength = 5))
 
-    return(glucose_df)
+    # output$notesTable ----
+    output$notesTable <- renderDataTable(
+      notes_df(),
+      options = list(pageLenth = 5))
+
+
+    return(glucose_df)  # This whole module returns a glucose_df
+
   })
 }
 
