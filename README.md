@@ -2,6 +2,10 @@
 
 This is a Golem-based implementation of an R Shiny app to view, explore, and analyze CGM glucose results obtained from [Tastermonial](https://tastermonial.com) users.
 
+## About this version
+
+This is a branch of the repo intended for Good Idea.
+
 ## Requirements
 
 To host on `shinyapps.io` you will first need to create an account. I recommend using your Github account credentials. Once you have enabled your `shinyapps` account, follow the instructions to get your "token" and "secret".
