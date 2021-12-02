@@ -36,7 +36,14 @@ mod_registration_server <- function(id, user){
       this_user <- user
       this_user$user_id <- db_user_id_from_firebase(con,f_user$response$uid)
 
+      a_user <- user_find_id(con,
+                             user = list(
+                               firebase_id = f_user$response$uid)
+                             )
+      message(sprintf("a_user: user_id=%s, f_id = %s ", a_user$user_id, a_user$firebase_id))
+
       uid <- this_user$user_id
+      message(sprintf("uid = %s\n", f_user$response$uid))
 
       uname <- tbl(con, "user_list") %>% filter(user_id == uid) %>% select(first_name, last_name) %>% collect()
       message(sprintf("uname = %s\n", uname$first_name))
