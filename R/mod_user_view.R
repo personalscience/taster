@@ -55,13 +55,13 @@ mod_user_view_server <- function(id, f, csv_user_gdf, cgm_data ){
 
     # GLUCOSE_RECORDS ----
     GLUCOSE_RECORDS <- reactive({
-      message("csv records are nrows", nrow(csv_user_gdf))
+      message(sprintf("glucose csv records are nrows = %d", nrow(csv_user_gdf)))
       cgm_data$glucose_records  ## %>% rbind(csv_user_gdf)
     })
 
     # NOTES_RECORDS ----
     NOTES_RECORDS <- reactive({
-      message("csv records are nrows", nrow(csv_user_gdf))
+      message(sprintf("notes csv records are nrows = %d", nrow(csv_user_gdf)))
       extra_notes <- NULL #cgmr::notes_df_from_glucose_table(csv_user_gdf, user_id = 0)
       return(cgm_data$notes_records  %>% rbind(extra_notes))
     })

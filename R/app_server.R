@@ -16,7 +16,10 @@ app_server <- function( input, output, session ) {
   user <- UserObject(con, firebase_obj = f)
 
   mod_about_server("about_ui_1", con, user)
-  glucose_df <- reactive(mod_csv_upload_server("fromCSV", con))
+  c_list <- mod_csv_upload_server("fromCSV", con)
+  glucose_df <- c_list$glucose_records
+  observe(message(sprintf("glucose_df rows = %d", nrow(glucose_df()))))
+
   mod_food_compare_server("food_compare_plot", cgm_data)
   mod_user_view_server("user_view_ui1", f, csv_user_gdf = glucose_df(), cgm_data)
 

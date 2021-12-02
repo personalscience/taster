@@ -116,9 +116,9 @@ mod_csv_upload_server <- function(id, con){
       options = list(pageLenth = 5))
 
 
-    cgm_data <- reactiveValues(con = isolate(con),
-                               glucose_records = glucose_df,
-                               notes_records = notes_df)
+    cgm_data <- list(con = reactive(con),
+                     glucose_records = glucose_df,
+                     notes_records = notes_df)
 
     return(cgm_data
            ) # This whole module returns a reactive glucose_df
@@ -140,6 +140,7 @@ demo_csv <- function() {
   #sample_glucose <- cgmr::glucose_df_from_libreview_csv()
   server <- function(input, output, session) {
     g <- mod_csv_upload_server("csv_upload_ui_1", con = db_connection())
+   # message(sprintf("g = %s", str(g$con())))
 
   }
   shinyApp(ui, server)
