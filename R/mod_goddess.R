@@ -62,7 +62,7 @@ mod_goddess_server <- function(id, f = firebase_obj, cgm_data){
       user <- f$get_signed_in()
       if(is.null(user)) {
         message("user_id is null")
-        user_id <- input$user_id
+        user_id <- 0
         username <- "<must sign in to see name>"
       }
       else {
@@ -143,8 +143,8 @@ mod_goddess_server <- function(id, f = firebase_obj, cgm_data){
         current_user <- list(id = 0, name = "<sign in please")
       }
 
-      message("Current User=",isolate(current_user))
-      visible_users <- db_users_visible(con, current_user)
+      message("Current User=",isolate(current_user[["id"]]))
+      visible_users <- db_users_visible(con, current_user[["id"]])
       #visible_names <- map_chr(visible_users, function(x) {db_name_for_user_id(con,user_id = x)})
 
       selectInput(

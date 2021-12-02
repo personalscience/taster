@@ -15,10 +15,7 @@ mod_about_ui <- function(id){
     textOutput(ns("about_page")),
     textOutput(ns("currentDB")),
     hr(),
-    markdown("Here's what we know about you:
-
-             1. You are one of our users
-             2. You are important.
+    markdown("**Welcome to Personal Science CGM**
 
              We want to make your experience as easy as possible. You can view the site anonymously, but more features
              are available if create an account.

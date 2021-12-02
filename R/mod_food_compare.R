@@ -133,7 +133,8 @@ mod_food_compare_server <- function(id, cgm_data){
       )
       updateCheckboxGroupInput(inputId = "meal_items",
                                label = "Select Meals",
-                               choices = meals_all())
+                               choices = meals_all(),
+                               selected = meals_all())
     })
 
     # output$raw_data_table ----
