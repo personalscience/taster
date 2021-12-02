@@ -11,10 +11,18 @@ app_ui <- function(request) {
     # Your application UI logic
 
 
-      navbarPage(   title = tags$img(src = "www/PSILogo300.png",
-                                     filetype = "image/png",
-                                     width = "75%"),
-                 collapsible = TRUE, inverse = TRUE,
+            navbarPage(
+                  title = tagList(
+                    tags$title("Personal Science"),
+                    a(
+                      alt = "Personal Science",
+                      href = "#",
+                      img(src = "www/PSILogo300.png",
+                          filetype = "image/png",
+                          width = "75%"))
+                  ),
+                  collapsible = TRUE,
+                  inverse = TRUE,
 
                   theme = bslib::bs_theme(bootswatch = "cerulean"),
 
@@ -44,7 +52,7 @@ app_ui <- function(request) {
                             tabPanel("Upload",
                                      fluidPage(
                                        titlePanel("Upload your own CGM results"),
-                                       mod_csv_upload_ui("fromCSV")
+                                       mod_upload_ui("fromCSV")
                                      )),
                             tabPanel("Filter",
                                      fluidPage(

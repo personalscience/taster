@@ -7,7 +7,7 @@
 #' @noRd
 #'
 #' @importFrom shiny NS tagList
-mod_csv_upload_ui <- function(id){
+mod_upload_ui <- function(id){
   ns <- NS(id)
   tagList(
     fluidPage(
@@ -30,7 +30,7 @@ mod_csv_upload_ui <- function(id){
 #'
 #' @param con database connection
 #' @noRd
-mod_csv_upload_server <- function(id, con){
+mod_upload_server <- function(id, con){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
 
@@ -123,19 +123,19 @@ mod_csv_upload_server <- function(id, con){
 }
 
 ## To be copied in the UI
-# mod_csv_upload_ui("csv_upload_ui_1")
+# mod_upload_ui("csv_upload_ui_1")
 
 ## To be copied in the server
-# mod_csv_upload_server("csv_upload_ui_1")
+# mod_upload_server("csv_upload_ui_1")
 
 #' @description Demo for mod_filter
 #' @noRd
 #'
-demo_csv <- function() {
-  ui <- fluidPage(mod_csv_upload_ui("csv_upload_ui_1"))
+demo_upload <- function() {
+  ui <- fluidPage(mod_upload_ui("csv_upload_ui_1"))
   #sample_glucose <- cgmr::glucose_df_from_libreview_csv()
   server <- function(input, output, session) {
-    g <- mod_csv_upload_server("csv_upload_ui_1", con = db_connection())
+    g <- mod_upload_server("csv_upload_ui_1", con = db_connection())
    # message(sprintf("g = %s", str(g$con())))
 
   }
