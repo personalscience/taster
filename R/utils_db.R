@@ -55,7 +55,7 @@ db_get_table <- function(con, table_name = "glucose_records") {
 db_write_table <- function(con = db_connection(), table_name = "raw_glucose", table_df) {
 
   msg <- "Nothing to write"
-  if (DBI::dbExistsTable(con, table_name)) {
+  if (DBI::dbExistsTable(con, table_name) & table_name == "raw_glucose") {
     # check that you're not adding another copy of the same table
     sn <- first(unique(table_df$serial_number))
     if(nrow(tbl(con, table_name) %>% filter(.data[["serial_number"]] == sn) %>% collect()) > 0){
