@@ -78,7 +78,7 @@ mod_registration_server <- function(id, user){
         modified = lubridate::now()
       )
       message(sprintf("Save to accounts_firebase table %s database: %s\n",attributes(con)$class, accounts_firebase_record))
-      response <- DBI::dbAppendTable(con, "accounts_firebase", value = accounts_firebase_record)
+      response <- db_write_table(con, "accounts_firebase", table_df = accounts_firebase_record)
       message(sprintf("response from appendTable: %s\n",response))
 
       message(sprintf("Save to %s database: %s\n",attributes(con)$class, accounts_user_record))

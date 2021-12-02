@@ -62,18 +62,37 @@ db_write_table <- function(con = db_connection(), table_name = "raw_glucose", ta
       message(sprintf("Already have that serial number %s", sn))
       msg <- sprintf("Already have that serial number %s", sn)
       return(msg)
-    } else {
+    } else {  # writes to raw_glucose table because the serial number is new
       message(sprintf("writing %d rows to table %s",nrow(table_df), table_name))
       msg <- sprintf("wrote %d records to %s",nrow(table_df), table_name)
       DBI::dbAppendTable(con, table_name, table_df)
     }
 
-    } else {
-
-
-  DBI::dbWriteTable(con, table_name, table_df)
-      msg <- "Wrote to table for the first time"
-    }
+  } else
+    if (DBI::dbExistsTable(con, table_name) & table_name == "accounts_firebase") {
+      if(nrow(table_df)>1) { return("Error in accounts_firebase: rows > 1")}
+      # find the max id already in this table
+      max_id <- tbl(con, table_name) %>% pull(id) %>% max()
+      # don't write if the firebase_id already exists
+      new_table_df_fid <- table_df %>% pull("firebase_id") %>% first()
+      existing_df_fids <- tbl(con, table_name) %>% pull("firebase_id")
+      if (new_table_df_fid %in% existing_df_fids){
+        return("Firebase id already exists")
+      }
+      new_records <- bind_cols(id=seq(to = nrow(table_df) + max_id, from = max_id + 1), table_df)
+      result <- DBI::dbAppendTable(con, table_name, new_records)
+      msg <- sprintf("Wrote to table with result = %s",result)
+    }  else # something other than raw_glucose or accounts_firebase
+      if (DBI::dbExistsTable(con, table_name))  {
+        # find the max id already in this table
+        max_id <- tbl(con, table_name) %>% pull(id) %>% max()
+        new_records <- bind_cols(id=seq(to = nrow(table_df) + max_id, from = max_id + 1), table_df)
+        result <- DBI::dbAppendTable(con, table_name, new_records)
+        msg <- sprintf("Wrote to table with result = %s",result)
+      } else {
+        DBI::dbWriteTable(con, table_name, table_df)
+        msg <- "Wrote to table for the first time"
+      }
 
   return(msg)
 
