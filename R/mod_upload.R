@@ -7,17 +7,11 @@
 #' @noRd
 #'
 #' @importFrom shiny NS tagList
-mod_csv_upload_ui <- function(id){
+mod_upload_ui <- function(id){
   ns <- NS(id)
   tagList(
     fluidPage(
-      markdown("To view your own data you will need:
-
-             1. A Personal Science login account (Sign up for an account on the Login Tab)
-             2. A valid Libreview CSV file (Get from the [Libreview Site](https://www.libreview.com/auth/register))
-             3. A valid Notes file that contains information about what foods you ate and what time.
-
-             "),
+      includeMarkdown(app_sys("app/www/docs/upload_instructions.md")),
       hr(),
       fileInput(ns("ask_filename_libreview"), label = "Choose Libreview File", accept = ".csv"),
       uiOutput(ns("ask_to_write_db")),
@@ -36,7 +30,7 @@ mod_csv_upload_ui <- function(id){
 #'
 #' @param con database connection
 #' @noRd
-mod_csv_upload_server <- function(id, con){
+mod_upload_server <- function(id, con){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
 
@@ -55,8 +49,10 @@ mod_csv_upload_server <- function(id, con){
       input$ask_filename_notes})
 
 
-    # glucose_df (raw)----
+    # glucose_df : Read Raw ----
     glucose_df_raw <- reactive(cgmr::libreview_csv_df(file=filepath_libreview()$datapath))
+    libreview_name <- reactive(glucose_df_raw()[["name"]])
+
     glucose_df <- reactive({
       g_df <- glucose_df_raw()[["glucose_raw"]] %>%
         transmute(
@@ -75,7 +71,7 @@ mod_csv_upload_server <- function(id, con){
     # notes_df ----
     notes_df<- reactive(cgmr::notes_df_from_csv(file = filepath_notes()$datapath))
 
-    libreview_name <- reactive(glucose_df_raw()[["name"]])
+
 
     # output$modChart ----
     output$modChart <- renderPlot({
@@ -127,19 +123,19 @@ mod_csv_upload_server <- function(id, con){
 }
 
 ## To be copied in the UI
-# mod_csv_upload_ui("csv_upload_ui_1")
+# mod_upload_ui("csv_upload_ui_1")
 
 ## To be copied in the server
-# mod_csv_upload_server("csv_upload_ui_1")
+# mod_upload_server("csv_upload_ui_1")
 
 #' @description Demo for mod_filter
 #' @noRd
 #'
-demo_csv <- function() {
-  ui <- fluidPage(mod_csv_upload_ui("csv_upload_ui_1"))
+demo_upload <- function() {
+  ui <- fluidPage(mod_upload_ui("csv_upload_ui_1"))
   #sample_glucose <- cgmr::glucose_df_from_libreview_csv()
   server <- function(input, output, session) {
-    g <- mod_csv_upload_server("csv_upload_ui_1", con = db_connection())
+    g <- mod_upload_server("csv_upload_ui_1", con = db_connection())
    # message(sprintf("g = %s", str(g$con())))
 
   }

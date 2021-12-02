@@ -15,13 +15,7 @@ mod_about_ui <- function(id){
     textOutput(ns("about_page")),
     textOutput(ns("currentDB")),
     hr(),
-    markdown("**Welcome to Personal Science CGM**
-
-             We want to make your experience as easy as possible. You can view the site anonymously, but more features
-             are available if create an account.
-
-             Choose one of the following log-in methods to log in (or out). If this is your first time, a new
-             account will be created for you."),
+    includeMarkdown(app_sys("app/www/docs/login_instructions.md")),
     firebase::useFirebase(),
     firebase::firebaseUIContainer(),
     firebase::reqSignin(actionButton(ns("signout"), "Sign out")),

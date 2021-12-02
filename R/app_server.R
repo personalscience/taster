@@ -8,15 +8,16 @@
 app_server <- function( input, output, session ) {
   # Your application server logic
 
+  # Set up objects that are important throughout
   con <- db_connection()
-
   cgm_data <- CgmObject(con)
-
   f <- firebase_setup(con)
   user <- UserObject(con, firebase_obj = f)
 
+
   mod_about_server("about_ui_1", con, user)
-  c_list <- mod_csv_upload_server("fromCSV", con)
+
+  c_list <- mod_upload_server("fromCSV", con)
   glucose_df <- c_list$glucose_records
   observe(message(sprintf("glucose_df rows = %d", nrow(glucose_df()))))
 

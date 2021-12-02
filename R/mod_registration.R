@@ -59,7 +59,7 @@ mod_registration_server <- function(id, user){
              last_name = "<Unknown Last Name",
              user_id = 0)
       } else current_user()
-      message(sprintf("questions: this_user = %s\n", this_user))
+      message(sprintf("questions: this_user = %s\n", this_user[["full_name"]]))
       tagList(
         textInput(ns("first_name"), value = this_user$first_name, label = "First Name"),
         textInput(ns("last_name"), value = this_user$last_name, label = "Last Name"),
