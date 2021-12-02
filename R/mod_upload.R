@@ -11,13 +11,7 @@ mod_csv_upload_ui <- function(id){
   ns <- NS(id)
   tagList(
     fluidPage(
-      markdown("To view your own data you will need:
-
-             1. A Personal Science login account (Sign up for an account on the Login Tab)
-             2. A valid Libreview CSV file (Get from the [Libreview Site](https://www.libreview.com/auth/register))
-             3. A valid Notes file that contains information about what foods you ate and what time.
-
-             "),
+      includeMarkdown(app_sys("app/www/docs/upload_instructions.md")),
       hr(),
       fileInput(ns("ask_filename_libreview"), label = "Choose Libreview File", accept = ".csv"),
       uiOutput(ns("ask_to_write_db")),
@@ -55,8 +49,10 @@ mod_csv_upload_server <- function(id, con){
       input$ask_filename_notes})
 
 
-    # glucose_df (raw)----
+    # glucose_df : Read Raw ----
     glucose_df_raw <- reactive(cgmr::libreview_csv_df(file=filepath_libreview()$datapath))
+    libreview_name <- reactive(glucose_df_raw()[["name"]])
+
     glucose_df <- reactive({
       g_df <- glucose_df_raw()[["glucose_raw"]] %>%
         transmute(
@@ -75,7 +71,7 @@ mod_csv_upload_server <- function(id, con){
     # notes_df ----
     notes_df<- reactive(cgmr::notes_df_from_csv(file = filepath_notes()$datapath))
 
-    libreview_name <- reactive(glucose_df_raw()[["name"]])
+
 
     # output$modChart ----
     output$modChart <- renderPlot({

@@ -19,6 +19,11 @@ app_ui <- function(request) {
                   theme = bslib::bs_theme(bootswatch = "cerulean"),
 
 
+                 tabPanel("Login",
+                          fluidPage(
+                            #Application title
+                            mod_about_ui("about_ui_1")
+                          )),
                  tabPanel("Compare",
                           fluidPage(
                             h2("Compare Experiments"),
@@ -50,13 +55,8 @@ app_ui <- function(request) {
                                        mod_user_view_ui("user_view_ui1")
 
                                      ))
-                            ),
-                 tabPanel("Login",
-                          fluidPage(
-                            #Application title
-                            mod_about_ui("about_ui_1")
-                          )
-                 )
+                            )
+
 
       )
   )
