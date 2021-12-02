@@ -11,7 +11,10 @@ app_ui <- function(request) {
     # Your application UI logic
 
 
-      navbarPage("Personal Science", collapsible = TRUE, inverse = TRUE,
+      navbarPage(   title = tags$img(src = "www/PSILogo300.png",
+                                     filetype = "image/png",
+                                     width = "75%"),
+                 collapsible = TRUE, inverse = TRUE,
 
                   theme = bslib::bs_theme(bootswatch = "cerulean"),
 
@@ -25,15 +28,6 @@ app_ui <- function(request) {
                           fluidPage(
                             mod_food_compare_ui("food_compare_plot")
                           )),
-                 tabPanel("User View",
-                          fluidPage(
-                            mod_user_view_ui("user_view_ui1")
-
-                          )),
-                 tabPanel("Filter",
-                          fluidPage(
-                            mod_filter_results_ui("filter_results_ui_1")
-                          )),
                  tabPanel("Analysis",
                           fluidPage(
                             mod_analysis_ui("analysis_ui_1")
@@ -41,11 +35,22 @@ app_ui <- function(request) {
                           )),
 
 
-                 tabPanel("Upload",
-                          fluidPage(
-                            titlePanel("Upload your own CGM results"),
-                            mod_csv_upload_ui("fromCSV")
-                          )),
+                 navbarMenu("Upload",
+                            tabPanel("Upload",
+                                     fluidPage(
+                                       titlePanel("Upload your own CGM results"),
+                                       mod_csv_upload_ui("fromCSV")
+                                     )),
+                            tabPanel("Filter",
+                                     fluidPage(
+                                       mod_filter_results_ui("filter_results_ui_1")
+                                     )),
+                            tabPanel("User View",
+                                     fluidPage(
+                                       mod_user_view_ui("user_view_ui1")
+
+                                     ))
+                            ),
                  tabPanel("Login",
                           fluidPage(
                             #Application title
