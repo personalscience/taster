@@ -179,22 +179,45 @@ user_id_max <- function(con) {
 
 
 #' @title Find Unique `user_id`, Creating One If Necessary
+#' @description Intended to be called after someone has firebase credentials, either
+#' because they are an existing user who is logging in again, or because they are a brand new
+#' user. Either way, this function will return a list that can uniquely identify what
+#' we know about that user.  Besides a unique `user_id`, the list will include items
+#' for the first name, last name, firebase id, and other information.
+#'
+#' Ultimately this function should return a user object.
 #' @param con valid database connection
 #' @param user list containing information needed to set up a new user
+#' @examples
+#' con <- db_connection()
+#' me <- list(user_id = 1234, first_name = "Richard", last_name = "Sprague", firebase_id = "769d1YgcNfTy4rQlxTuMqWR0b3t2")
+#' u = list(first_name = "a",
+#'          last_name = "z",
+#'          user_id = NULL,
+#'          firebase_id = "a1")
+#'
+#' user_find_id(con, u)
+#' @return list that can uniquely identify the user, including new `user_id` if necessary
 user_find_id <- function(con, user) {
 
-first_name = if(is.null(user$first_name)) "" else user$first_name
-last_name = if(is.null(user$last_name)) "" else user$last_name
-new_id = user$user_id
+  if (!is.list(user)) {
+    return(NULL)
+  }
+  if (is.null(user$firebase_id)){
+    return(NULL)
+  }
+  first_name = if(is.null(user$first_name)) "" else user$first_name
+  last_name = if(is.null(user$last_name)) "" else user$last_name
+  new_id = user$user_id
 
-if (is.null(new_id)) {
-  uf <- user$firebase_id
-  f_id <- tbl(con, "accounts_firebase") %>% filter(firebase_id == uf) %>% count() %>% pull(1)
-  new_id <- if(f_id == 0) user_id_max(con) + 1 else {
-    tbl(con, "accounts_firebase") %>%
-      filter(firebase_id == uf) %>%
-      pull(user_id)
-}}  # do nothing if a user_id already exists
+  if (is.null(new_id)) {
+    uf <- user$firebase_id
+    f_id <- tbl(con, "accounts_firebase") %>% filter(firebase_id == uf) %>% count() %>% pull(1)
+    new_id <- if(f_id == 0) user_id_max(con) + 1 else {
+      tbl(con, "accounts_firebase") %>%
+        filter(firebase_id == uf) %>%
+        pull(user_id)
+    }}  # do nothing if a user_id already exists
 
-return(list(first_name = first_name, last_name = last_name, user_id = new_id, firebase_id = user$firebase_id))
+  return(list(first_name = first_name, last_name = last_name, user_id = new_id, firebase_id = user$firebase_id))
 }

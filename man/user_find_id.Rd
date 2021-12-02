@@ -11,6 +11,25 @@ user_find_id(con, user)
 
 \item{user}{list containing information needed to set up a new user}
 }
+\value{
+list that can uniquely identify the user, including new `user_id` if necessary
+}
 \description{
-Find Unique `user_id`, Creating One If Necessary
+Intended to be called after someone has firebase credentials, either
+because they are an existing user who is logging in again, or because they are a brand new
+user. Either way, this function will return a list that can uniquely identify what
+we know about that user.  Besides a unique `user_id`, the list will include items
+for the first name, last name, firebase id, and other information.
+
+Ultimately this function should return a user object.
+}
+\examples{
+con <- db_connection()
+me <- list(user_id = 1234, first_name = "Richard", last_name = "Sprague", firebase_id = "769d1YgcNfTy4rQlxTuMqWR0b3t2")
+u = list(first_name = "a",
+         last_name = "z",
+         user_id = NULL,
+         firebase_id = "a1")
+
+user_find_id(con, u)
 }

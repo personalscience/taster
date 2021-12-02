@@ -7,9 +7,9 @@ users <- tibble(user_id = c(0,1,2,3),
                 last_name = c("z","y","x","w"))
 
 fbase <- tibble(user_id = c(0,1,7,8),
-                first_name = c("a","b","j","k"),
+                first_name = c("a","b","j",NA_character_),
                 last_name = c("z","y","r","s"),
-                firebase_id = c("a1","b1", NA, NA))
+                firebase_id = c("a1","b1", NA_character_, "d1"))
 
 db_write_table(scon, "user_list", users)
 db_write_table(scon, "accounts_firebase", fbase)
@@ -28,11 +28,23 @@ test_that("db_replace_user",{
 })
 
 test_that("user_find_id works", {
+  expect_equal(user_find_id(scon, NULL), NULL)
   expect_equal(user_find_id(scon, user = list(first_name = "a",
                                               last_name = "z",
                                               user_id = NULL,
                                               firebase_id = "a1")),
                list(first_name = "a", last_name = "z", user_id = 0, firebase_id = "a1"))
+  expect_equal(user_find_id(scon, user = list(last_name = "s",
+                                              firebase_id = "d1",
+                                              user_id = 8)),
+               list(first_name = "", last_name = "s", user_id = 8, firebase_id = "d1"))
+  expect_equal(user_find_id(scon, user = list(user_id = 0,
+                                              firebase_id = NULL)),
+               NULL)
+  expect_mapequal(user_find_id(scon, user = list(first_name = "Joe",
+                                              firebase_id = "new_fb_id" )),
+               list(first_name = "Joe", last_name = "", firebase_id = "new_fb_id", user_id = 4))
+
   expect_equal(user_find_id(con, user = list(first_name = "a",
                                              last_name = "z",
                                              user_id = NULL,

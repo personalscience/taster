@@ -13,7 +13,10 @@ mod_registration_ui <- function(id){
     h1("Registration page"),
     p("Answers to all questions are optional"),
     uiOutput(ns("questions")),
-    actionButton(ns("reg_save"), label = "Save")
+    actionButton(ns("reg_save"), label = "Save"),
+    firebase::useFirebase(),
+    firebase::firebaseUIContainer(),
+    firebase::reqSignin(actionButton(ns("signout"), "Sign out"))
 
   )
 }
@@ -101,6 +104,7 @@ demo_reg <- function() {
 
     f <- firebase_setup(con)
     user <- UserObject(con, user_id = 1234, firebase_obj = f)
+    message(sprintf("demo_reg user is %s and id = %s", user$full_name, user$firebase_id))
 
     mod_registration_server("reg_ui1", user)
 
