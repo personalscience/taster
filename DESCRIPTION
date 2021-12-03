@@ -27,6 +27,7 @@ Imports:
     htmltools,
     lubridate,
     magrittr,
+    markdown,
     pkgload,
     processx,
     purrr,

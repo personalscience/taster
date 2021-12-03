@@ -22,6 +22,7 @@ RUN Rscript -e 'remotes::install_version("config",upgrade="never", version = "0.
 RUN Rscript -e 'remotes::install_version("tidyr",upgrade="never", version = "1.1.4")'
 RUN Rscript -e 'remotes::install_version("RPostgres",upgrade="never", version = "1.4.1")'
 RUN Rscript -e 'remotes::install_version("readr",upgrade="never", version = "2.0.2")'
+RUN Rscript -e 'remotes::install_version("markdown",upgrade="never", version = "1.1")'
 RUN Rscript -e 'remotes::install_version("golem",upgrade="never", version = "0.3.1")'
 RUN Rscript -e 'remotes::install_version("ggplot2",upgrade="never", version = "3.3.5")'
 RUN Rscript -e 'remotes::install_version("DT",upgrade="never", version = "0.19")'
