@@ -36,6 +36,8 @@ mod_registration_server <- function(id, user){
       f_user <- user$f$get_signed_in()
       validate(need(!is.null(f_user), "Not signed in"))
 
+      #tbl(con, "accounts_user")
+
       a_user <- user_find_id(con,
                              user = list(
                                firebase_id = f_user$response$uid)
@@ -53,7 +55,7 @@ mod_registration_server <- function(id, user){
              last_name = "<Unknown Last Name",
              user_id = 0)
       } else current_user()
-      message(sprintf("questions: this_user = %s\n", this_user[["full_name"]]))
+      message(sprintf("questions: this_user = %s\n", this_user))
       tagList(
         textInput(ns("first_name"), value = this_user$first_name, label = "First Name"),
         textInput(ns("last_name"), value = this_user$last_name, label = "Last Name"),

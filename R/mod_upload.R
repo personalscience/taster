@@ -13,10 +13,11 @@ mod_upload_ui <- function(id){
     fluidPage(
       includeMarkdown(app_sys("app/www/docs/upload_instructions.md")),
       hr(),
-      fileInput(ns("ask_filename_libreview"), label = "Choose Libreview File", accept = ".csv"),
+      fluidRow(fileInput(ns("ask_filename_libreview"), label = "Choose Libreview File", accept = ".csv"),
+               fileInput(ns("ask_filename_notes"), label = "Choose Notes File", accept = ".csv")),
       uiOutput(ns("ask_to_write_db")),
       hr(),
-      fileInput(ns("ask_filename_notes"), label = "Choose Notes File", accept = ".csv"),
+      fileInput(ns("ask_filename_nutrisense"), label = "Choose Nutrisense File", accept = ".csv"),
       plotOutput(ns("modChart")),
       hr(),
       wellPanel(dataTableOutput(ns("glucoseTable"))),
@@ -39,14 +40,24 @@ mod_upload_server <- function(id, con){
       validate(
         need(input$ask_filename_libreview,"Please select a Libreview CSV file")
       )
-      input$ask_filename_libreview})
+      input$ask_filename_libreview}
+      )
 
     # filepath_notes ----
     filepath_notes<- reactive({
       validate(
         need(input$ask_filename_notes,"Please select a Notes CSV file")
       )
-      input$ask_filename_notes})
+      input$ask_filename_notes}
+      )
+
+    # filepath_nutrisense ----
+    filepath_nutrisense<- reactive({
+      validate(
+        need(input$ask_filename_nutrisense,"Please select a Nutrisense CSV file")
+      )
+      input$ask_filename_nutrisense}
+      )
 
 
     # glucose_df : Read Raw ----
@@ -69,8 +80,13 @@ mod_upload_server <- function(id, con){
     )
 
     # notes_df ----
-    notes_df<- reactive(cgmr::notes_df_from_csv(file = filepath_notes()$datapath))
+    notes_df_csv<- reactive(cgmr::notes_df_from_csv(file = filepath_notes()$datapath))
+    notes_df_libreview <- reactive(cgmr::notes_df_from_glucose_table(glucose_df()))
 
+
+    # nutrisense_df ----
+    glucose_df_nutrisense_raw <-
+      reactive(cgmr::glucose_df_from_nutrisense(filepath = filepath_nutrisense()$datapath))
 
 
     # output$modChart ----
@@ -94,7 +110,7 @@ mod_upload_server <- function(id, con){
     # input$write_db ----
     observeEvent(input$write_db, {
       if(input$write_db) {
-      message(sprintf('writing to %s database now', class(con)))
+      message(sprintf('Thinking about writing to %s database now', class(con)))
         # db_write_table(con=con,
         #                table_name = "raw_glucose",
         #                table_df = glucose_df_raw()[["glucose_raw"]])
@@ -102,19 +118,24 @@ mod_upload_server <- function(id, con){
     })
 
     # output$glucoseTable ----
-    output$glucoseTable <- renderDataTable(
-      glucose_df(),
-      options = list(pageLength = 5))
+    output$glucoseTable <- renderDataTable({
+      if(is.null(isolate(notes_df_libreview()))) {
+        message("No notes data in libreview csv")
+      }
+      glucose_df()
+    },
+    options = list(pageLength = 5)
+    )
 
     # output$notesTable ----
     output$notesTable <- renderDataTable(
-      notes_df(),
+      notes_df_csv(),
       options = list(pageLenth = 5))
 
 
     cgm_data <- list(con = reactive(con),
                      glucose_records = glucose_df,
-                     notes_records = notes_df)
+                     notes_records = notes_df_csv)
 
     return(cgm_data
            ) # This whole module returns a reactive glucose_df

@@ -9,10 +9,11 @@ users <- tibble(user_id = c(0,1,2,3),
 fbase <- tibble(user_id = c(0,1,7,8),
                 first_name = c("a","b","j",NA_character_),
                 last_name = c("z","y","r","s"),
-                firebase_id = c("a1","b1", NA_character_, "d1"))
+                firebase_id = c("a1","b1", "c1", "d1"))
 
 db_write_table(scon, "user_list", users)
 db_write_table(scon, "accounts_firebase", fbase)
+db_write_table(scon, "accounts_user", users)
 
 test_that("max user works",{
           expect_equal(user_id_max(scon), 3)
@@ -29,15 +30,19 @@ test_that("db_replace_user",{
 
 test_that("user_find_id works", {
   expect_equal(user_find_id(scon, NULL), NULL)
-  expect_equal(user_find_id(scon, user = list(first_name = "a",
-                                              last_name = "z",
-                                              user_id = NULL,
+  expect_equal(user_find_id(scon, list(user_id = 1, firebase_id = NULL)),
+               NULL)
+
+  expect_equal(user_find_id(scon, user = list(first_name = "a",  # I know your firebase_id, but not your user_id
+
                                               firebase_id = "a1")),
                list(first_name = "a", last_name = "z", user_id = 0, firebase_id = "a1"))
-  expect_equal(user_find_id(scon, user = list(last_name = "s",
-                                              firebase_id = "d1",
-                                              user_id = 8)),
-               list(first_name = "", last_name = "s", user_id = 8, firebase_id = "d1"))
+
+
+  expect_equal(user_find_id(scon, user = list(last_name = "s",  # your first time using this firebase_id; you need a new user_id
+                                              firebase_id = "e1")),
+               list(first_name = "", last_name = "s", user_id = 4, firebase_id = "e1"))
+
   expect_equal(user_find_id(scon, user = list(user_id = 0,
                                               firebase_id = NULL)),
                NULL)
@@ -50,6 +55,8 @@ test_that("user_find_id works", {
                                              user_id = NULL,
                                              firebase_id = "a1"))$user_id,
                user_id_max(con) + 1)
+  expect_equal(user_find_id(con, user = list(user_id = 1234)),
+               NULL)
 
 })
 

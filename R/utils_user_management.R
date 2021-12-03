@@ -206,18 +206,29 @@ user_find_id <- function(con, user) {
   if (is.null(user$firebase_id)){
     return(NULL)
   }
+
   first_name = if(is.null(user$first_name)) "" else user$first_name
   last_name = if(is.null(user$last_name)) "" else user$last_name
-  new_id = user$user_id
 
-  if (is.null(new_id)) {
+
+  if (is.null(user$user_id)) { # no user_id for user
     uf <- user$firebase_id
     f_id <- tbl(con, "accounts_firebase") %>% filter(firebase_id == uf) %>% count() %>% pull(1)
-    new_id <- if(f_id == 0) user_id_max(con) + 1 else {
+    user$user_id <- if(f_id == 0) user_id_max(con) + 1 else {
       tbl(con, "accounts_firebase") %>%
         filter(firebase_id == uf) %>%
         pull(user_id)
-    }}  # do nothing if a user_id already exists
+    }}
+  #  at this point, user$user_id exists in accounts_firebase
+  # but it's possible user$user_id is a new id and doesn't exist in accounts_users
+  ID <- user$user_id
+      user_record <- tbl(con, "accounts_user") %>% filter(user_id == ID) %>% collect()
+      if(nrow(user_record)>0) { # it's a new user_id so there's no record of it yet
+      first_name <- if(is.null(user_record$first_name)) "" else user_record$first_name
+      last_name <- if(is.null(user_record$last_name)) "" else user_record$last_name
+      }
+      #message(sprintf("user_find_id found user_id = %s user_record = %s\n",user$user_id, user_record))
 
-  return(list(first_name = first_name, last_name = last_name, user_id = new_id, firebase_id = user$firebase_id))
+
+  return(list(first_name = first_name, last_name = last_name, user_id = user$user_id, firebase_id = user$firebase_id))
 }
