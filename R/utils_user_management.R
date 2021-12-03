@@ -206,6 +206,7 @@ user_find_id <- function(con, user) {
   if (is.null(user$firebase_id)){
     return(NULL)
   }
+
   first_name = if(is.null(user$first_name)) "" else user$first_name
   last_name = if(is.null(user$last_name)) "" else user$last_name
   new_id = user$user_id
@@ -217,7 +218,10 @@ user_find_id <- function(con, user) {
       tbl(con, "accounts_firebase") %>%
         filter(firebase_id == uf) %>%
         pull(user_id)
-    }}  # do nothing if a user_id already exists
+    }} else {# do nothing if a user_id already exists
+      user_record <- tbl(con, "accounts_user") %>% filter(user_id == new_id) %>% collect()
+      message(sprintf("user_find_id found user_id = %s user_record = %s\n",new_id, user_record))
+    }
 
   return(list(first_name = first_name, last_name = last_name, user_id = new_id, firebase_id = user$firebase_id))
 }

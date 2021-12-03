@@ -13,6 +13,7 @@ fbase <- tibble(user_id = c(0,1,7,8),
 
 db_write_table(scon, "user_list", users)
 db_write_table(scon, "accounts_firebase", fbase)
+db_write_table(scon, "accounts_user", users)
 
 test_that("max user works",{
           expect_equal(user_id_max(scon), 3)
@@ -50,6 +51,8 @@ test_that("user_find_id works", {
                                              user_id = NULL,
                                              firebase_id = "a1"))$user_id,
                user_id_max(con) + 1)
+  expect_equal(user_find_id(con, user = list(user_id = 1234)),
+               NULL)
 
 })
 
