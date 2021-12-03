@@ -28,7 +28,7 @@ RUN Rscript -e 'remotes::install_version("DT",upgrade="never", version = "0.19")
 RUN Rscript -e 'remotes::install_version("DescTools",upgrade="never", version = "0.99.43")'
 RUN Rscript -e 'remotes::install_version("dbplyr",upgrade="never", version = "2.1.1")'
 RUN Rscript -e 'remotes::install_github("JohnCoene/firebase@76fdd7dfc585bfcdb0e9d54d621ca4b2a87a1ff4")'
-RUN Rscript -e 'remotes::install_github("personalscience/cgmr@923772f946d74bd022f4c9fb3323f1afe2b1b317")'
+RUN Rscript -e 'remotes::install_github("personalscience/cgmr@dd97a6cc06e0a21808c24cad2aff20322260ff0f")'
 RUN mkdir /build_zone
 ADD . /build_zone
 WORKDIR /build_zone
