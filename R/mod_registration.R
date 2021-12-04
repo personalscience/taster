@@ -63,6 +63,7 @@ mod_registration_server <- function(id, user){
       )
     })
 
+    # save ----
     observeEvent(input$reg_save, {
       message("Thanks for saving!")
       this_user <- current_user()
@@ -80,8 +81,10 @@ mod_registration_server <- function(id, user){
         modified = lubridate::now()
       )
       message(sprintf("Save to accounts_firebase table %s database: %s\n",attributes(con)$class, accounts_firebase_record))
-      response <- db_write_table(con, "accounts_firebase", table_df = accounts_firebase_record)
-      message(sprintf("response from appendTable: %s\n",response))
+      message(sprintf("Save to accounts_firebase table %s database: %s\n",attributes(con)$class, accounts_user_record))
+      response_fb <- db_write_table(con, "accounts_firebase", table_df = accounts_firebase_record)
+      response_u <- db_replace_records( con, this_user$user_id, "accounts_user", accounts_user_record)
+      message(sprintf("response from appendTable: %s and replace_records: %s\n",response_fb, response_u))
 
       message(sprintf("Save to %s database: %s\n",attributes(con)$class, accounts_user_record))
       # message(sprintf("save to %s database: user_id = %d, first_name=%s, last_name=%s, age=%d\n",

@@ -11,6 +11,11 @@ sample_table <- tibble(id = c(1,2,3),
                        user_id = c(7,8,9),
                        firebase_id = c("x","y","z"))
 
+new_user_records <- tibble(# id = c(1),
+                           name = c("m"),
+                           user_id = c(7),
+                           firebase_id = c("x"))
+
 
 test_that("First Write works", {
   expect_equal(db_write_table(scon, table_name = "raw_glucose", glucose_data1$glucose_raw ), "Wrote to table for the first time")
@@ -29,8 +34,31 @@ test_that("First Write works", {
   expect_equal(db_write_table(scon, table_name = "raw_glucose", head(glucose_data2)$glucose_raw), "wrote 31737 records to raw_glucose")
 })
 
-print(tbl(scon, "sample_table"))
 
+# delete 2 records that match the `user_id` vector  and replace them with `new_user_records`
+test_that("Replace Records works",{
+  expect_equal(db_replace_records(scon, user_id = c(1,2,7,9), "sample_table", new_user_records),
+               2) # found 2 records to drop
+  expect_equal(tbl(scon, "sample_table") %>% filter(user_id == 7) %>% pull(name),
+               "m")
+})
+test_that("Replace Records: user_id = NULL",{
+  expect_equal(db_replace_records(scon, user_id = NULL, "sample_table", new_user_records),
+               0)
+})
+
+test_that("Replace Records: no such user id",{
+  new_user_records$user_id <- 21
+  new_user_records$name <- "newname"
+  expect_equal(db_replace_records(scon, user_id = c(21), "sample_table", new_user_records),
+               0) # no such user_id
+})
+
+test_that("Replace Records: correct new data in sample table",{
+  expect_equal(tbl(scon, "sample_table") %>% pull(name), c("b","x","y","m","newname"))
+})
+
+print(tbl(scon, "sample_table"))
 
 test_that("get_table",{
   expect_equal(db_get_table(scon, table_name = "non-existent_table"),NULL)

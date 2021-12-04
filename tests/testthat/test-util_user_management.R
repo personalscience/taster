@@ -26,6 +26,8 @@ test_that("db_replace_user",{
   expect_equal(tbl(scon, "user_list") %>% filter(user_id == 1) %>% pull(first_name),
                "new_first")
   db_replace_user(scon, list(user_id = 2))
+  expect_equal(tbl(scon, "user_list") %>% filter(user_id == 2) %>% collect(),
+               tibble(user_id = 2, first_name = "", last_name = ""))
 })
 
 test_that("user_find_id works", {
