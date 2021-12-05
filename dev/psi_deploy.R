@@ -18,6 +18,8 @@ devtools::install_github("personalscience/cgmr",
 
 #rsconnect::deployApp()
 
-golem::add_dockerfile(repos = c(REPO_NAME = 'https://packagemanager.rstudio.com/cran/__linux__/focal/2021-11-09'))
+# works https://packagemanager.rstudio.com/cran/__linux__/focal/2021-11-09
+# https://packagemanager.rstudio.com/all/__linux__/focal/2021-12-01+Y3JhbiwyOjQ1MjYyMTU7Qjk2N0NENjk
+golem::add_dockerfile(repos = c(REPO_NAME = 'https://packagemanager.rstudio.com/all/__linux__/focal/2021-12-01+Y3JhbiwyOjQ1MjYyMTU7Qjk2N0NENjk'))
 
 remotes::install_github("JohnCoene/firebase")
