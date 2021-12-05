@@ -13,7 +13,10 @@ mod_registration_ui <- function(id){
     h1("Registration page"),
     p("Answers to all questions are optional"),
     uiOutput(ns("questions")),
-    actionButton(ns("reg_save"), label = "Save")
+    actionButton(ns("reg_save"), label = "Save"),
+    firebase::useFirebase(),
+    firebase::firebaseUIContainer(),
+    firebase::reqSignin(actionButton(ns("signout"), "Sign out"))
 
   )
 }
@@ -27,28 +30,19 @@ mod_registration_server <- function(id, user){
 
     con <- user$con
 
+    # current_user() ----
+    # return what we know about a user with valid firebase credentials
     current_user <- reactive({
       f_user <- user$f$get_signed_in()
       validate(need(!is.null(f_user), "Not signed in"))
-      this_user <- user
-      this_user$user_id <- db_user_id_from_firebase(con,f_user$response$uid)
 
-      uid <- this_user$user_id
+      a_user <- user_find_id(con,
+                             user = list(
+                               firebase_id = f_user$response$uid)
+                             )
+      message(sprintf("a_user: user_id=%s, f_id = %s ", a_user$user_id, a_user$firebase_id))
 
-      uname <- tbl(con, "user_list") %>% filter(user_id == uid) %>% select(first_name, last_name) %>% collect()
-      message(sprintf("uname = %s\n", uname$first_name))
-      if(nrow(uname) > 0) {
-        this_user$first_name <- first(uname$first_name)
-        this_user$last_name <- first(uname$last_name)
-      } else {
-        this_user$first_name <- "<Unknown First Name"
-        this_user$last_name <- "<Unknown Last Name"
-      }
-
-
-      this_user$user_id <- user$user_id
-      message(sprintf("Current_user():  user_id = %s, first=%s\n", this_user$user_id, this_user$first_name))
-      return(this_user)
+      return(a_user)
 
     })
 
@@ -59,7 +53,7 @@ mod_registration_server <- function(id, user){
              last_name = "<Unknown Last Name",
              user_id = 0)
       } else current_user()
-      message(sprintf("questions: this_user = %s\n", this_user[["full_name"]]))
+      message(sprintf("questions: this_user = %s\n", this_user))
       tagList(
         textInput(ns("first_name"), value = this_user$first_name, label = "First Name"),
         textInput(ns("last_name"), value = this_user$last_name, label = "Last Name"),
@@ -67,14 +61,31 @@ mod_registration_server <- function(id, user){
       )
     })
 
+    # save ----
     observeEvent(input$reg_save, {
       message("Thanks for saving!")
-      message(sprintf("save to %s database: user_id = %d, first_name=%s, last_name=%s, age=%d\n",
-                      attributes(con)$class,
-                      if(is.null(current_user()$user_id)) "NULL" else current_user()$user_id,
-                      input$first_name,
-                      input$last_name,
-                      input$age_roughly))
+      this_user <- current_user()
+      accounts_firebase_record <- tibble(
+        user_id = this_user$user_id,
+        firebase_id = this_user$firebase_id,
+        created = lubridate::now(),
+        modified = lubridate::now()
+      )
+      accounts_user_record <- tibble(
+        user_id = this_user$user_id,
+        first_name = input$first_name,
+        last_name = input$last_name,
+        privilege = "user",
+        modified = lubridate::now()
+      )
+      message(sprintf("Save to accounts_firebase table %s database: %s\n",attributes(con)$class, accounts_firebase_record))
+      message(sprintf("Save to accounts_firebase table %s database: %s\n",attributes(con)$class, accounts_user_record))
+      response_fb <- db_write_table(con, "accounts_firebase", table_df = accounts_firebase_record)
+      response_u <- db_replace_records( con, this_user$user_id, "accounts_user", accounts_user_record)
+      message(sprintf("response from appendTable: %s and replace_records: %s\n",response_fb, response_u))
+
+      message(sprintf("Save to %s database: %s\n",attributes(con)$class, accounts_user_record))
+
 
     })
 
@@ -101,6 +112,7 @@ demo_reg <- function() {
 
     f <- firebase_setup(con)
     user <- UserObject(con, user_id = 1234, firebase_obj = f)
+    message(sprintf("demo_reg user is %s and id = %s", user$full_name, user$firebase_id))
 
     mod_registration_server("reg_ui1", user)
 

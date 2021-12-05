@@ -55,25 +55,44 @@ db_get_table <- function(con, table_name = "glucose_records") {
 db_write_table <- function(con = db_connection(), table_name = "raw_glucose", table_df) {
 
   msg <- "Nothing to write"
-  if (DBI::dbExistsTable(con, table_name)) {
+  if (DBI::dbExistsTable(con, table_name) & table_name == "raw_glucose") {
     # check that you're not adding another copy of the same table
     sn <- first(unique(table_df$serial_number))
     if(nrow(tbl(con, table_name) %>% filter(.data[["serial_number"]] == sn) %>% collect()) > 0){
       message(sprintf("Already have that serial number %s", sn))
       msg <- sprintf("Already have that serial number %s", sn)
       return(msg)
-    } else {
+    } else {  # writes to raw_glucose table because the serial number is new
       message(sprintf("writing %d rows to table %s",nrow(table_df), table_name))
       msg <- sprintf("wrote %d records to %s",nrow(table_df), table_name)
       DBI::dbAppendTable(con, table_name, table_df)
     }
 
-    } else {
-
-
-  DBI::dbWriteTable(con, table_name, table_df)
-      msg <- "Wrote to table for the first time"
-    }
+  } else
+    if (DBI::dbExistsTable(con, table_name) & table_name == "accounts_firebase") {
+      if(nrow(table_df)>1) { return("Error in accounts_firebase: rows > 1")}
+      # find the max id already in this table
+      max_id <- tbl(con, table_name) %>% pull(id) %>% max()
+      # don't write if the firebase_id already exists
+      new_table_df_fid <- table_df %>% pull("firebase_id") %>% first()
+      existing_df_fids <- tbl(con, table_name) %>% pull("firebase_id")
+      if (new_table_df_fid %in% existing_df_fids){
+        return("Firebase id already exists")
+      }
+      new_records <- bind_cols(id=seq(to = nrow(table_df) + max_id, from = max_id + 1), table_df)
+      result <- DBI::dbAppendTable(con, table_name, new_records)
+      msg <- sprintf("Wrote to table with result = %s",result)
+    }  else # something other than raw_glucose or accounts_firebase
+      if (DBI::dbExistsTable(con, table_name))  {
+        # find the max id already in this table
+        max_id <- tbl(con, table_name) %>% pull(id) %>% max()
+        new_records <- bind_cols(id=seq(to = nrow(table_df) + max_id, from = max_id + 1), table_df)
+        result <- DBI::dbAppendTable(con, table_name, new_records)
+        msg <- sprintf("Wrote to table with result = %s",result)
+      } else {
+        DBI::dbWriteTable(con, table_name, table_df)
+        msg <- "Wrote to table for the first time"
+      }
 
   return(msg)
 
@@ -100,6 +119,36 @@ db_replace_user <- function(con, user) {
   if (result > 0) return(TRUE) else return(FALSE)
 
 
+}
+
+#' @title Replace All Records in `table_name` that match `user_id`
+#' @param con valid database connection
+#' @param user_id user ID
+#' @param table_name character string name of a database table
+#' @param table_df dataframe of records to substitute
+#' @return integer number of rows affected
+db_replace_records <- function( con, user_id, table_name, table_df) {
+
+  if(is.null(user_id)) {return(0)}
+
+
+  sql_drop <- glue::glue_sql('
+                           DELETE
+                           FROM {`table_name`}
+                           WHERE user_id IN ({user_id*})
+
+                             ',
+                             .con = con)
+
+
+  query <- DBI::dbSendStatement(con, sql_drop)
+  results <- DBI::dbGetRowsAffected(query)
+  DBI::dbClearResult(query)
+
+  if (results>0) {message(sprintf("User IDs replaced in %s rows",results))}
+  DBI::dbWriteTable(con, table_name, table_df, append = TRUE)
+
+  return(results)
 }
 
 
