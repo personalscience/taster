@@ -218,7 +218,7 @@ user_find_id <- function(con, user) {
       tbl(con, "accounts_firebase") %>%
         filter(firebase_id == uf) %>%
         pull(user_id)
-    }}
+      }}
   #  at this point, user$user_id exists in accounts_firebase
   # but it's possible user$user_id is a new id and doesn't exist in accounts_users
   ID <- user$user_id
@@ -232,3 +232,4 @@ user_find_id <- function(con, user) {
 
   return(list(first_name = first_name, last_name = last_name, user_id = user$user_id, firebase_id = user$firebase_id))
 }
+

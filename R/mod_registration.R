@@ -36,8 +36,6 @@ mod_registration_server <- function(id, user){
       f_user <- user$f$get_signed_in()
       validate(need(!is.null(f_user), "Not signed in"))
 
-      #tbl(con, "accounts_user")
-
       a_user <- user_find_id(con,
                              user = list(
                                firebase_id = f_user$response$uid)
@@ -87,12 +85,7 @@ mod_registration_server <- function(id, user){
       message(sprintf("response from appendTable: %s and replace_records: %s\n",response_fb, response_u))
 
       message(sprintf("Save to %s database: %s\n",attributes(con)$class, accounts_user_record))
-      # message(sprintf("save to %s database: user_id = %d, first_name=%s, last_name=%s, age=%d\n",
-      #                 attributes(con)$class,
-      #                 if(is.null(current_user()$user_id)) "NULL" else current_user()$user_id,
-      #                 input$first_name,
-      #                 input$last_name,
-      #                 input$age_roughly))
+
 
     })
 
