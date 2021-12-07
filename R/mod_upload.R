@@ -13,8 +13,10 @@ mod_upload_ui <- function(id){
     fluidPage(
       includeMarkdown(app_sys("app/www/docs/upload_instructions.md")),
       hr(),
-      fluidRow(fileInput(ns("ask_filename_libreview"), label = "Choose Libreview File", accept = ".csv"),
-               fileInput(ns("ask_filename_notes"), label = "Choose Notes File", accept = ".csv")),
+      textOutput(ns("user_message")),
+      fluidRow(
+        uiOutput(ns("ask_for_libreview_csv")),
+        fileInput(ns("ask_filename_notes"), label = "Choose Notes File", accept = ".csv")),
       uiOutput(ns("ask_to_write_db")),
       hr(),
       fileInput(ns("ask_filename_nutrisense"), label = "Choose Nutrisense File", accept = ".csv"),
@@ -35,13 +37,16 @@ mod_upload_server <- function(id, con){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
 
-    # filepath_libreview ----
-    filepath_libreview<- reactive({
-      validate(
-        need(input$ask_filename_libreview,"Please select a Libreview CSV file")
-      )
-      input$ask_filename_libreview}
-      )
+    # Ask Filepath ----
+    output$ask_for_libreview_csv<- renderUI({
+
+      file_selection(item_id = ns("libreview_upload"), label = "Libreview CSV", accept = ".csv")
+
+    }
+
+    )
+
+
 
     # filepath_notes ----
     filepath_notes<- reactive({
@@ -61,8 +66,18 @@ mod_upload_server <- function(id, con){
 
 
     # glucose_df : Read Raw ----
-    glucose_df_raw <- reactive(cgmr::libreview_csv_df(file=filepath_libreview()$datapath))
-    libreview_name <- reactive(glucose_df_raw()[["name"]])
+
+    glucose_df_raw <- reactive({
+      validate(
+        need(input$libreview_upload, "Upload a file please")
+      )
+      new_df <- cgmr::libreview_csv_df(file=input$libreview_upload$datapath)
+    }
+    )
+    libreview_name <- reactive({
+      user_feedback(output=output, sprintf("You uploaded %s glucose values",nrow(glucose_df())))
+      glucose_df_raw()[["name"]]
+      })
 
     glucose_df <- reactive({
       g_df <- glucose_df_raw()[["glucose_raw"]] %>%
@@ -80,7 +95,12 @@ mod_upload_server <- function(id, con){
     )
 
     # notes_df ----
-    notes_df_csv<- reactive(cgmr::notes_df_from_csv(file = filepath_notes()$datapath))
+    notes_df_csv<- reactive({
+      notes <- cgmr::notes_df_from_csv(file = filepath_notes()$datapath)
+      user_feedback(output, msg = sprintf("Uploaded %s new notes", nrow(notes)))
+      return(notes)
+    }
+      )
     notes_df_libreview <- reactive(cgmr::notes_df_from_glucose_table(glucose_df()))
 
 
@@ -119,10 +139,8 @@ mod_upload_server <- function(id, con){
 
     # output$glucoseTable ----
     output$glucoseTable <- renderDataTable({
-      if(is.null(isolate(notes_df_libreview()))) {
-        message("No notes data in libreview csv")
-      }
-      glucose_df()
+
+      glucose_df_raw()[["glucose_raw"]]
     },
     options = list(pageLength = 5)
     )
@@ -141,6 +159,26 @@ mod_upload_server <- function(id, con){
            ) # This whole module returns a reactive glucose_df
 
   })
+}
+
+#' @title Feedback to User
+#' @description A generic way to send feedback to the user.  Assumes a `user_message` tag in the UI.
+#' @param output output
+#' @param msg character message to display
+#' @return feedback object
+user_feedback <- function(output, msg = "Thank You For Listening"){
+
+  output$user_message <- renderText(msg)
+}
+
+#' @title Make a File Selection Object
+#' @param item_id character string NS id for UI
+#' @param label character string name on label
+#' @return file selection object
+file_selection <- function(item_id, label = "Which File?", ...){
+
+  selected <- fileInput(inputId = item_id, label = label, ...)
+  return(selected)
 }
 
 ## To be copied in the UI
