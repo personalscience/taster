@@ -54,6 +54,10 @@ app_ui <- function(request) {
                                        titlePanel("Upload your own CGM results"),
                                        mod_upload_ui("fromCSV")
                                      )),
+                            tabPanel("Metadata",
+                                     fluidPage(
+                                       mod_metadata_ui("metadata")
+                                     )),
                             tabPanel("Filter",
                                      fluidPage(
                                        mod_filter_results_ui("filter_results_ui_1")

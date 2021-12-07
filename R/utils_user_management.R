@@ -58,6 +58,13 @@ UserObject <- function(con, user_id = NULL,  firebase_obj = NULL) {
       objects <- DBI::dbListObjects(con)
       tables <- DBI::dbListTables(con)
       return(list(objects=objects, tables=tables))
+    },
+    set_id = function(new_id){
+      this$user_id <- new_id
+    },
+
+    print = function() {
+      sprintf("Object User: user_id = %s, full_name = %s\n",this$user_id, db$full_name)
     }
 
   )
@@ -70,7 +77,15 @@ UserObject <- function(con, user_id = NULL,  firebase_obj = NULL) {
   structure(db, class = "list",
             con  = con,
             user_id = user_id,
-            firebase_obj = firebase_obj)
+            firebase_obj = firebase_obj,
+            print = print)
+
+}
+
+#' @title Print this user
+#' @param userObject user object
+print_user <- function(userObj) {
+  sprintf("Object User: user_id = %s, full_name = %s\n",userObj[["user_id"]], userObj[["full_name"]])
 
 }
 
