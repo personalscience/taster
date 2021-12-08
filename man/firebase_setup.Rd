@@ -14,4 +14,5 @@ firebase object
 }
 \description{
 This is just a stub for now, in order to consolidate all program-wide calls to Firebase.
+See configuration instructions \url{https://firebase.john-coene.com/guide/config/}
 }

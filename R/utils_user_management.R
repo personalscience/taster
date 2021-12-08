@@ -159,6 +159,7 @@ setMethod(f = "get_id", signature = "User", function(x, ...) {
 
 #' @title Set up Firebase support
 #' @description This is just a stub for now, in order to consolidate all program-wide calls to Firebase.
+#' See configuration instructions \url{https://firebase.john-coene.com/guide/config/}
 #' @param con database connection
 #' @import firebase
 #' @return firebase object
