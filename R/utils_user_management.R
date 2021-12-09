@@ -203,7 +203,7 @@ user_id_max <- function(con) {
 #'
 #' Ultimately this function should return a user object.
 #' @param con valid database connection
-#' @param user list containing information needed to set up a new user
+#' @param user list containing information needed to set up a new user (either `user_id`, or`firebase_id`)
 #' @examples
 #' con <- db_connection()
 #' me <- list(user_id = 1234, first_name = "Richard", last_name = "Sprague", firebase_id = "769d1YgcNfTy4rQlxTuMqWR0b3t2")
@@ -227,7 +227,7 @@ user_find_id <- function(con, user) {
   last_name = if(is.null(user$last_name)) "" else user$last_name
 
 
-  if (is.null(user$user_id)) { # no user_id for user
+  if (is.null(user$user_id)) { # no user_id for user, so look up firebase_id and return a new user_id if not found.
     uf <- user$firebase_id
     f_id <- tbl(con, "accounts_firebase") %>% filter(firebase_id == uf) %>% count() %>% pull(1)
     user$user_id <- if(f_id == 0) user_id_max(con) + 1 else {
@@ -247,5 +247,37 @@ user_find_id <- function(con, user) {
 
 
   return(list(first_name = first_name, last_name = last_name, user_id = user$user_id, firebase_id = user$firebase_id))
+}
+
+
+#' @title Current User
+#' @description Intended to be called as a reactive, this function requires a currently-running firebase instance
+#' and will not respond unless the user is logged in.  If logged in, then return the current user_id
+#' @param user_object User object in list form (e.g. list(con = db_connection(), firebase_id = firebase_setup())
+#' @return user_id user ID
+util_current_user<- function(user_object) {
+
+  con <- user_object[["con"]]
+  f <- user_object[["firebase_id"]]
+
+  user <- f$get_signed_in()
+  if(is.null(user)) {
+    message("user_id is null")
+    user_id <- 0
+    username <- "<must sign in to see name>"
+  }
+  else {
+    f_id <- db_user_id_from_firebase(con, user$response$uid)
+    user_id <- if(is.na(f_id)) 0 else f_id  # if user isn't registered return user_id = 0
+
+    cat(file=stderr(),sprintf("\nUser %s is signed in\n",user_id))
+
+    username <- db_name_for_user_id(con, f, user_id)
+  }
+
+
+  current_id <- list(id=if(is.null(user_id)) 0 else as.numeric(user_id), name = username)
+  message("current ID=",current_id)
+  return(current_id)
 }
 

@@ -194,8 +194,13 @@ demo_upload <- function() {
   ui <- fluidPage(mod_upload_ui("csv_upload_ui_1"))
   #sample_glucose <- cgmr::glucose_df_from_libreview_csv()
   server <- function(input, output, session) {
+
+    con <- db_connection()
+
     g <- mod_upload_server("csv_upload_ui_1", con = db_connection())
    # message(sprintf("g = %s", str(g$con())))
+    onStop(function(){message("gracefully exiting from mod_upload...")
+    DBI::dbDisconnect(con)})
 
   }
   shinyApp(ui, server)

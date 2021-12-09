@@ -9,7 +9,7 @@ user_find_id(con, user)
 \arguments{
 \item{con}{valid database connection}
 
-\item{user}{list containing information needed to set up a new user}
+\item{user}{list containing information needed to set up a new user (either `user_id`, or`firebase_id`)}
 }
 \value{
 list that can uniquely identify the user, including new `user_id` if necessary

@@ -57,28 +57,7 @@ mod_goddess_server <- function(id, f = firebase_obj, cgm_data){
 
 
     # current_user() ----
-    current_user<- reactive( {
-
-      user <- f$get_signed_in()
-      if(is.null(user)) {
-        message("user_id is null")
-        user_id <- 0
-        username <- "<must sign in to see name>"
-      }
-      else {
-        f_id <- db_user_id_from_firebase(con, user$response$uid)
-        user_id <- if(is.na(f_id)) 0 else f_id  # if user isn't registered return user_id = 0
-
-        cat(file=stderr(),sprintf("\nUser %s is signed in\n",user_id))
-
-        username <- db_name_for_user_id(con, f, user_id)
-      }
-
-
-      current_id <- list(id=if(is.null(user_id)) 0 else as.numeric(user_id), name = username)
-      message("current ID=",current_id)
-      return(current_id)}
-    )
+    current_user<- reactive( util_current_user(list(firebase_id = f, con = con)))
 
     # taster_prod_list() ----
     taster_prod_list <- reactive({
