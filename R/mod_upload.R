@@ -33,7 +33,7 @@ mod_upload_ui <- function(id){
 #'
 #' @param con database connection
 #' @noRd
-mod_upload_server <- function(id, con){
+mod_upload_server <- function(id, con, user){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
 
@@ -45,6 +45,17 @@ mod_upload_server <- function(id, con){
     }
 
     )
+
+    # Current User ----
+    current_user <- reactive({
+      this_user <- user$f$get_signed_in()
+      validate(need(!is.null(this_user), "Not signed in"))
+      user <- user_find_id(con,
+                           list(firebase_id = this_user$response$uid))
+      message("Current User:", print_user(user))
+      return(user)
+
+    })
 
 
 
@@ -130,7 +141,13 @@ mod_upload_server <- function(id, con){
     # input$write_db ----
     observeEvent(input$write_db, {
       if(input$write_db) {
-      user_feedback(output, msg = sprintf('Thinking about writing to %s database now', class(con)))
+        message("write_db", print_user(user))
+      user_feedback(output,
+                    msg = sprintf('Thinking about writing %s rows to %s database now\n
+                                  User ID = %s',
+                                  nrow(glucose_df_raw()[["glucose_raw"]]),
+                                  class(con),
+                                  current_user()$user_id))
         # db_write_table(con=con,
         #                table_name = "raw_glucose",
         #                table_df = glucose_df_raw()[["glucose_raw"]])
@@ -191,13 +208,17 @@ file_selection <- function(item_id, label = "Which File?", ...){
 #' @noRd
 #'
 demo_upload <- function() {
-  ui <- fluidPage(mod_upload_ui("csv_upload_ui_1"))
+  ui <- fluidPage(firebase::useFirebase(),
+                  firebase::firebaseUIContainer(),
+    mod_upload_ui("csv_upload_ui_1"))
   #sample_glucose <- cgmr::glucose_df_from_libreview_csv()
   server <- function(input, output, session) {
 
     con <- db_connection()
-
-    g <- mod_upload_server("csv_upload_ui_1", con = db_connection())
+    f <- firebase_setup()
+    user <- UserObject(con, firebase_obj = f)
+  message("demo:", print_user(user))
+    g <- mod_upload_server("csv_upload_ui_1", con = con, user = user)
    # message(sprintf("g = %s", str(g$con())))
     onStop(function(){message("gracefully exiting from mod_upload...")
     DBI::dbDisconnect(con)})

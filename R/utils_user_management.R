@@ -85,7 +85,18 @@ UserObject <- function(con, user_id = NULL,  firebase_obj = NULL) {
 #' @title Print this user
 #' @param userObject user object
 print_user <- function(userObj) {
-  sprintf("Object User: user_id = %s, full_name = %s\n",userObj[["user_id"]], userObj[["full_name"]])
+
+  if(is.null(userObj)) return("userObj: <NULL>") else
+    return(
+  sprintf("User: user_id = %s, full_name = %s, firebase ID = %s\n",
+          if(!is.null(userObj[["user_id"]]))
+             userObj[["user_id"]] else "<NULL>",
+          if(!is.null(userObj[["full_name"]]))
+             userObj[["full_name"]] else "<NULL>",
+          if(!is.null(userObj[["firebase_id"]]))
+            userObj[["firebase_id"]] else "<no firebase ID>"
+  )
+    )
 
 }
 
@@ -243,7 +254,7 @@ user_find_id <- function(con, user) {
       first_name <- if(is.null(user_record$first_name)) "" else user_record$first_name
       last_name <- if(is.null(user_record$last_name)) "" else user_record$last_name
       }
-      #message(sprintf("user_find_id found user_id = %s user_record = %s\n",user$user_id, user_record))
+      message(sprintf("user_find_id found user_id = %s user_record = %s\n",user$user_id, user_record))
 
 
   return(list(first_name = first_name, last_name = last_name, user_id = user$user_id, firebase_id = user$firebase_id))
@@ -256,7 +267,7 @@ user_find_id <- function(con, user) {
 #' @param user_object User object in list form (e.g. list(con = db_connection(), firebase_id = firebase_setup())
 #' @return user_id user ID
 util_current_user<- function(user_object) {
-
+message("util_current_user")
   con <- user_object[["con"]]
   f <- user_object[["firebase_id"]]
 
@@ -267,6 +278,7 @@ util_current_user<- function(user_object) {
     username <- "<must sign in to see name>"
   }
   else {
+    message("User is signed in")
     f_id <- db_user_id_from_firebase(con, user$response$uid)
     user_id <- if(is.na(f_id)) 0 else f_id  # if user isn't registered return user_id = 0
 
