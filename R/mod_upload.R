@@ -130,7 +130,7 @@ mod_upload_server <- function(id, con){
     # input$write_db ----
     observeEvent(input$write_db, {
       if(input$write_db) {
-      message(sprintf('Thinking about writing to %s database now', class(con)))
+      user_feedback(output, msg = sprintf('Thinking about writing to %s database now', class(con)))
         # db_write_table(con=con,
         #                table_name = "raw_glucose",
         #                table_df = glucose_df_raw()[["glucose_raw"]])
