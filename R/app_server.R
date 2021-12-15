@@ -14,6 +14,14 @@ app_server <- function( input, output, session ) {
   f <- firebase_setup(con)
   user <- UserObject(con, firebase_obj = f)
 
+  observe({
+    # Trigger this observer every time an input changes
+    reactiveValuesToList(input)
+    session$doBookmark()
+  })
+  onBookmarked(function(url) {
+    updateQueryString(url)
+  })
 
   mod_about_server("about_ui_1", con, user)
 

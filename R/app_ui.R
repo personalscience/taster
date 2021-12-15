@@ -11,7 +11,7 @@ app_ui <- function(request) {
     # Your application UI logic
 
 
-            navbarPage(
+            navbarPage(id = "navbarpage",
                   title = tagList(
                     tags$title("Personal Science"),
                     a(
@@ -32,12 +32,12 @@ app_ui <- function(request) {
                             #Application title
                             mod_about_ui("about_ui_1")
                           )),
-                 tabPanel("Compare",
+                 tabPanel("Compare", value = "goddess",
                           fluidPage(
                             h2("Compare Experiments"),
                             mod_goddess_ui("food2_compare_plot")
                           )),
-                 tabPanel("Foods",
+                 tabPanel("Foods", value = "foods",
                           fluidPage(
                             mod_food_compare_ui("food_compare_plot")
                           )),
