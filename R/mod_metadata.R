@@ -59,7 +59,6 @@ mod_metadata_server <- function(id, cgm_data, user){
       })
 
   })
-
   return(TRUE)
 }
 
