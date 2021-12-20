@@ -71,21 +71,32 @@ mod_goddess_server <- function(id, f = firebase_obj, cgm_data){
 
 
     # show_user (ID, range, etc.)----
-    output$show_user <- renderText(
+    output$show_user <- renderText({
+
+      validate(
+        need(!is.null(input$user_id), "No Such User")
+      )
 
       sprintf("user_id = %s, product = %s, range=%s", input$user_id,
 
               input$food_name1,
-              paste0(glucose_ranges_for_id(input$user_id, cgm_data$glucose_records), collapse=" : ")
+              paste0(glucose_ranges_for_id(input$user_id,
+                                           cgm_data$glucose_records),
+                     collapse=" : ")
       )
+    }
     )
 
 
 
     # y_scale ----
 
-    y_scale <- reactive(
+    y_scale <- reactive({
+      validate(
+        need(!is.null(input$normalize), "waiting for normalize")
+      )
       y_scale_(bind_rows(food_df2(), food_df()), input$normalize)
+    }
     )
 
 
@@ -261,7 +272,7 @@ food_df_ <- function(cgm_data,
     validate(
     #  need(!is.null(taster_prod_list()), "No food times available for this person"),
       need(!is.null(user_id), "No user selected"),
-      need(food_name, "No food selected")
+      need(!is.null(food_name), "No food selected")
     )
 
     one_food_df <-  cgmr::food_times_df_fast(

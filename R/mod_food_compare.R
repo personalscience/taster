@@ -12,12 +12,7 @@ mod_food_compare_ui <- function(id){
   tagList(
     sidebarLayout(
       sidebarPanel(
-        selectInput(
-          ns("food_name"),
-          label = "Select Food",
-          choices = db_food_list(db_connection(), user_id = c(1000:1009,1012:1502)),
-          selected = "Clif Bar Chocolate"
-        ),
+        uiOutput(ns("foodnames")),
         checkboxInput(ns("normalize"), label = "Normalize"),
         checkboxInput(ns("smooth"), label = "Smooth"),
         checkboxInput(ns("combine"), label = "Show Average"),
@@ -87,10 +82,23 @@ mod_food_compare_server <- function(id, cgm_data){
     meals_all <- reactive({
       one_food_df <- food_df()
       validate(
-        need(!is.null(one_food_df), sprintf("No glucose results for food %s", input$food_name1))
+        need(!is.null(one_food_df), sprintf("No glucose results for food %s",
+                                            input$food_name1))
       )
       one_food_df %>% distinct(meal) %>% pull(meal)}
     )
+
+    # output$foodnames ----
+    output$foodnames <-
+      renderUI(
+
+        selectInput(ns("food_name"),
+                    label = "Select Food",
+                    choices = db_food_list(con = cgm_data$con,
+                                           user_id = c(1000:1009,1012:1502)),
+                    selected = "Clif Bar Chocolate"
+        )
+      )
 
     # output$main_plot  ----
     output$main_plot <- renderPlot({
