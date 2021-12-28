@@ -142,15 +142,26 @@ mod_upload_server <- function(id, con, user){
     observeEvent(input$write_db, {
       if(input$write_db) {
         message("write_db", print_user(user))
+        ID = current_user()$user_id
       user_feedback(output,
                     msg = sprintf('Thinking about writing %s rows to %s database now\n
                                   User ID = %s',
                                   nrow(glucose_df_raw()[["glucose_raw"]]),
                                   class(con),
-                                  current_user()$user_id))
-        # db_write_table(con=con,
-        #                table_name = "raw_glucose",
-        #                table_df = glucose_df_raw()[["glucose_raw"]])
+                                  ID))
+      new_raw_table <- bind_cols(user_id = ID,
+                                 glucose_df_raw()[["glucose_raw"]])
+
+
+
+
+        response <- db_write_table(con=con,
+                       table_name = "raw_glucose",
+                       table_df = new_raw_table)
+        user_feedback(output,
+                      msg = sprintf("Wrote User %s with Response = \n %s",
+                                    ID,
+                                    response))
       }
     })
 
