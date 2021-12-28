@@ -1,5 +1,20 @@
 ## Testing database functions
 
+
+# dittodb::start_db_capturing()
+# out <- tbl(con2, "glucose_records") %>% filter(user_id == 1234 & value > 150) %>% collect()
+# dittodb::stop_db_capturing()
+dittodb::with_mock_db(
+  test_that("glucose records", {
+    con2 <- db_connection()
+    on.exit(dbDisconnect(con2))
+    out <- tbl(con2, "glucose_records") %>%
+      filter(user_id == 1234 & value > 150) %>% collect()
+
+    expect_equal(dim(out), c(461, 7))
+  })
+)
+
 scon <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
 
 
