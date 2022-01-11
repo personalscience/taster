@@ -102,6 +102,10 @@ To populate the remote, AWS-stored database or any other specified in your `conf
 
 See `tasterdb` instructions for more details.
 
+## Testing
+
+Run unit tests with `devtools::test()` (or type CMD-SHIFT-T)
+
 ## Deploy
 
 Run the script `psi_deploy.R`.
