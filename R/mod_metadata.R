@@ -1,6 +1,6 @@
 #' metadata UI Function
 #'
-#' @description A shiny Module.
+#' @description A shiny Module to let you view and modify metadata for a user.
 #'
 #' @param id,input,output,session Internal parameters for {shiny}.
 #'
@@ -29,7 +29,7 @@ mod_metadata_server <- function(id, cgm_data, user){
     current_user <- reactive({
       this_user <- user$f$get_signed_in()
       validate(need(!is.null(this_user), "Not signed in"))
-      user$user_id <- db_user_id_from_firebase(con,this_user$response$uid)
+      user$user_id <- db_user_id_from_firebase(user$con,this_user$response$uid)
       message(sprintf("Current_user()  user_id = %s", user$user_id))
       return(this_user)
 
@@ -38,7 +38,7 @@ mod_metadata_server <- function(id, cgm_data, user){
     output$user <- renderText({
       this_user <- user$f$get_signed_in()
       validate(need(!is.null(this_user), "Not signed in"))
-      user$user_id <- db_user_id_from_firebase(con,this_user$response$uid)
+      user$user_id <- db_user_id_from_firebase(user$con,this_user$response$uid)
       print_user(user)
     })
 
