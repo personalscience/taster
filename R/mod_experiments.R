@@ -10,7 +10,8 @@
 mod_experiments_ui <- function(id){
   ns <- NS(id)
   tagList(
-    h1("Experiments"),
+    #h1("Experiments"),
+    includeMarkdown(app_sys("app/www/docs/experiments_instructions.md")),
     hr(),
     DT::dataTableOutput(ns("experiments_table"))
 

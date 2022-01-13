@@ -1,0 +1,12 @@
+version: "3"
+services:
+  web:
+    build: .
+    ports:
+      - "80:80"
+    env_file:
+      - taster.env
+    volumes:
+      - ./config:/inst
+      - ./www:/inst/www
+

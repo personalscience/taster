@@ -30,6 +30,7 @@ app_server <- function( input, output, session ) {
   observe(message(sprintf("glucose_df rows = %d", nrow(glucose_df()))))
 
   mod_metadata_server("metadata", cgm_data, user)
+  mod_experiments_server("experiments_ui_1", user)
 
   mod_food_compare_server("food_compare_plot", cgm_data)
   mod_user_view_server("user_view_ui1", f, csv_user_gdf = glucose_df(), cgm_data)

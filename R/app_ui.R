@@ -67,7 +67,13 @@ app_ui <- function(request) {
                                        mod_user_view_ui("user_view_ui1")
 
                                      ))
-                            )
+                            ),
+
+                 tabPanel("Experiments",
+                          fluidPage(
+                            mod_experiments_ui("experiments_ui_1")
+
+                          ))
 
 
       )
