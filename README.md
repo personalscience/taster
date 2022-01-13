@@ -76,6 +76,28 @@ Run the docker container while loading the environment variables
 docker run -p 8085:80 --env-file .env --name taster -d tastermonial
 ```
 
+Or use Docker Compose
+
+```yml
+version: "3"
+services:
+  web:
+    build: .
+    ports:
+      - "8086:80"
+	  env_file:
+      - taster.env
+	  volumes:
+      - ./config:/inst
+
+```
+Assuming you have the above `.env` file in `taster.env`, you can run like this
+```sh
+docker-compose up -d
+```
+and the app will appear on port 8086 of your host.
+
+
 ## Database
 
 The app requires a database. For testing purposes, a pre-prepared Sqlite database will work fine, though it is currently not included in this repo.
