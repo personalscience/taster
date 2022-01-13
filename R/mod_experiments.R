@@ -36,21 +36,25 @@ mod_experiments_server <- function(id, user){
     et <- db_get_table(con, table_name = "experiments")
 
     output$experiments_table <- {
-      validate(
-        need(!is.null(et), "Experiments Table Doesn't Exist")
-      )
-      experiments_table <-  et %>% select(-id,-experiment_id)
 
-      experiments_table$experiment_image_url <- purrr::map2_chr(experiments_table$experiment_image_url,
-                                                                experiments_table$experiment_name,
-                                                                wrap_img)
-      DT::renderDataTable(experiments_table, escape = FALSE,
-                                                    options = list(
-                                                      initComplete = htmlwidgets::JS(
-                                                        "function(settings, json) {",
-                                                        "$(this.api().table().header()).css({'background-color': '#000', 'color': '#fff'});",
-                                                        "}")))
-}
+
+      DT::renderDataTable({
+
+        validate(
+          need(!is.null(et), "Experiments Table Doesn't Exist")
+        )
+        experiments_table <-  et %>% select(-id,-experiment_id)
+        experiments_table$experiment_image_url <- purrr::map2_chr(experiments_table$experiment_image_url,
+                                                                  experiments_table$experiment_name,
+                                                                  wrap_img)
+        experiments_table},
+        escape = FALSE,
+        options = list(
+          initComplete = htmlwidgets::JS(
+            "function(settings, json) {",
+            "$(this.api().table().header()).css({'background-color': '#000', 'color': '#fff'});",
+            "}")))
+    }
   })
 }
 
