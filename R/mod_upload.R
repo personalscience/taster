@@ -105,10 +105,11 @@ mod_upload_server <- function(id, con, user){
       }
     )
 
-    # notes_df ----
+    # notes_df_csv ----
     notes_df_csv<- reactive({
       notes <- cgmr::notes_df_from_csv(file = filepath_notes()$datapath)
-      user_feedback(output, msg = sprintf("Uploaded %s new notes", nrow(notes)))
+      ID = current_user()$user_id
+      user_feedback(output, msg = sprintf("Uploaded %s new notes for User %s", nrow(notes), ID))
       return(notes)
     }
       )
@@ -155,13 +156,29 @@ mod_upload_server <- function(id, con, user){
 
 
 
-        response <- db_write_table(con=con,
+      response <-
+        db_write_table(con=con,
                        table_name = "raw_glucose",
                        table_df = new_raw_table)
-        user_feedback(output,
-                      msg = sprintf("Wrote User %s with Response = \n %s",
-                                    ID,
-                                    response))
+      user_feedback(output,
+                    msg = sprintf("Wrote User %s with Response = \n %s",
+                                  ID,
+                                  response))
+      validate(
+        need(!is.null(notes_df_csv()), "Upload a Notes CSV to write Notes file")
+      )
+      new_raw_notes_table <- bind_cols(user_id = ID,
+                                       notes_df_csv())
+
+      notes_response <- "not writing notes yet"
+        # db_write_table(con = con,
+        #                table_name = "raw_notes",
+        #                table_df = new_raw_notes_table)
+      user_feedback(output,
+                    msg = sprintf("Glucose=%s\nNotes=%s",
+                                  response,
+                                  notes_response))
+
       }
     })
 
@@ -176,7 +193,7 @@ mod_upload_server <- function(id, con, user){
     # output$notesTable ----
     output$notesTable <- renderDataTable(
       notes_df_csv(),
-      options = list(pageLenth = 5))
+      options = list(pageLength = 5))
 
 
     cgm_data <- list(con = reactive(con),
@@ -191,12 +208,16 @@ mod_upload_server <- function(id, con, user){
 
 #' @title Feedback to User
 #' @description A generic way to send feedback to the user.  Assumes a `user_message` tag in the UI.
+#' If the message is NULL, return 'No Value Found'.
 #' @param output output
 #' @param msg character message to display
-#' @return feedback object
-user_feedback <- function(output, msg = "Thank You For Listening"){
-
-  output$user_message <- renderText(msg)
+#' @return renderText object
+user_feedback <- function(output, msg = "Thank You For Listening") {
+  message("user feedback")
+  message(msg)
+  output$user_message <-
+    renderText(if (is_empty(msg)) "No Value Found"
+      else msg)
 }
 
 #' @title Make a File Selection Object
