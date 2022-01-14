@@ -31,6 +31,17 @@ new_user_records <- tibble(# id = c(1),
                            user_id = c(7),
                            firebase_id = c("x"))
 
+raw_notes_records <- tibble(Start = c(20,21,22),
+                            End = c(30,NA,NA),
+                            Comment = c("a","b","c"),
+                            Z = c(8,9,10),
+                            user_id = c(555,555,555))
+new_notes_records <- tibble(Start = c(23,24),
+                            End = c(31,32),
+                            Comment = c("d","e"),
+                            Z = c(6,7),
+                            user_id = c(655,655))
+
 
 test_that("First Write works", {
   expect_equal(db_write_table(scon, table_name = "raw_glucose", glucose_data1$glucose_raw ), "Wrote to table for the first time")
@@ -80,6 +91,14 @@ test_that("get_table",{
   expect_equal(nrow(db_get_table(scon, table_name = "raw_glucose")),35721)
   expect_equal(db_get_table(scon, table_name = "accounts_firebase")[["firebase_id"]], c("x","y","z","w"))
 })
+
+test_that("raw notes table", {
+  expect_equal(db_write_notes_table(scon, "raw_notes", raw_notes_records, user_id = 555), "Wrote to table with result = TRUE")
+  expect_equal(db_write_notes_table(scon, "raw_notes", new_notes_records, user_id = 555), "Wrote to table with result = 3")
+  expect_equal(tbl(scon, "raw_notes") %>% collect() %>% pull(4), c(6,7))
+  expect_equal(names(tbl(scon,"raw_notes") %>% collect()), c("Start","End","Comment","Z", "user_id"))
+})
+print(tbl(scon,"raw_notes"))
 
 
 

@@ -107,9 +107,15 @@ mod_upload_server <- function(id, con, user){
 
     # notes_df_csv ----
     notes_df_csv<- reactive({
-      notes <- cgmr::notes_df_from_csv(file = filepath_notes()$datapath)
       ID = current_user()$user_id
-      user_feedback(output, msg = sprintf("Uploaded %s new notes for User %s", nrow(notes), ID))
+      notes <- NULL
+      try(notes <- cgmr::notes_df_from_csv(file = filepath_notes()$datapath,
+                                       user_id = ID))
+
+      validate(
+        need(!is.null(notes), "Bad Notes Format; please upload a properly-formatted Notes CSV")
+      )
+    user_feedback(output, msg = sprintf("Uploaded %s new notes for User %s", nrow(notes), ID))
       return(notes)
     }
       )
@@ -142,8 +148,10 @@ mod_upload_server <- function(id, con, user){
     # input$write_db ----
     observeEvent(input$write_db, {
       if(input$write_db) {
-        message("write_db", print_user(user))
+        user_feedback(output, "Please log in")
         ID = current_user()$user_id
+        message("write_db")
+
       user_feedback(output,
                     msg = sprintf('Thinking about writing %s rows to %s database now\n
                                   User ID = %s',
@@ -167,13 +175,14 @@ mod_upload_server <- function(id, con, user){
       validate(
         need(!is.null(notes_df_csv()), "Upload a Notes CSV to write Notes file")
       )
-      new_raw_notes_table <- bind_cols(user_id = ID,
-                                       notes_df_csv())
+      new_raw_notes_table <- notes_df_csv()
+      print(new_raw_notes_table)
 
-      notes_response <- "not writing notes yet"
-        # db_write_table(con = con,
-        #                table_name = "raw_notes",
-        #                table_df = new_raw_notes_table)
+      notes_response <-
+      db_write_notes_table(con = con,
+                                             table_name = "raw_notes",
+                                             table_df = new_raw_notes_table,
+                                             user_id = ID)
       user_feedback(output,
                     msg = sprintf("Glucose=%s\nNotes=%s",
                                   response,

@@ -12,8 +12,9 @@ user_feedback(output, msg = "Thank You For Listening")
 \item{msg}{character message to display}
 }
 \value{
-feedback object
+renderText object
 }
 \description{
 A generic way to send feedback to the user.  Assumes a `user_message` tag in the UI.
+If the message is NULL, return 'No Value Found'.
 }

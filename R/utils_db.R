@@ -98,6 +98,32 @@ db_write_table <- function(con = db_connection(), table_name = "raw_glucose", ta
 
 }
 
+#' @title Write a notes table to the database
+#' @param con valid database connection
+#' @param table_name char string for table name
+#' @param table_df valid dataframe to write to the database
+#' @param user_id User ID
+#' @return character string with a message that can be displayed to the user
+db_write_notes_table <- function(con = db_connection(),
+                                 table_name = "raw_notes",
+                                 table_df,
+                                 user_id) {
+  msg <- "NA"
+  if (DBI::dbExistsTable(con, table_name)) {
+    new_records <- table_df
+    #result <- DBI::dbAppendTable(con, table_name, new_records)
+
+    result <- db_replace_records(con, user_id, table_name, new_records)
+    msg <- if(!is.null(result)) result else "NULL from writeTable"
+  } else { # table doesn't exist, so create one from scratch
+    new_table <- table_df
+    result <- DBI::dbWriteTable(con, table_name, new_table)
+    msg <- if(!is.null(result)) result else "NULL from writeTable"
+  }
+  return(sprintf("Wrote to table with result = %s",msg))
+}
+
+
 #' @title Replace User Information in Database
 #' @description Find the user matching this `user_id` and replace
 #' with the other values in `user`
@@ -140,7 +166,11 @@ db_replace_records <- function( con, user_id, table_name, table_df) {
                              ',
                              .con = con)
 
-
+# todo add some type of COMMIT to this SQL, so the old records aren't deleted until we're sure the new ones are in place.
+  # BEGIN
+  # DELETE FROM # as above
+  # INSERT INTO
+  # COMMIT
   query <- DBI::dbSendStatement(con, sql_drop)
   results <- DBI::dbGetRowsAffected(query)
   DBI::dbClearResult(query)
