@@ -108,6 +108,7 @@ mod_upload_server <- function(id, con, user){
     # notes_df_csv ----
     notes_df_csv<- reactive({
       ID = current_user()$user_id
+
       notes <- NULL
       try(notes <- cgmr::notes_df_from_csv(file = filepath_notes()$datapath,
                                        user_id = ID))
@@ -116,6 +117,7 @@ mod_upload_server <- function(id, con, user){
         need(!is.null(notes), "Bad Notes Format; please upload a properly-formatted Notes CSV")
       )
     user_feedback(output, msg = sprintf("Uploaded %s new notes for User %s", nrow(notes), ID))
+
       return(notes)
     }
       )
