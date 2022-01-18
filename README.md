@@ -4,47 +4,11 @@ This is a Golem-based implementation of an R Shiny app to view, explore, and ana
 
 ## Requirements
 
-To host on `shinyapps.io` you will first need to create an account. I recommend using your Github account credentials. Once you have enabled your `shinyapps` account, follow the instructions to get your "token" and "secret".
-
-## Using Config.yml (deprecated in this version)
-
-This directory needs a `config.yml` file to deploy on <https://shinyapps.io>. Be sure to fill in all the values below correctly:
-
-``` {.yaml}
-default:
-  tastermonial:
-    datadir: "~/path/to/a/local/directory/where/you/store/tastermonial/files"
-  shiny:
-    name: 'personalscience'
-    token: 'yourtoken'
-    secret: 'your secret'
-  dataconnection:
-    driver: !expr RPostgres::Postgres()
-    host: "localhost"
-    user: "postgres"
-    password: 'yourlocalpassword'
-    port: 5432
-    dbname: 'qsdb'
-    glucose_table: 'glucose_records'
-
-shinyapps:
-  dataconnection:
-    driver: !expr RPostgres::Postgres()
-    host: "<IP address for local host>"
-    user: "username"
-    password: 'password'
-    port: 5432
-    dbname: 'qsdb'
-    glucose_table: 'glucose_records'
-```
-
-To run locally, you will need a Postgres database. The app will use the configuration set in the `config.yml`. To use the local database, run
-
-``` r
-Sys.setenv(R_CONFIG_ACTIVE = "local")
-```
+Develop the app as a package in RStudio. Like other Golem-based packages, by convention the `dev` directory is reserved for non-package-related setup and miscellaneous.
 
 ## Docker
+
+You should be able to run the app from the Dockerfile, which will take care of all the software versions and setup. You'll need to connect to a database (see below), the credentials of which are kept in the local environment variables.
 
 Make a Docker version using the `Dockerfile`.
 
@@ -102,27 +66,8 @@ and the app will appear on port 8086 of your host.
 
 The app requires a database. For testing purposes, a pre-prepared Sqlite database will work fine, though it is currently not included in this repo.
 
-Database related features are handled by the separate package `tasterdb`, which expects all Libreview files and other raw data to be in the directory specified by:
+Pre-loading and other Tastermonial-specific database features are in the separate package [`tasterdb`](https://github.com/personalscience/tasterdb).
 
-``` r
-config::get("tastermonial")$datadir
-```
-
-Using `tasterdb`, you can fill the database using a data directory that contains:
-
--   All Libreview CSV files, exactly as downloaded from <https://libreview.com>. Any CSV file that includes "glucose" in the name will automatically be read into the database.
--   Latest Tastermonial firebase output, stored in the file `table-data.csv`.
--   Miscellaneous other raw files including Nutrisense-formatted files.
-
-Load the local Postgres database automatically like this:
-
-``` r
-my_local_db <- tasterdb::load_db("local")
-```
-
-To populate the remote, AWS-stored database or any other specified in your `config.yml`, pass the string name to `tasterdb::load_db()`.
-
-See `tasterdb` instructions for more details.
 
 ## Testing
 
@@ -130,6 +75,9 @@ Run unit tests with `devtools::test()` (or type CMD-SHIFT-T)
 
 ## Deploy
 
-Run the script `psi_deploy.R`.
+See the script [`dev/psi_deploy.R`](./dev/psi_deploy.R) for specific deployment prerequisites. 
 
-Go to: <https://personalscience.shinyapps.io/Tastermonial/>
+I'm able to load and host the web app on DigitalOcean by simply loading this Github repo without changes directly as a [DigitalOcean app](https://cloud.digitalocean.com/apps).  You will of course need to set environment variables in order to run the database.
+
+
+

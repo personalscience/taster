@@ -9,7 +9,11 @@ app_server <- function( input, output, session ) {
   # Your application server logic
 
   # Set up objects that are important throughout
-  con <- db_connection()
+
+  con <- tryCatch(
+    error = function(cnd) {"invalid Database"},
+    db_connection(), silent = TRUE)
+
   cgm_data <- CgmObject(con)
   f <- firebase_setup(con)
   user <- UserObject(con, firebase_obj = f)
