@@ -103,6 +103,8 @@ print_user <- function(userObj) {
 #' @title Registered Users From Database
 #' @slot con valid database connection
 #' @slot users_df dataframe of users
+#' @slot glucose_records dataframe of glucose
+#' @slot notes_records dataframe of notes
 #' @export
 RegisteredUsers <- setClass("RegisteredUsers", slots = c("con" = "DBIConnection",
                                                          "users_df" = "data.frame",
@@ -216,14 +218,16 @@ user_id_max <- function(con) {
 #' @param con valid database connection
 #' @param user list containing information needed to set up a new user (either `user_id`, or`firebase_id`)
 #' @examples
-#' con <- db_connection()
-#' me <- list(user_id = 1234, first_name = "Richard", last_name = "Sprague", firebase_id = "769d1YgcNfTy4rQlxTuMqWR0b3t2")
+#' #con <- db_connection()
+#' me <- list(user_id = 1234, first_name = "Richard",
+#'  last_name = "Sprague",
+#'  firebase_id = "769d1YgcNfTy4rQlxTuMqWR0b3t2")
 #' u = list(first_name = "a",
 #'          last_name = "z",
 #'          user_id = NULL,
 #'          firebase_id = "a1")
 #'
-#' user_find_id(con, u)
+#' #user_find_id(con, u)
 #' @return list that can uniquely identify the user, including new `user_id` if necessary
 user_find_id <- function(con, user) {
 

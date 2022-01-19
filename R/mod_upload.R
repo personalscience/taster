@@ -22,6 +22,9 @@ mod_upload_ui <- function(id){
       fileInput(ns("ask_filename_nutrisense"), label = "Choose Nutrisense File", accept = ".csv"),
       plotOutput(ns("modChart")),
       hr(),
+      h1("Experiments"),
+      wellPanel(dataTableOutput(ns("experimentsTable"))),
+      hr(),
       wellPanel(dataTableOutput(ns("glucoseTable"))),
       hr(),
       h1("Notes Table"),
@@ -34,10 +37,13 @@ mod_upload_ui <- function(id){
 #' csv_upload Server Functions
 #'
 #' @param con database connection
+#' @importFrom cgmrdb classify_notes_to_experiment
 #' @noRd
 mod_upload_server <- function(id, con, user){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
+
+    experiments_mapping <- DBI::dbReadTable(con, "experiments_mapping")
 
     # Current User ----
     current_user <- reactive({
@@ -139,6 +145,12 @@ mod_upload_server <- function(id, con, user){
     notes_df_libreview <- reactive(cgmr::notes_df_from_glucose_table(glucose_df()))
 
 
+    ## notes_df ----
+    notes_df <- reactive({
+
+      return(bind_rows(notes_df_csv(),notes_df_libreview()))
+    }
+    )
 
     # output$modChart ----
     output$modChart <- renderPlot({
@@ -175,15 +187,8 @@ mod_upload_server <- function(id, con, user){
                                  glucose_df_raw()[["glucose_raw"]])
 
       # todo pull this code to cgmr:  convert the raw table to a glucose record
-      notes_from_raw_glucose <- NULL # cgmr::notes_df_from_glucose_table(new_raw_table, user_id = ID)
+      notes_from_raw_glucose <- cgmr::notes_df_from_glucose_table(glucose_df(), user_id = ID)
 
-      glucose_df <- new_raw_table  %>%
-        transmute(`time` = `timestamp`,
-                  scan = glucose_scan,
-                  hist = glucose_historic,
-                  strip = strip_glucose,
-                  value = hist,
-                  food = notes)  %>% add_column(user_id = ID)
 
       message(sprintf("Found notes in glucose file %s\n", notes_from_raw_glucose[,"Comment"]))
 
@@ -219,6 +224,15 @@ mod_upload_server <- function(id, con, user){
       }
     })
 
+    # experiments ----
+    experiments_times <- reactive({
+      notes_table <- notes_df()
+
+      notes_table$Comment <- cgmrdb::classify_notes_to_experiment(notes_table$Comment, experiments_mapping)
+      message(sprintf("notes_table: %s\n", head(notes_table$Comment,5)))
+      return(notes_table %>% filter(Comment != "other"))
+    })
+
     # output$glucoseTable ----
     output$glucoseTable <- renderDataTable({
 
@@ -229,8 +243,16 @@ mod_upload_server <- function(id, con, user){
 
     # output$notesTable ----
     output$notesTable <- renderDataTable(
-      notes_df_csv(),
-      options = list(pageLength = 5))
+      notes_df(),
+      options = list(pageLength = 5)
+      )
+
+    # output$experiments ----
+    output$experimentsTable <- renderDataTable(
+      experiments_times(),
+      options = list(pageLength = 5)
+    )
+
 
 
     cgm_data <- list(con = reactive(con),

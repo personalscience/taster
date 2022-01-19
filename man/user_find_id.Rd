@@ -24,12 +24,14 @@ for the first name, last name, firebase id, and other information.
 Ultimately this function should return a user object.
 }
 \examples{
-con <- db_connection()
-me <- list(user_id = 1234, first_name = "Richard", last_name = "Sprague", firebase_id = "769d1YgcNfTy4rQlxTuMqWR0b3t2")
+#con <- db_connection()
+me <- list(user_id = 1234, first_name = "Richard",
+ last_name = "Sprague",
+ firebase_id = "769d1YgcNfTy4rQlxTuMqWR0b3t2")
 u = list(first_name = "a",
          last_name = "z",
          user_id = NULL,
          firebase_id = "a1")
 
-user_find_id(con, u)
+#user_find_id(con, u)
 }

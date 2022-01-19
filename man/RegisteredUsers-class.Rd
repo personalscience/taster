@@ -28,5 +28,9 @@ Registered Users From Database
 \item{\code{con}}{valid database connection}
 
 \item{\code{users_df}}{dataframe of users}
+
+\item{\code{glucose_records}}{dataframe of glucose}
+
+\item{\code{notes_records}}{dataframe of notes}
 }}
 

@@ -16,6 +16,14 @@ devtools::install_github("personalscience/cgmr",
                          ref = "HEAD",
                          upgrade = "never")
 
+
+remove.packages("cgmrdb")
+devtools::install_github("personalscience/cgmrdb",
+                         ref = "HEAD",
+                         upgrade = "never"
+                         )
+# usethis::use_package("cgmrdb") # add to description file
+
 #rsconnect::deployApp()
 
 # works https://packagemanager.rstudio.com/cran/__linux__/focal/2021-11-09

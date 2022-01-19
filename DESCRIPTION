@@ -14,6 +14,7 @@ Imports:
     attempt,
     bslib,
     cgmr (>= 0.0.6.3),
+    cgmrdb,
     config (>= 0.3.1),
     DBI,
     dbplyr,
