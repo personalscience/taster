@@ -8,7 +8,7 @@ db_connection <- function() {
   conn_args <- get_golem_config("dataconnection")
 
   con <- tryCatch(
-    error = function(cnd) {stop(sprintf("Database %s is invalid",{if(!is.null(conn_args$host)) conn_args$host else "unknown"}))},
+    error = function(cnd) {stop(sprintf("Database host %s is invalid",{if(!is.null(conn_args$host)) conn_args$host else "unknown"}))},
     DBI::dbConnect(
     drv = conn_args$driver,
     user = conn_args$user,

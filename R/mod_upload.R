@@ -23,6 +23,8 @@ mod_upload_ui <- function(id){
       plotOutput(ns("modChart")),
       hr(),
       wellPanel(dataTableOutput(ns("glucoseTable"))),
+      hr(),
+      h1("Notes Table"),
       wellPanel(dataTableOutput(ns("notesTable")))
     )
 
@@ -163,6 +165,19 @@ mod_upload_server <- function(id, con, user){
       new_raw_table <- bind_cols(user_id = ID,
                                  glucose_df_raw()[["glucose_raw"]])
 
+      # todo pull this code to cgmr:  convert the raw table to a glucose record
+      notes_from_raw_glucose <- NULL # cgmr::notes_df_from_glucose_table(new_raw_table, user_id = ID)
+
+      glucose_df <- new_raw_table  %>%
+        transmute(`time` = `timestamp`,
+                  scan = glucose_scan,
+                  hist = glucose_historic,
+                  strip = strip_glucose,
+                  value = hist,
+                  food = notes)  %>% add_column(user_id = ID)
+
+      message(sprintf("Found notes in glucose file %s\n", notes_from_raw_glucose[,"Comment"]))
+
 
 
 
@@ -178,12 +193,14 @@ mod_upload_server <- function(id, con, user){
         need(!is.null(notes_df_csv()), "Upload a Notes CSV to write Notes file")
       )
       new_raw_notes_table <- notes_df_csv()
-      print(new_raw_notes_table)
+
+      combined_raw_notes_table <- bind_rows(new_raw_notes_table, notes_from_raw_glucose)
+      print(combined_raw_notes_table)
 
       notes_response <-
       db_write_notes_table(con = con,
                                              table_name = "raw_notes",
-                                             table_df = new_raw_notes_table,
+                                             table_df = combined_raw_notes_table,
                                              user_id = ID)
       user_feedback(output,
                     msg = sprintf("Glucose=%s\nNotes=%s",
