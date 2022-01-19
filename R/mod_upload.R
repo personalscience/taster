@@ -39,15 +39,6 @@ mod_upload_server <- function(id, con, user){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
 
-    # Ask Filepath ----
-    output$ask_for_libreview_csv<- renderUI({
-
-      file_selection(item_id = ns("libreview_upload"), label = "Libreview CSV", accept = ".csv")
-
-    }
-
-    )
-
     # Current User ----
     current_user <- reactive({
       this_user <- user$f$get_signed_in()
@@ -60,8 +51,18 @@ mod_upload_server <- function(id, con, user){
     })
 
 
+    # Ask Filepath ----
+    output$ask_for_libreview_csv<- renderUI({
 
-    # filepath_notes ----
+      file_selection(item_id = ns("libreview_upload"), label = "Libreview CSV", accept = ".csv")
+
+    }
+
+    )
+
+
+
+    ## filepath_notes ----
     filepath_notes<- reactive({
       validate(
         need(input$ask_filename_notes,"Please select a Notes CSV file")
@@ -69,7 +70,7 @@ mod_upload_server <- function(id, con, user){
       input$ask_filename_notes}
       )
 
-    # filepath_nutrisense ----
+    ## filepath_nutrisense ----
     filepath_nutrisense<- reactive({
       validate(
         need(input$ask_filename_nutrisense,"Please select a Nutrisense CSV file")
@@ -78,7 +79,7 @@ mod_upload_server <- function(id, con, user){
       )
 
 
-    # glucose_df : Read Raw ----
+    # glucose_df_raw : Read Raw ----
 
     glucose_df_raw <- reactive({
       validate(
@@ -87,12 +88,16 @@ mod_upload_server <- function(id, con, user){
       new_df <- cgmr::libreview_csv_df(file=input$libreview_upload$datapath)
     }
     )
+
+    ## libreview_name ----
     libreview_name <- reactive({
       user_feedback(output=output, sprintf("You uploaded %s glucose values",nrow(glucose_df())))
       glucose_df_raw()[["name"]]
       })
 
+    ## glucose_df ----
     glucose_df <- reactive({
+      ID = current_user()$user_id
       g_df <- glucose_df_raw()[["glucose_raw"]] %>%
         transmute(
           `time` = `timestamp`,
@@ -101,11 +106,17 @@ mod_upload_server <- function(id, con, user){
           strip = strip_glucose,
           value = hist,
           food = notes,
-          user_id = 0
+          user_id = ID
         )
       return(g_df)
       }
     )
+
+    ## nutrisense_df ----
+    glucose_df_nutrisense_raw <-
+      reactive(cgmr::glucose_df_from_nutrisense(filepath = filepath_nutrisense()$datapath))
+
+
 
     # notes_df_csv ----
     notes_df_csv<- reactive({
@@ -123,12 +134,10 @@ mod_upload_server <- function(id, con, user){
       return(notes)
     }
       )
+
+    ## notes_df_libreview ----
     notes_df_libreview <- reactive(cgmr::notes_df_from_glucose_table(glucose_df()))
 
-
-    # nutrisense_df ----
-    glucose_df_nutrisense_raw <-
-      reactive(cgmr::glucose_df_from_nutrisense(filepath = filepath_nutrisense()$datapath))
 
 
     # output$modChart ----
