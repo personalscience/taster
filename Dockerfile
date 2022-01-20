@@ -1,6 +1,6 @@
 FROM rocker/r-ver:4.1.1
 RUN apt-get update && apt-get install -y  git-core libcurl4-openssl-dev libgit2-dev libicu-dev libpq-dev libssl-dev libxml2-dev make pandoc pandoc-citeproc zlib1g-dev && rm -rf /var/lib/apt/lists/*
-RUN echo "options(repos = c(REPO_NAME = 'https://packagemanager.rstudio.com/all/__linux__/focal/2022-01-03+Y3JhbiwyOjQ1MjYyMTU7NTY4Qjk1ODA'), download.file.method = 'libcurl', Ncpus = 4)" >> /usr/local/lib/R/etc/Rprofile.site
+RUN echo "options(repos = c(REPO_NAME = 'https://packagemanager.rstudio.com/all/__linux__/focal/2022-01-13+Y3JhbiwyOjQ1MjYyMTU7M0ZDNzkwNzE'), download.file.method = 'libcurl', Ncpus = 4)" >> /usr/local/lib/R/etc/Rprofile.site
 RUN R -e 'install.packages("remotes")'
 RUN Rscript -e 'remotes::install_version("magrittr",upgrade="never", version = "2.0.1")'
 RUN Rscript -e 'remotes::install_version("tibble",upgrade="never", version = "3.1.6")'
@@ -29,7 +29,7 @@ RUN Rscript -e 'remotes::install_version("ggplot2",upgrade="never", version = "3
 RUN Rscript -e 'remotes::install_version("DT",upgrade="never", version = "0.20")'
 RUN Rscript -e 'remotes::install_version("DescTools",upgrade="never", version = "0.99.44")'
 RUN Rscript -e 'remotes::install_version("dbplyr",upgrade="never", version = "2.1.1")'
-RUN Rscript -e 'remotes::install_github("JohnCoene/firebase@76fdd7dfc585bfcdb0e9d54d621ca4b2a87a1ff4")'
+RUN Rscript -e 'remotes::install_github("JohnCoene/firebase@f1db0cdf263286d625b43a620ad53b562cb7421c")'
 RUN Rscript -e 'remotes::install_github("personalscience/cgmrdb@f1a286626c5d89ec7801145f02110bc0089ac8a4")'
 RUN Rscript -e 'remotes::install_github("personalscience/cgmr@dd97a6cc06e0a21808c24cad2aff20322260ff0f")'
 RUN mkdir /build_zone
