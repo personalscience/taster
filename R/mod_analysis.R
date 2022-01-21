@@ -50,7 +50,7 @@ mod_analysis_server <- function(id, glucose_df, cgm_data){
     con <- cgm_data$con
 
       foods_to_analyze_db <- db_experiments_list(con)
-      foods_to_analyze <- foods_to_analyze_db[!foods_to_analyze_db %>% str_detect("other")]
+      foods_to_analyze <- foods_to_analyze_db[!foods_to_analyze_db %>% stringr::str_detect("other")]
 
     auc_df <- reactive({
       validate(
