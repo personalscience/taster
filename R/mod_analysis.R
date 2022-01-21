@@ -49,7 +49,8 @@ mod_analysis_server <- function(id, glucose_df, cgm_data){
     ns <- session$ns
     con <- cgm_data$con
 
-      foods_to_analyze <- db_food_list(con, c(1000:1009,1013:1502))
+      foods_to_analyze_db <- db_experiments_list(con)
+      foods_to_analyze <- foods_to_analyze_db[!foods_to_analyze_db %>% str_detect("other")]
 
     auc_df <- reactive({
       validate(
@@ -64,14 +65,16 @@ mod_analysis_server <- function(id, glucose_df, cgm_data){
 
 
     AUC_for_food <- function(foodname) {
-      cgmr::auc_for_food(foodname, glucose_records = cgm_data$glucose_records,
+      auc <- cgmr::auc_for_food(foodname, glucose_records = cgm_data$glucose_records,
                          notes_records = cgm_data$notes_records, start_limit = 200)
+      if (anyNA(auc)) return(tibble(iAUC = NA)) else return(auc)
     }
 
     all_foods <- reactive({
       validate(
         need(input$calc,"Press Calculate to see Analytics")
       )
+
       tibble(foodname = foods_to_analyze,
                         iAUC = purrr::map_dbl(foods_to_analyze, function(x) {AUC_for_food(x) %>% pull(iAUC) %>% mean()}),
                         n = purrr::map_dbl(foods_to_analyze, function(x) {AUC_for_food(x) %>% nrow()}))

@@ -2,6 +2,7 @@
 
 export(CgmObject)
 export(UserObject)
+export(db_experiments_list)
 export(db_food_list)
 export(db_get_table)
 export(db_name_for_user_id)

@@ -184,6 +184,22 @@ db_replace_records <- function( con, user_id, table_name, table_df) {
 }
 
 
+#' @title List all valid experiments
+#' @description Return a vector of all experiments currently available on the platform.
+#' Unlike [taster::db_food_list()], it uses the values from the database table `experiments`.
+#' so it will not find experiments (usually food names) for some people. On the other hand,
+#' this calls the database each time, so you'll see performance problems if you do it too often.
+#' @param con valid database connection
+#' @return character vector of all experiment names
+#' @export
+db_experiments_list <- function(con) {
+  result = NULL
+  if(DBI::dbExistsTable(con, "experiments"))
+  { result <- tbl(con, "experiments") %>% pull("experiment_name")}
+  return(result)
+}
+
+
 #' @title List all products consumed by `user_id`
 #' @description Return all products consumed by this user. If `user_id==NULL` then show
 #'  from all users, all products consumed more than once.

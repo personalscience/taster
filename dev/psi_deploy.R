@@ -12,6 +12,7 @@ rsconnect::setAccountInfo(name=config::get("shiny")$name,
 
 
 remove.packages("cgmr")
+load_all("~/dev/psi/cgmr")
 devtools::install_github("personalscience/cgmr",
                          ref = "HEAD",
                          upgrade = "never")
@@ -36,3 +37,5 @@ golem::add_dockerfile(repos = c(REPO_NAME = 'https://packagemanager.rstudio.com/
 
 remove.packages("firebase")
 remotes::install_github("JohnCoene/firebase")
+
+
