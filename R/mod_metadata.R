@@ -30,32 +30,45 @@ mod_metadata_server <- function(id, cgm_data, user){
       this_user <- user$f$get_signed_in()
       validate(need(!is.null(this_user), "Not signed in"))
       user$user_id <- db_user_id_from_firebase(user$con,this_user$response$uid)
-      message(sprintf("Current_user()  user_id = %s", user$user_id))
-      return(this_user)
+      user$firebase_id <- this_user$response$uid
+      new_user <- UserObject(user$con, user$user_id, firebase_obj = user$f)
+      message(sprintf("Current_user()  user_id = %s firebase_id = %s/n", user$user_id, user$firebase_id))
+      return(new_user)
 
     })
 
     output$user <- renderText({
-      this_user <- user$f$get_signed_in()
-      validate(need(!is.null(this_user), "Not signed in"))
-      user$user_id <- db_user_id_from_firebase(user$con,this_user$response$uid)
-      print_user(user)
+      this_user <- current_user()
+      print_user(this_user)
+    })
+
+    selected_notes_records <- reactive({
+      user <- current_user()
+      ID <- user$user_id
+      current_user_notes <- cgm_data[["notes_records"]] %>% filter(user_id == ID)
+      return(current_user_notes)
     })
 
     output$message <- renderText({
       validate(
         need(input$notes_table_cells_selected, "Please select a cell to edit")
       )
+
       cell <- input$notes_table_cells_selected
-      value <- cgm_data$notes_records[cell[1],cell[2]]
+      selected_notes <- selected_notes_records()
+      value <- selected_notes[cell[1],cell[2]]
       paste0(sprintf("You clicked row=%s, col=%s\n", cell[1],cell[2]),
           sprintf("value = %s", value))
 
     })
 
     output$notes_table <- DT::renderDT({
-      DT::datatable(cgm_data[["notes_records"]], editable = TRUE, selection = list(mode = 'single',
-                                                                                   target = 'cell'))
+
+      current_user_notes <- selected_notes_records()
+      DT::datatable(current_user_notes,
+                    editable = TRUE,
+                    selection = list(mode = 'single',
+                                     target = 'cell'))
       })
 
   })

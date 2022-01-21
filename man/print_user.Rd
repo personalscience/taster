@@ -9,6 +9,9 @@ print_user(userObj)
 \arguments{
 \item{userObject}{user object}
 }
+\value{
+character string of user object
+}
 \description{
 Print this user
 }

@@ -84,6 +84,7 @@ UserObject <- function(con, user_id = NULL,  firebase_obj = NULL) {
 
 #' @title Print this user
 #' @param userObject user object
+#' @return character string of user object
 print_user <- function(userObj) {
 
   if(is.null(userObj)) return("userObj: <NULL>") else
