@@ -12,7 +12,7 @@ rsconnect::setAccountInfo(name=config::get("shiny")$name,
 
 
 remove.packages("cgmr")
-load_all("~/dev/psi/cgmr")
+#load_all("~/dev/psi/cgmr")
 devtools::install_github("personalscience/cgmr",
                          ref = "HEAD",
                          upgrade = "never")
