@@ -8,5 +8,5 @@ services:
       - taster.env
     volumes:
       - ./config:/inst
-      - ./www:/inst/www
+      - ./www/docs:/inst/www/docs
 
