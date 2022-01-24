@@ -35,7 +35,7 @@ plot_compare_glucose <- function(food_times_df,
   g <- if(combine){
     foods_to_show %>% cgmr::combined_food_times_df() %>%
       ggplot() +
-      geom_line(aes(x=`t`,y=`value`,color=`date_ch`), size = 1) +
+      geom_line(aes(x=`t`,y=`value`,color=.data[[{{legend_var }}]]), size = 1) +
       geom_smooth(inherit.aes= FALSE,
                   aes(x=t,y=ave),
                   method = "loess",
