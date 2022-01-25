@@ -17,7 +17,7 @@ mod_upload_ui <- function(id){
       fluidRow(
         uiOutput(ns("ask_for_libreview_csv")),
         fileInput(ns("ask_filename_notes"), label = "Choose Notes File", accept = ".csv")),
-      uiOutput(ns("ask_to_write_db")),
+      uiOutput(ns("ask_to_write_db")),uiOutput(ns("ask_to_write_final")),
       hr(),
       fileInput(ns("ask_filename_nutrisense"), label = "Choose Nutrisense File", accept = ".csv"),
       plotOutput(ns("modChart")),
@@ -169,6 +169,36 @@ mod_upload_server <- function(id, con, user){
 
     })
 
+    # output$ask_to_write_final ----
+    output$ask_to_write_final <- renderUI({
+      validate(
+        need(!is.null(glucose_df()),sprintf("Please confirm you're ready to write to the database"))
+      )
+      actionButton(NS(id,"write_final"),
+                   label = "Write to Final")
+
+
+
+    })
+
+    # input$write_final ----
+    observeEvent(input$write_final, {
+      if(input$write_final) {
+        user_feedback(output, "Please log in")
+        ID = current_user()$user_id
+
+        message("ready to do final write")
+
+        write_notes <- experiments_times()
+        write_glucose <- glucose_df()
+
+        notes_result <- db_replace_records(con, ID, "notes_records", write_notes)
+        glucose_result <- db_replace_records(con, ID, "glucose_records", write_glucose)
+
+        message(sprintf("wrote %s glucose records; %s notes_records\n", glucose_result, notes_result))
+      }
+    })
+
 
     # input$write_db ----
     observeEvent(input$write_db, {
@@ -226,7 +256,7 @@ mod_upload_server <- function(id, con, user){
 
     # experiments ----
     experiments_times <- reactive({
-      notes_table <- notes_df()
+      notes_table <- notes_df() %>% select(-TZ)
 
       notes_table$Comment <- cgmrdb::classify_notes_to_experiment(notes_table$Comment, experiments_mapping)
       message(sprintf("notes_table: %s\n", head(notes_table$Comment,5)))
