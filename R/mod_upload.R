@@ -305,7 +305,7 @@ user_feedback <- function(output, msg = "Thank You For Listening") {
   message("user feedback")
   message(msg)
   output$user_message <-
-    renderText(if (is_empty(msg)) "No Value Found"
+    renderText(if (rlang::is_empty(msg)) "No Value Found"
       else msg)
 }
 
