@@ -149,6 +149,39 @@ db_replace_user <- function(con, user) {
 
 }
 
+#' @title Insert a new `user_id` into appropriate tables
+#' @param con valid database connection
+#' @param user list containing `$user_id` and `$firebase_id`
+#' @return integer total of rows affected in database write operations. You have a problem if this is 0.
+db_insert_user <- function(con, user){
+  if(is.null(user)) {warning("tried to insert NULL user"); return(0)}
+
+  ID <- user[["user_id"]]
+  if (is.null(ID)) {warning("tried to insert NULL user"); return(0)}
+  user_fb <- user[["firebase_id"]]
+  if (is.null(user_fb)) {warning("tried to insert NULL firebase_id"); return(0)}
+
+  if (nrow(tbl(con, "user_list") %>% filter(user_id == ID) %>% collect()) ==  0) {
+  s1 <- sprintf("INSERT INTO user_list(user_id)
+               VALUES(%d)",
+               ID)
+  result1 <- DBI::dbExecute(con, s1)
+  } else result1 = 0
+
+  # don't insert new user_id if user_id already exists in accounts_firebase
+
+  if (nrow(tbl(con, "accounts_firebase") %>% filter(user_id == ID) %>% collect()) ==  0) {
+
+  s2 <- sprintf("INSERT INTO accounts_firebase(user_id, firebase_id)
+               VALUES(%d,'%s')",
+                ID,user_fb)
+  result2 <- DBI::dbExecute(con, s2)
+  } else result2 = 0
+
+
+  return(result1+result2)  # you have a problem if return = 0
+}
+
 #' @title Replace All Records in `table_name` that match `user_id`
 #' @param con valid database connection
 #' @param user_id user ID

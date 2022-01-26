@@ -211,7 +211,8 @@ user_id_max <- function(con) {
 #' @description Each time you call this function, you will get a proposed new and unique `user_id`.
 #' Be careful: this function doesn't save the ID generated, so if you want to be sure that your new ID is
 #' truly unique, you better update the database table.
-#' Obviously, a future version of this function will do that automatically.
+#' Obviously, a future version of this function will do that automatically, but right now everyone
+#' who uses this function needs reassurance there are no side effects.
 #' @param con valid database connection
 #' @return integer ID
 user_new_unique_id <- function(con) {
@@ -262,7 +263,7 @@ user_find_id <- function(con, user) {
     user$user_id <- if(f_id == 0) user_new_unique_id(con) else {
       tbl(con, "accounts_firebase") %>%
         filter(firebase_id == uf) %>%
-        pull(user_id)
+        pull(user_id) %>% first()
       }}
   #  at this point, user$user_id exists in accounts_firebase
   # but it's possible user$user_id is a new id and doesn't exist in accounts_users
@@ -288,7 +289,9 @@ user_find_id <- function(con, user) {
 #' @return logical TRUE if success
 user_accounts_update <- function(con, user) {
   if(is.null(user)) return(FALSE)
+  result <- db_insert_user(con, user)
 
+  if (result>0) return(TRUE)
   return(FALSE)
 }
 

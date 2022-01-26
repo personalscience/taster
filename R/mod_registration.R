@@ -42,6 +42,11 @@ mod_registration_server <- function(id, user){
                              )
       message(sprintf("a_user: user_id=%s, f_id = %s ", a_user$user_id, a_user$firebase_id))
 
+    # registered <- user_accounts_update(con, a_user)
+    # if(!registered) {
+    #   warning("Unable to register this user")
+    # }
+
       return(a_user)
 
     })

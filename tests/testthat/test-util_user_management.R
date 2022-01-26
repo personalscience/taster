@@ -108,6 +108,17 @@ test_that("db_user_all_ids", {
   expect_equal(db_user_all_ids(scon), c(0,1,2,3) )
 })
 
+
+test_that("db_insert_user and user_accounts_update",{
+  db_insert_user(scon, list(user_id=45, firebase_id = "iu"))
+  expect_equal(tbl(scon,"user_list") %>% collect() %>% pull(user_id), c(0,1,2,3,45))
+  db_insert_user(scon, list(user_id = 7, firebase_id = "c1")) # adding duplicate to accounts_firebase
+  user_accounts_update(scon, list(user_id = 67, firebase_id = "iu2"))
+  expect_equal(tbl(scon,"user_list") %>% collect() %>% pull(user_id), c(0,1,2,3,45,7,67))
+  expect_equal(tbl(scon,"accounts_firebase") %>% collect() %>% pull(user_id), c(0,1,7,8,45,67))
+
+})
+
 # test_that("user_list",{
 #   expect_equal(db_user_df() %>% filter(user_id == 1234) %>% pull(last_name), "Sprague")
 # })
