@@ -259,18 +259,25 @@ db_user_privileges <- function(con, user_id = -1){
   return(result)
 }
 
-#' @title All user records in the database
+#' @title All user ids in the database
 #' @param conn_args database connection
-#' @return dataframe of all user records
+#' @return vector of all known `user_id`
 #' @importFrom dplyr tbl collect
 #' @export
-db_user_df <- function(conn_args = config::get("dataconnection")){
-  con <- db_connection()
+db_user_all_ids <- function(con){
 
-  users_df <- db_get_table(con, "user_list")
 
-  DBI::dbDisconnect(con)
-  return(users_df)
+  user_list <- db_get_table(con, "user_list")
+  if(is.null(user_list)) { message("no users in table user_list"); return(NULL)}
+  accounts_list <- db_get_table(con, "accounts_user")
+  if(is.null(accounts_list)) { message("no users in table accounts_list") ; return(NULL)}
+
+  u_id <- user_list[["user_id"]]
+  a_id <- accounts_list[["user_id"]]
+
+  all_ids <- union(u_id,a_id)
+
+  return(all_ids)
 
 }
 
@@ -319,7 +326,7 @@ db_users_visible <- function(con, user_id = -1 ) {
   } else "user"
 
   if (privilege == "admin")
-    visible_user_ids <- db_user_df() %>% pull(user_id) %>% union(0)
+    visible_user_ids <- db_user_all_ids(con) %>% union(0)
 
 
 
@@ -336,7 +343,12 @@ db_users_visible <- function(con, user_id = -1 ) {
 db_name_for_user_id <- function(con, firebase_obj, user_id) {
   ID = user_id
 
-    return(db_user_df() %>% dplyr::filter(user_id == ID)  %>%
+  users_list <- db_get_table(con, "user_list")
+  if(is.null(users_list)) { warning("no users in table user_list"); return(NULL)}
+  accounts_list <- db_get_table(con, "accounts_user")
+  if(is.null(accounts_list)) { warning("no users in table accounts_list"); return(NULL)}
+
+    return(inner_join(users_list,accounts_list) %>% dplyr::filter(user_id == ID)  %>%
              select(first_name,last_name) %>%
              as.character() %>%
              stringr::str_flatten(collapse = " "))

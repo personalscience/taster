@@ -13,12 +13,7 @@ mod_analysis_ui <- function(id){
 
     sidebarLayout(
       sidebarPanel(
-        selectInput(
-          ns("user_id"),
-          label = "User Name",
-          choices = db_user_df() %>% pull(user_id),
-          selected = 1234
-        ),
+        uiOutput(ns("id_list")),
         markdown("White boxes represent 50% of the iAUC results from all users of that product.
 
                  The line in the middle of each white box is the median iAUC"
@@ -99,6 +94,16 @@ mod_analysis_server <- function(id, glucose_df, cgm_data){
         psi_theme()})
 
     output$food_summary <- renderDataTable({all_foods() %>% arrange(iAUC)})
+
+    output$id_list <- renderUI({
+
+      selectInput(
+        ns("user_id"),
+        label = "User Name",
+        choices = db_user_all_ids(con),
+        selected = 1234
+      )
+    })
   })
 }
 

@@ -201,12 +201,24 @@ user_id_max <- function(con) {
    #  filter(user_id == max(user_id, na.rm = TRUE)) %>%
    #  pull(user_id)
 
-  s <- 'SELECT max("user_id") FROM user_list;'
+  s <- 'SELECT max("user_id") FROM accounts_user;'
 
   max_id <- DBI::dbGetQuery(con, s) %>% pull(1)
   return(max_id)
 }
 
+#' @title Make New Unique `user_id`
+#' @description Each time you call this function, you will get a proposed new and unique `user_id`.
+#' Be careful: this function doesn't save the ID generated, so if you want to be sure that your new ID is
+#' truly unique, you better update the database table.
+#' Obviously, a future version of this function will do that automatically.
+#' @param con valid database connection
+#' @return integer ID
+user_new_unique_id <- function(con) {
+  max_id <- user_id_max(con)
+  new_unique_id <- max_id + 1
+  return(new_unique_id)
+}
 
 #' @title Find Unique `user_id`, Creating One If Necessary
 #' @description Intended to be called after someone has firebase credentials, either
@@ -215,7 +227,8 @@ user_id_max <- function(con) {
 #' we know about that user.  Besides a unique `user_id`, the list will include items
 #' for the first name, last name, firebase id, and other information.
 #'
-#' Ultimately this function should return a user object.
+#' Ultimately this function should return a user object, though in this version
+#' it returns a list.
 #' @param con valid database connection
 #' @param user list containing information needed to set up a new user (either `user_id`, or`firebase_id`)
 #' @examples
@@ -229,7 +242,7 @@ user_id_max <- function(con) {
 #'          firebase_id = "a1")
 #'
 #' #user_find_id(con, u)
-#' @return list that can uniquely identify the user, including new `user_id` if necessary
+#' @return List that can uniquely identify the user, including new `user_id` if necessary. NULL means none found.
 user_find_id <- function(con, user) {
 
   if (!is.list(user)) {
@@ -246,7 +259,7 @@ user_find_id <- function(con, user) {
   if (is.null(user$user_id)) { # no user_id for user, so look up firebase_id and return a new user_id if not found.
     uf <- user$firebase_id
     f_id <- tbl(con, "accounts_firebase") %>% filter(firebase_id == uf) %>% count() %>% pull(1)
-    user$user_id <- if(f_id == 0) user_id_max(con) + 1 else {
+    user$user_id <- if(f_id == 0) user_new_unique_id(con) else {
       tbl(con, "accounts_firebase") %>%
         filter(firebase_id == uf) %>%
         pull(user_id)
@@ -265,6 +278,19 @@ user_find_id <- function(con, user) {
   return(list(first_name = first_name, last_name = last_name, user_id = user$user_id, firebase_id = user$firebase_id))
 }
 
+#' @title Update User Accounts Databases
+#' @description In general, the `user_*()` functions do not have side effects. But sometimes you discover a
+#' brand new `user_id` that doesn't yet map to the database. When that happens, this function is for you.
+#' Given a user list containing a `$firebase_id` and a `$user_id`, it will update the
+#' `accounts_user` and `accounts_firebase` database tables to reflect the new information
+#' @param con valid database connection
+#' @param user list containing `firebase_id` and `user_id`
+#' @return logical TRUE if success
+user_accounts_update <- function(con, user) {
+  if(is.null(user)) return(FALSE)
+
+  return(FALSE)
+}
 
 #' @title Current User
 #' @description Intended to be called as a reactive, this function requires a currently-running firebase instance

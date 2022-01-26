@@ -12,7 +12,7 @@ user_find_id(con, user)
 \item{user}{list containing information needed to set up a new user (either `user_id`, or`firebase_id`)}
 }
 \value{
-list that can uniquely identify the user, including new `user_id` if necessary
+List that can uniquely identify the user, including new `user_id` if necessary. NULL means none found.
 }
 \description{
 Intended to be called after someone has firebase credentials, either
@@ -21,7 +21,8 @@ user. Either way, this function will return a list that can uniquely identify wh
 we know about that user.  Besides a unique `user_id`, the list will include items
 for the first name, last name, firebase id, and other information.
 
-Ultimately this function should return a user object.
+Ultimately this function should return a user object, though in this version
+it returns a list.
 }
 \examples{
 #con <- db_connection()

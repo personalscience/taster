@@ -2,21 +2,26 @@
 con <- db_connection()
 scon  <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
 
-users <- tibble(user_id = c(0,1,2,3),
+legacy_users <- tibble(user_id = c(0,1,2,3),
                 first_name = c("a","b","c","d"),
                 last_name = c("z","y","x","w"))
+
+users <- tibble(user_id = c(0,2,3),
+                first_name = c("a","c","d"),
+                last_name = c("z","x","w"))
 
 fbase <- tibble(user_id = c(0,1,7,8),
                 first_name = c("a","b","j",NA_character_),
                 last_name = c("z","y","r","s"),
                 firebase_id = c("a1","b1", "c1", "d1"))
 
-db_write_table(scon, "user_list", users)
+db_write_table(scon, "user_list", legacy_users)
 db_write_table(scon, "accounts_firebase", fbase)
 db_write_table(scon, "accounts_user", users)
 
 test_that("max user works",{
-          expect_equal(user_id_max(scon), 3)
+  expect_equal(user_id_max(scon), 3)
+  expect_equal(user_new_unique_id(scon), 4)
 })
 
 test_that("db_replace_user",{
@@ -73,9 +78,6 @@ test_that("null user",{
   expect_equal(user2$privilege , "admin")
 })
 
-test_that("user_list",{
-  expect_equal(db_user_df() %>% filter(user_id == 1234) %>% pull(last_name), "Sprague")
-})
 
 test_that("name for user ID", {
   expect_equal(db_name_for_user_id(con, user_id = 1234), "Richard Sprague")
@@ -97,6 +99,18 @@ test_that("firebase works",{
   expect_equal(db_user_id_from_firebase(con, "q0cqXsbigXg0ZaWy5IsC0AhvPCK2"), 1009)
   expect_equal(db_user_id_from_firebase(con, "somethingwrong"),NA)
 })
+
+test_that("db_name_for_user_id", {
+  expect_equal(db_name_for_user_id(scon, NULL, 0),"a z")
+})
+
+test_that("db_user_all_ids", {
+  expect_equal(db_user_all_ids(scon), c(0,1,2,3) )
+})
+
+# test_that("user_list",{
+#   expect_equal(db_user_df() %>% filter(user_id == 1234) %>% pull(last_name), "Sprague")
+# })
 
 
 DBI::dbDisconnect(con)
