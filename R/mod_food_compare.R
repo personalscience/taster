@@ -52,8 +52,7 @@ mod_food_compare_server <- function(id, cgm_data){
       )
 
       one_food_df <-  cgmr::food_times_df_fast(
-        glucose_df = cgm_data$glucose_records,
-        notes_df = cgm_data$notes_records,
+        cgm_data,
         user_id = NULL,
         timeLength = 150,
         prefixLength = 30,

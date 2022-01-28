@@ -275,9 +275,7 @@ food_df_ <- function(cgm_data,
       need(!is.null(food_name), "No food selected")
     )
 
-    one_food_df <-  cgmr::food_times_df_fast(
-      glucose_df = cgm_data$glucose_records,
-      notes_df = cgm_data$notes_records,
+    one_food_df <-  cgmr::food_times_df_fast(cgm_data,
       user_id = user_id,
       timeLength = timewindow,
       prefixLength = prefixLength,

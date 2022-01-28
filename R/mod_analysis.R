@@ -52,16 +52,13 @@ mod_analysis_server <- function(id, glucose_df, cgm_data){
         need(input$calc,"Press Calculate to see Analytics \n May take up to 30 seconds \n Please be patient!")
       )
 
-      cgmr::df_for_all_auc(food_list = foods_to_analyze,
-                            glucose_records = cgm_data$glucose_records,
-                            notes_records = cgm_data$notes_records)
+      cgmr::df_for_all_auc(food_list = foods_to_analyze, cgm_data)
     }
     )
 
 
     AUC_for_food <- function(foodname) {
-      auc <- cgmr::auc_for_food(foodname, glucose_records = cgm_data$glucose_records,
-                         notes_records = cgm_data$notes_records, start_limit = 200)
+      auc <- cgmr::auc_for_food(foodname, cgm_data, start_limit = 200)
       if (anyNA(auc)) return(tibble(iAUC = NA)) else return(auc)
     }
 
