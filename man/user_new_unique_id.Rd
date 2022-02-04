@@ -16,5 +16,6 @@ integer ID
 Each time you call this function, you will get a proposed new and unique `user_id`.
 Be careful: this function doesn't save the ID generated, so if you want to be sure that your new ID is
 truly unique, you better update the database table.
-Obviously, a future version of this function will do that automatically.
+Obviously, a future version of this function will do that automatically, but right now everyone
+who uses this function needs reassurance there are no side effects.
 }

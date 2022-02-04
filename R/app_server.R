@@ -11,8 +11,10 @@ app_server <- function( input, output, session ) {
   # Set up objects that are important throughout
 
   con <- tryCatch(
-    error = function(cnd) {"invalid Database"},
+    error = function(cnd) {stop("invalid Database")},
     db_connection(), silent = TRUE)
+
+  if(class(con)=="character") stop("no database found")
 
   cgm_data <- CgmObject(con)
   f <- firebase_setup(con)

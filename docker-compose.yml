@@ -9,4 +9,11 @@ services:
     volumes:
       - ./config:/inst
       - ./www/docs:/inst/www/docs
-
+  db:
+     image: postgres
+     ports:
+       - "5432:5432"
+     env_file:
+       - taster.env
+     hostname: sprague-ubuntu
+       
